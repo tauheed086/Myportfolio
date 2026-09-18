@@ -1,22 +1,17 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-test("portfolio renders its content and usable navigation without client JavaScript", async () => {
+test("renders a full-screen wave portfolio with usable overlay controls", async () => {
   const { default: worker } = await import("../dist/server/index.js");
   const response = await worker.fetch(new Request("http://localhost/", { headers: { accept: "text/html" } }), { ASSETS: { fetch: async () => new Response("Not found", { status: 404 }) } }, { waitUntil() {}, passThroughOnException() {} });
   assert.equal(response.status, 200);
   const html = await response.text();
-  assert.match(html, /Full-stack Developer/);
-  assert.match(html, /Ideas into/);
-  for (const id of ["home", "work", "about", "stack", "contact"]) {
-    assert.match(html, new RegExp(`id="${id}"`));
-    assert.match(html, new RegExp(`href="#${id}"`));
-  }
-  assert.match(html, /Project placeholders/);
-  assert.match(html, /Your email goes here/);
-  assert.doesNotMatch(html, /href="(?:#|mailto:)"/);
-  assert.doesNotMatch(html, /codex-preview|react-loading-skeleton|Your site is taking shape/);
-  assert.match(html, /aria-label="Filter projects"/);
-  assert.match(html, /aria-label="Play 3D animation"/);
-  assert.match(html, /aria-labelledby="project-dialog-title"/);
+  assert.match(html, /Your Name/);
+  assert.match(html, /is a full-stack developer/);
+  assert.match(html, /class="wave-scene/);
+  assert.match(html, /Explore my projects/);
+  assert.match(html, /View scene only/);
+  assert.match(html, /aria-label="Play animation"/);
+  assert.match(html, /aria-labelledby="panel-title"/);
+  assert.doesNotMatch(html, /mini-dashboard|hero-actions|stack-strip|codex-preview/);
 });
