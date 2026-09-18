@@ -1,6 +1,7 @@
 // Edit this file to personalize your portfolio. No layout changes needed.
 export const profile = {
   name: "Your Name",
+  logo: "", // e.g. /logo.png (put the file in public/)
   wordmark: "yourname.dev",
   role: "Full-stack developer",
   intro: "I connect thoughtful interfaces with powerful backends. Building for the web with React, Python, and a healthy dose of curiosity.",
