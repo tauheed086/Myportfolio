@@ -5,23 +5,21 @@ import { ArrowRight, Moon, Sun, Pause, Play, X } from "lucide-react";
 import WaveScene from "./wave-scene";
 import { profile, projects } from "./content";
 
-const navigation = [{ id: "about", label: "About" }, { id: "projects", label: "My Work" }, { id: "contact", label: "Contact Me" }] as const;
-
-type Panel = "projects" | "about" | "contact" | null;
+const navigation = [{ id: "about", label: "About" }, { id: "projects", label: "My Work" }, { id: "contact", label: "Contact Me" }];
 
 export default function Portfolio() {
   const [paused, setPaused] = useState(true);
   const [sceneOnly, setSceneOnly] = useState(false);
   const [night, setNight] = useState(false);
-  const [panel, setPanel] = useState<Panel>(null);
-  const [activeNav, setActiveNav] = useState<number | null>(null);
-  const [hoverNav, setHoverNav] = useState<number | null>(null);
-  const openPanel = (next: Exclude<Panel, null>) => {
+  const [panel, setPanel] = useState(null);
+  const [activeNav, setActiveNav] = useState(null);
+  const [hoverNav, setHoverNav] = useState(null);
+  const openPanel = (next) => {
     setActiveNav(navigation.findIndex(item => item.id === next));
     setPanel(next);
   };
   const highlight = hoverNav ?? activeNav;
-  const dialog = useRef<HTMLDialogElement>(null);
+  const dialog = useRef(null);
 
   useEffect(() => {
     try { setNight(localStorage.getItem("portfolio-theme") === "night"); }

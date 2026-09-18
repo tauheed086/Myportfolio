@@ -3,8 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 
 // Water, the boat, and birds share one clock, including pause/reduced motion.
-export default function WaveScene({ paused, night = false }: { paused: boolean; night?: boolean }) {
-  const host = useRef<HTMLDivElement>(null);
+export default function WaveScene({ paused, night = false }) {
+  const host = useRef(null);
   const pausedRef = useRef(paused);
   const nightRef = useRef(night);
   const [ready, setReady] = useState(false);
@@ -22,7 +22,7 @@ export default function WaveScene({ paused, night = false }: { paused: boolean; 
       if (disposed) return;
       const texture = await new THREE.TextureLoader().loadAsync("/sunset-painting.png");
       if (disposed) { texture.dispose(); return; }
-      let renderer: InstanceType<typeof THREE.WebGLRenderer>;
+      let renderer;
       try { renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: "low-power" }); }
       catch { texture.dispose(); return; }
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
@@ -207,7 +207,7 @@ export default function WaveScene({ paused, night = false }: { paused: boolean; 
       scene.add(new THREE.Mesh(geometry, material));
       let frame = 0, lastTime = performance.now(), lastPointer = 0, rippleIndex = 0;
       let dirty = true;
-      let travelPhase: "home" | "leaving" | "away" | "entering" = nightRef.current ? "away" : "home";
+      let travelPhase = nightRef.current ? "away" : "home";
       let lastNight = nightRef.current;
       const travelSpeed = 0.42;
       const awayPosition = new THREE.Vector3(1.45, 1.45, 1.45);
@@ -217,7 +217,7 @@ export default function WaveScene({ paused, night = false }: { paused: boolean; 
         const time = uniforms.time.value;
         const cropX = uniforms.crop.value.x;
         const boatX = THREE.MathUtils.clamp((0.265 + Math.sin(time * 0.045) * 0.015 - 0.5) / cropX + 0.5, 0.12, 0.40);
-        const birdOffset = (index: number) => {
+        const birdOffset = (index) => {
           const t = time - index * (0.62 + Math.sin(time * 0.48) * 0.20);
           const phase = t * 0.85 + Math.sin(t * 0.55) * 0.22;
           const imageX = 0.505 + Math.sin(phase) * 0.095 + Math.sin(phase * 3) * 0.008;
@@ -226,7 +226,7 @@ export default function WaveScene({ paused, night = false }: { paused: boolean; 
         };
         uniforms.travel.value.set(-boatX - 0.025, birdOffset(0), birdOffset(1));
       };
-      const updateTravel = (delta: number, reduced: boolean) => {
+      const updateTravel = (delta, reduced) => {
         const night = nightRef.current;
         if (reduced) {
           uniforms.travel.value.setScalar(night ? 1.45 : 0);
@@ -276,9 +276,9 @@ export default function WaveScene({ paused, night = false }: { paused: boolean; 
       const observer = new ResizeObserver(resize);
       observer.observe(container);
       resize();
-      const onPointer = (event: PointerEvent) => {
+      const onPointer = (event) => {
         if (pausedRef.current || performance.now() - lastPointer < 110) return;
-        if ((event.target as Element)?.closest("button, a, dialog")) return;
+        if (event.target?.closest?.("button, a, dialog")) return;
         const rect = container.getBoundingClientRect();
         const x = (event.clientX - rect.left) / rect.width;
         const y = 1 - (event.clientY - rect.top) / rect.height;
@@ -300,7 +300,7 @@ export default function WaveScene({ paused, night = false }: { paused: boolean; 
       window.addEventListener("pointermove", onPointer, { passive: true });
       window.addEventListener("pointerdown", onPointer, { passive: true });
       const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
-      const render = (now: number) => {
+      const render = (now) => {
         if (disposed) return;
         frame = requestAnimationFrame(render);
         const delta = Math.min((now - lastTime) / 1000, 0.05);
