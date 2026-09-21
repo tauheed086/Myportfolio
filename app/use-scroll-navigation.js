@@ -9,7 +9,9 @@ export default function useScrollNavigation(journey) {
 
   useEffect(() => {
     const nav = navbar.current;
+    if (!nav || !journey?.current) return;
     const root = nav.closest(".portfolio-page");
+    if (!root) return;
     const sections = [...root.querySelectorAll("[data-nav-section]")];
     const preference = window.matchMedia("(prefers-reduced-motion: reduce)");
     let frame = 0, positions = [], start = 0, end = 1, compact = 880, expanded = 1200;

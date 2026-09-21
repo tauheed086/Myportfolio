@@ -1,21 +1,37 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { ArrowDown, Moon, Sun, Pause, Play, X } from "lucide-react";
 import WaveScene from "./wave-scene";
 import useOceanScroll from "./use-ocean-scroll";
 import useScrollNavigation from "./use-scroll-navigation";
 import PortfolioSections from "./portfolio-sections";
+import DeepSeaFish from "./deep-sea-fish";
 import { profile } from "./content";
 
 const navigation = [{ id: "about", label: "About" }, { id: "projects", label: "My Work" }, { id: "contact", label: "Contact Me" }];
+
+const subscribeTheme = (notify) => {
+  window.addEventListener("storage", notify);
+  return () => window.removeEventListener("storage", notify);
+};
+const getThemeSnapshot = () => {
+  try {
+    return localStorage.getItem("portfolio-theme") === "night";
+  } catch {
+    return false;
+  }
+};
+const getServerThemeSnapshot = () => false;
 
 export default function Portfolio() {
   const { journey, submerged, dive } = useOceanScroll();
   const { navbar, activeSection } = useScrollNavigation(journey);
   const [paused, setPaused] = useState(true);
   const [sceneOnly, setSceneOnly] = useState(false);
-  const [night, setNight] = useState(false);
+  const isNightSaved = useSyncExternalStore(subscribeTheme, getThemeSnapshot, getServerThemeSnapshot);
+  const [nightOverride, setNightOverride] = useState(null);
+  const night = nightOverride ?? isNightSaved;
   const [panel, setPanel] = useState(null);
   const [hoverNav, setHoverNav] = useState(null);
   const [focusNav, setFocusNav] = useState(null);
@@ -33,13 +49,9 @@ export default function Portfolio() {
   };
   const dialog = useRef(null);
 
-  useEffect(() => {
-    try { setNight(localStorage.getItem("portfolio-theme") === "night"); }
-    catch { /* The theme still works when browser storage is unavailable. */ }
-  }, []);
   const toggleTheme = () => {
     const next = !night;
-    setNight(next);
+    setNightOverride(next);
     try { localStorage.setItem("portfolio-theme", next ? "night" : "day"); }
     catch { /* Saving a preference is optional. */ }
   };
@@ -106,7 +118,7 @@ export default function Portfolio() {
       <footer className="bottom-bar"><p>React · Python · MERN</p></footer>
     </div>
 
-    <div className="scene-controls"><button className="theme-toggle" onClick={toggleTheme} aria-label="Night mode" aria-pressed={night}>{night ? <Sun size={13} /> : <Moon size={13} />}<span>{night ? "Day scene" : "Night scene"}</span></button><span /><button onClick={() => setSceneOnly(!sceneOnly)} aria-pressed={sceneOnly}>{sceneOnly ? "Show portfolio" : "View scene only"}</button><span /> <button className="motion-button" aria-label={paused ? "Play animation" : "Pause animation"} onClick={() => setPaused(!paused)}>{paused ? <Play size={12} /> : <Pause size={12} />}</button></div>
+    <div className="scene-controls" style={{ opacity: submerged ? 0 : 1, pointerEvents: submerged ? "none" : "auto", transition: "opacity 0.4s" }}><button className="theme-toggle" onClick={toggleTheme} aria-label="Night mode" aria-pressed={night}>{night ? <Sun size={13} /> : <Moon size={13} />}<span>{night ? "Day scene" : "Night scene"}</span></button><span /><button onClick={() => setSceneOnly(!sceneOnly)} aria-pressed={sceneOnly}>{sceneOnly ? "Show portfolio" : "View scene only"}</button><span /> <button className="motion-button" aria-label={paused ? "Play animation" : "Pause animation"} onClick={() => setPaused(!paused)}>{paused ? <Play size={12} /> : <Pause size={12} />}</button></div>
 
     <dialog id="portfolio-panel" ref={dialog} className="info-panel" aria-labelledby="panel-title" onCancel={() => setPanel(null)} onClose={() => setPanel(null)} onClick={event => { if (event.target === event.currentTarget) setPanel(null); }}>
       <div className="panel-content"><button className="close-panel" aria-label="Close panel" onClick={() => setPanel(null)}><X size={23} strokeWidth={1.4} /></button>
@@ -123,5 +135,6 @@ export default function Portfolio() {
     <div id="ocean-depth" className="ocean-depth-target" aria-hidden="true" />
     </div>
     <PortfolioSections />
+    <DeepSeaFish submerged={submerged} paused={paused} />
   </main>;
 }

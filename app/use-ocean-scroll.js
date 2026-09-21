@@ -13,6 +13,7 @@ export default function useOceanScroll() {
     if (!element) return;
     const stage = element.querySelector(".wave-portfolio");
     const crest = element.querySelector(".ocean-crest");
+    if (!stage || !crest) return;
     const preference = window.matchMedia("(prefers-reduced-motion: reduce)");
     let frame = 0, previousSubmerged = false;
     let displayedProgress = null, lastFrameTime = 0;
@@ -71,6 +72,7 @@ export default function useOceanScroll() {
     const element = journey.current;
     if (!element) return;
     const stage = element.querySelector(".wave-portfolio");
+    if (!stage) return;
     const top = window.scrollY + element.getBoundingClientRect().top + element.offsetHeight - stage.clientHeight;
     window.scrollTo({ top, behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth" });
   };

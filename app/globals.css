@@ -171,7 +171,7 @@ p, h1, h2, h3 { margin: 0; }
 .ocean-journey {
   position: relative;
   height: 300svh;
-  background: #031326;
+  background: #01070c;
   --wave-y: 100vh;
   --water-surface: #499ab0;
   --water-darkness: 0;
@@ -182,12 +182,12 @@ p, h1, h2, h3 { margin: 0; }
 .ocean-journey > .wave-portfolio { position: sticky; top: 0; height: 100svh; min-height: 0; isolation: isolate; background: #226d86; }
 .ocean-journey .wave-scene { opacity: var(--scene-opacity); }
 .ocean-journey .portfolio-overlay { opacity: var(--surface-opacity); transition: none; }
-.ocean-journey .scene-controls { z-index: 6; }
+.ocean-journey .scene-controls { z-index: 6; opacity: var(--surface-opacity); pointer-events: auto; transition: opacity 0.3s; }
 .ocean-water { position: absolute; inset: 0; z-index: 4; pointer-events: none; opacity: var(--ocean-opacity); overflow: hidden; }
 .ocean-wave { position: absolute; top: 0; left: -2%; width: 104%; transform: translate3d(0, var(--wave-y), 0); filter: brightness(calc(1 - var(--water-darkness) * .88)) saturate(calc(1 + var(--water-darkness) * .2)) hue-rotate(calc(var(--water-darkness) * 12deg)); will-change: transform; }
 .ocean-crest { position: relative; height: auto; aspect-ratio: 2076 / 757; background: linear-gradient(to bottom, transparent 72%, var(--water-surface) 100%); }
 .ocean-crest img { display: block; width: 100%; height: 100%; object-fit: fill; mask-image: linear-gradient(to bottom, #000 0%, #000 72%, transparent 100%); -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 72%, transparent 100%); }
-.ocean-extension { position: relative; height: 160svh; margin-top: -1px; background: linear-gradient(to bottom, var(--water-surface), #226d86 55%, #07364e 100%); }
+.ocean-extension { position: relative; height: 160svh; margin-top: -1px; background: linear-gradient(to bottom, var(--water-surface), #226d86 40%, #07364e 65%, #031326 80%, #031326 100%); }
 .ocean-depth-target { position: absolute; bottom: 0; height: 100svh; width: 1px; pointer-events: none; }
 @media (prefers-reduced-motion: reduce) {
   .ocean-wave { transform: none; will-change: auto; }
@@ -195,7 +195,7 @@ p, h1, h2, h3 { margin: 0; }
 }
 
 /* Navigation is outside the fading hero and above every ocean layer. */
-.portfolio-page { position: relative; background: #031326; }
+.portfolio-page { position: relative; background: #01070c; }
 .portfolio-page > .top-nav.persistent-nav {
   position: fixed;
   inset: 26px auto auto 50%;
@@ -234,7 +234,12 @@ p, h1, h2, h3 { margin: 0; }
 .persistent-nav .nav-item.is-hovered { color: #fffaf0; }
 .persistent-nav .nav-item:focus-visible { outline-offset: -4px; }
 .theme-night .persistent-nav .nav-highlight::before { background: #24555c; }
-.ocean-content { position: relative; background: linear-gradient(180deg, #0b202b, #031326 65%); color: #e5f2f2; }
+.ocean-content {
+  position: relative;
+  background: linear-gradient(180deg, #01070c 0%, #01070c 240px, #020e18 45%, #031326 70%, #01070e 100%);
+  color: #e5f2f2;
+  margin-top: -2px;
+}
 .depth-section { min-height: 100svh; padding: 160px 7% 100px; }
 .depth-section-inner { width: min(100%, 1000px); margin-inline: auto; }
 .depth-eyebrow { font: 12px var(--font-mono); letter-spacing: .2em; color: #72ccd3; margin-bottom: 26px; }
@@ -291,17 +296,6 @@ p, h1, h2, h3 { margin: 0; }
   flex-wrap: wrap;
 }
 
-.hero-italic {
-  font-family: var(--font-serif);
-  font-style: italic;
-  font-weight: 300;
-  font-size: clamp(3.6rem, 7.2vw, 8rem);
-  line-height: 0.82;
-  color: var(--ink);
-  letter-spacing: -0.02em;
-  text-shadow: 0 2px 24px rgba(255, 245, 235, 0.7);
-  user-select: none;
-}
 
 .hero-title {
   display: flex;
@@ -406,46 +400,7 @@ p, h1, h2, h3 { margin: 0; }
   text-shadow: 0 1px 12px rgba(0, 0, 0, 0.7);
 }
 
-.theme-night .hero-italic,
 .theme-night .hero-title {
   color: #f1f6ff;
   text-shadow: 0 2px 28px rgba(0, 8, 24, 0.85);
-}
-
-@media (max-width: 800px) {
-  .intro {
-    top: max(150px, 27%);
-    left: 6%;
-    right: 6%;
-    gap: 12px;
-  }
-  .hero-headline-group {
-    flex-direction: column;
-    align-items: center;
-    gap: 6px;
-  }
-  .hero-italic {
-    font-size: clamp(2.8rem, 11vw, 4.4rem);
-    line-height: 0.88;
-  }
-  .hero-title {
-    font-size: clamp(1.125rem, 4.5vw, 2rem);
-    line-height: 1.4;
-  }
-}
-
-@media (max-height: 620px) {
-  .intro {
-    top: max(140px, 28%);
-    gap: 8px;
-  }
-  .hero-kicker {
-    display: none;
-  }
-  .hero-italic {
-    font-size: 2.8rem;
-  }
-  .hero-title {
-    font-size: clamp(1.125rem, 3.4vw, 2rem);
-  }
 }

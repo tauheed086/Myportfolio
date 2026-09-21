@@ -1,0 +1,322 @@
+/* ==========================================================================
+   Deep Sea 3D Fish & Ocean Atmosphere
+   Adapted from Michelle Barker's "Weird Fishes" creative code
+   ========================================================================== */
+
+.ocean-atmosphere {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+  opacity: 0;
+  transition: opacity 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+}
+
+.ocean-atmosphere.is-active {
+  opacity: 1;
+}
+
+
+/* --- 3D Fish Layer & Container --- */
+.fish-wrapper {
+  width: 100%;
+  height: 100vh;
+  position: absolute;
+  top: 0;
+  left: 0;
+  perspective: 100rem;
+  perspective-origin: center center;
+  transform-style: preserve-3d;
+  pointer-events: none;
+}
+
+.fish {
+  --bodyW: 2.2rem;
+  --o: 0.92;
+  --l: 85%;
+  --c: hsla(195, 65%, var(--l), var(--o));
+  --size: 11rem;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: var(--size);
+  height: var(--size);
+  transform-style: preserve-3d;
+  transform-origin: center center;
+  will-change: transform;
+}
+
+@media (min-width: 1000px) {
+  .fish {
+    --size: 15rem;
+    --bodyW: 3rem;
+  }
+}
+
+/* Skeleton Layer revealed in deepest zones */
+.fish__skeleton {
+  --clip: polygon(0 var(--bodyW), 45% 0, 55% 0, 100% var(--bodyW), 50% 100%);
+  position: absolute;
+  top: calc(var(--bodyW) / 4);
+  left: calc(var(--bodyW) * 0.75);
+  width: var(--bodyW);
+  height: calc(var(--bodyW) * 4);
+  background:
+    repeating-linear-gradient(0deg, var(--c), var(--c) 0.1rem, transparent 0, transparent 0.5rem),
+    linear-gradient(var(--c) var(--bodyW), transparent var(--bodyW)),
+    linear-gradient(90deg, transparent calc((var(--bodyW) / 2) - 0.1rem), var(--c) 0, var(--c) calc((var(--bodyW) / 2) + 0.1rem), transparent 0);
+  -webkit-clip-path: var(--clip);
+  clip-path: var(--clip);
+  opacity: 0;
+  transform: translate3d(0, 0, calc(var(--bodyW) / -2)) rotate(90deg);
+  transform-origin: center center;
+  filter: drop-shadow(0 0 6px rgba(130, 225, 255, 0.8));
+}
+
+.fish__inner {
+  --a: 9.5deg;
+  width: calc(var(--bodyW) * 1.5);
+  height: var(--size);
+  transform-style: preserve-3d;
+  transform: rotate(90deg);
+}
+
+/* Body facets */
+.fish__body {
+  --l: 75%;
+  --c: hsla(195, 60%, var(--l), var(--o));
+  position: absolute;
+  top: var(--bodyW);
+  left: 0;
+  width: var(--bodyW);
+  height: calc(3 * var(--bodyW));
+  background: var(--c);
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+  transform: translateZ(calc(var(--bodyW) / -2)) rotateX(var(--a));
+  transform-origin: center top;
+}
+
+.fish__body:nth-child(2) {
+  --l: 72%;
+  transform: translateZ(calc(var(--bodyW) / 2)) rotateX(calc(var(--a) * -1));
+}
+
+.fish__body:nth-child(3) {
+  --l: 92%;
+  transform: rotateY(90deg) translate3d(calc(var(--bodyW) / -2), 0, 0) rotateX(var(--a));
+  transform-origin: left top;
+}
+
+.fish__body:nth-child(4) {
+  --l: 52%;
+  transform: rotateY(90deg) translate3d(calc(var(--bodyW) / 2), 0, 0) rotateX(calc(var(--a) * -1));
+  transform-origin: right top;
+}
+
+/* Head facets */
+.fish__head {
+  --a: 23.5deg;
+  --l: 85%;
+  --c: hsla(195, 65%, var(--l), var(--o));
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: var(--bodyW);
+  height: var(--bodyW);
+  background: var(--c);
+  clip-path: polygon(40% 0, 60% 0, 100% 100%, 0 100%);
+  transform: translateZ(calc(var(--bodyW) / 2)) rotateX(var(--a));
+  transform-origin: center bottom;
+}
+
+.fish__head--2 {
+  --l: 78%;
+  transform: translateZ(calc(var(--bodyW) / -2)) rotateX(calc(var(--a) * -1));
+}
+
+.fish__head--3 {
+  --l: 90%;
+  transform: rotateY(90deg) translate3d(calc(var(--bodyW) / -2), 0, 0) rotateX(calc(var(--a) * -1));
+  transform-origin: left bottom;
+}
+
+.fish__head--4 {
+  --l: 55%;
+  transform: rotateY(90deg) translate3d(calc(var(--bodyW) / 2), 0, 0) rotateX(var(--a));
+  transform-origin: right bottom;
+}
+
+/* Tail */
+.fish__tail-main {
+  --o: 0.9;
+  --l: 88%;
+  --c: hsla(195, 60%, var(--l), var(--o));
+  width: var(--bodyW);
+  height: var(--bodyW);
+  background-color: var(--c);
+  position: absolute;
+  left: 0;
+  bottom: var(--bodyW);
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+}
+
+.fish__tail-fork {
+  --o: 0.92;
+  --l: 94%;
+  --c: hsla(195, 65%, var(--l), var(--o));
+  width: var(--bodyW);
+  height: var(--bodyW);
+  background-color: var(--c);
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  clip-path: polygon(0 0, 100% 0, 100% 70%, 90% 100%, 70% 70%, 50% 30%, 30% 70%, 10% 100%, 0 70%);
+  transform-origin: top center;
+  transform: rotateX(-45deg);
+  animation: tailWag 900ms cubic-bezier(0.45, 0, 0.55, 1) infinite alternate;
+}
+
+/* Fins */
+.fish__fin {
+  width: calc(var(--bodyW) / 8 * 3);
+  height: var(--bodyW);
+  background-color: hsla(195, 70%, 82%, 0.85);
+  position: absolute;
+  top: calc(var(--bodyW) * 1.5);
+  left: calc(var(--bodyW) / 8 * 3);
+  clip-path: polygon(50% 0, 100% 30%, 100% 60%, 50% 100%, 0 60%, 0 30%);
+  transform-origin: top center;
+  transform: translateZ(calc(var(--bodyW) / 2)) rotateY(0deg) rotateX(5deg) rotate(10deg);
+  animation: finFlutter 1400ms infinite alternate ease-in-out;
+}
+
+.fish__fin--2 {
+  transform: translateZ(calc(var(--bodyW) / -2)) rotateY(0deg) rotateX(-5deg) rotate(10deg);
+  animation: finFlutter2 1400ms infinite alternate ease-in-out;
+}
+
+@keyframes tailWag {
+  to {
+    transform: rotateX(45deg);
+  }
+}
+
+@keyframes finFlutter {
+  100% {
+    transform: translateZ(calc(var(--bodyW) / 2)) rotateY(12deg) rotateX(22deg) rotate(-10deg);
+  }
+}
+
+@keyframes finFlutter2 {
+  100% {
+    transform: translateZ(calc(var(--bodyW) / -2)) rotateY(-12deg) rotateX(-22deg) rotate(-10deg);
+  }
+}
+
+/* --- Bioluminescent Drifting Lights --- */
+.ocean-lights {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.ocean-lights__group {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.ocean-lights__light {
+  --size: 0.35rem;
+  width: var(--size);
+  height: var(--size);
+  position: absolute;
+  background: radial-gradient(circle, #fff 20%, rgba(130, 225, 255, 0.8) 60%, transparent 100%);
+  border-radius: 100%;
+  filter: blur(0.08rem);
+  box-shadow: 0 0 10px rgba(120, 220, 255, 0.7);
+  animation: bioBlink 2600ms var(--d, 0ms) infinite alternate ease-in-out;
+}
+
+.ocean-lights__light:nth-child(1) { top: 15%; left: 22%; --d: 0ms; }
+.ocean-lights__light:nth-child(2) { top: 38%; left: 14%; --d: 300ms; }
+.ocean-lights__light:nth-child(3) { top: 62%; left: 19%; --d: 550ms; }
+.ocean-lights__light:nth-child(4) { top: 22%; left: 68%; --d: 800ms; }
+.ocean-lights__light:nth-child(5) { top: 46%; left: 58%; --d: 1200ms; }
+.ocean-lights__light:nth-child(6) { top: 88%; left: 35%; --d: 450ms; }
+.ocean-lights__light:nth-child(7) { top: 80%; left: 88%; --d: 1100ms; }
+.ocean-lights__light:nth-child(8) { top: 65%; left: 78%; --d: 1500ms; }
+
+@keyframes bioBlink {
+  0% { opacity: 0.2; transform: scale(0.7) translateY(0); }
+  50% { opacity: 0.9; transform: scale(1.1) translateY(-6px); }
+  100% { opacity: 0.1; transform: scale(0.6) translateY(-12px); }
+}
+
+/* --- Rising Interactive Bubbles --- */
+.ocean-bubbles {
+  position: fixed;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 6;
+  transform-origin: center;
+  will-change: transform;
+}
+
+.ocean-bubbles__inner {
+  position: relative;
+  width: 8rem;
+  height: 8rem;
+}
+
+.ocean-bubbles__bubble {
+  --c: rgba(220, 245, 255, 0.6);
+  --size: 2.2rem;
+  position: absolute;
+  width: var(--size);
+  height: var(--size);
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.85), transparent 45%),
+              radial-gradient(transparent 30%, var(--c)),
+              radial-gradient(circle at 100% 0%, transparent 30%, var(--c));
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: inset 0 0 6px rgba(255, 255, 255, 0.6), 0 0 8px rgba(130, 220, 255, 0.3);
+  transform-origin: center;
+  transform: scale(0);
+  opacity: 0;
+}
+
+.ocean-bubbles__bubble:nth-child(1) {
+  top: 0;
+  left: 0;
+}
+
+.ocean-bubbles__bubble:nth-child(2) {
+  --size: 1.6rem;
+  top: 2rem;
+  left: 1.8rem;
+}
+
+.ocean-bubbles__bubble:nth-child(3) {
+  --size: 1.1rem;
+  top: 4.5rem;
+  left: 0.5rem;
+}
+
+.ocean-bubbles__bubble:nth-child(4) {
+  --size: 2rem;
+  top: 1rem;
+  left: 3rem;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .fish__tail-fork,
+  .fish__fin,
+  .fish__fin--2,
+  .ocean-lights__light {
+    animation: none !important;
+  }
+}
