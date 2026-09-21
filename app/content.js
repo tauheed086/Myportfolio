@@ -1,14 +1,18 @@
 // Edit this file to personalize your portfolio. No layout changes needed.
 export const profile = {
-  name: "Your Name",
-  logo: "", // e.g. /logo.png (put the file in public/)
-  wordmark: "yourname.dev",
-  role: "Full-stack developer",
+  name: "Tauheed Mulla",
+  logo: "/logo.ico",
+  wordmark: "tauheed.dev",
+  role: "Full-Stack Developer",
+  heroKicker: "FULL-STACK DEVELOPMENT AND DIGITAL EXPERIENCES FOR THE MODERN WEB",
+  heroTitle: [
+    "while(alive): build(); learn(); repeat();",
+  ],
   intro: "I connect thoughtful interfaces with powerful backends. Building for the web with React, Python, and a healthy dose of curiosity.",
   about: "I enjoy the whole picture: the interface you interact with, the logic behind it, and all the small details that make an application feel right.",
-  aboutMore: "My toolkit centers on React and Python, with the MERN stack in the mix. I like turning complex problems into simple, useful experiences — and learning something new along the way.",
-  email: "", // e.g. hello@yourdomain.com
-  github: "", // full URL
+  aboutMore: "My toolkit centers on React, JavaScript, and Python, with the MERN stack in the mix. I like turning complex problems into simple, useful experiences — and learning something new along the way.",
+  email: "tauheed.m@seamlessautomations.com",
+  github: "https://github.com/tauheed086",
   linkedin: "", // full URL
   resume: "", // e.g. /resume.pdf (put the file in public/)
 };
