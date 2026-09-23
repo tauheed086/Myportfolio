@@ -239,19 +239,69 @@
   animation: bioBlink 2600ms var(--d, 0ms) infinite alternate ease-in-out;
 }
 
-.ocean-lights__light:nth-child(1) { top: 15%; left: 22%; --d: 0ms; }
-.ocean-lights__light:nth-child(2) { top: 38%; left: 14%; --d: 300ms; }
-.ocean-lights__light:nth-child(3) { top: 62%; left: 19%; --d: 550ms; }
-.ocean-lights__light:nth-child(4) { top: 22%; left: 68%; --d: 800ms; }
-.ocean-lights__light:nth-child(5) { top: 46%; left: 58%; --d: 1200ms; }
-.ocean-lights__light:nth-child(6) { top: 88%; left: 35%; --d: 450ms; }
-.ocean-lights__light:nth-child(7) { top: 80%; left: 88%; --d: 1100ms; }
-.ocean-lights__light:nth-child(8) { top: 65%; left: 78%; --d: 1500ms; }
+.ocean-lights__light:nth-child(1) {
+  top: 15%;
+  left: 22%;
+  --d: 0ms;
+}
+
+.ocean-lights__light:nth-child(2) {
+  top: 38%;
+  left: 14%;
+  --d: 300ms;
+}
+
+.ocean-lights__light:nth-child(3) {
+  top: 62%;
+  left: 19%;
+  --d: 550ms;
+}
+
+.ocean-lights__light:nth-child(4) {
+  top: 22%;
+  left: 68%;
+  --d: 800ms;
+}
+
+.ocean-lights__light:nth-child(5) {
+  top: 46%;
+  left: 58%;
+  --d: 1200ms;
+}
+
+.ocean-lights__light:nth-child(6) {
+  top: 88%;
+  left: 35%;
+  --d: 450ms;
+}
+
+.ocean-lights__light:nth-child(7) {
+  top: 80%;
+  left: 88%;
+  --d: 1100ms;
+}
+
+.ocean-lights__light:nth-child(8) {
+  top: 65%;
+  left: 78%;
+  --d: 1500ms;
+}
 
 @keyframes bioBlink {
-  0% { opacity: 0.2; transform: scale(0.7) translateY(0); }
-  50% { opacity: 0.9; transform: scale(1.1) translateY(-6px); }
-  100% { opacity: 0.1; transform: scale(0.6) translateY(-12px); }
+  0% {
+    opacity: 0.2;
+    transform: scale(0.7) translateY(0);
+  }
+
+  50% {
+    opacity: 0.9;
+    transform: scale(1.1) translateY(-6px);
+  }
+
+  100% {
+    opacity: 0.1;
+    transform: scale(0.6) translateY(-12px);
+  }
 }
 
 /* --- Rising Interactive Bubbles --- */
@@ -279,8 +329,8 @@
   height: var(--size);
   border-radius: 50%;
   background: radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.85), transparent 45%),
-              radial-gradient(transparent 30%, var(--c)),
-              radial-gradient(circle at 100% 0%, transparent 30%, var(--c));
+    radial-gradient(transparent 30%, var(--c)),
+    radial-gradient(circle at 100% 0%, transparent 30%, var(--c));
   border: 1px solid rgba(255, 255, 255, 0.4);
   box-shadow: inset 0 0 6px rgba(255, 255, 255, 0.6), 0 0 8px rgba(130, 220, 255, 0.3);
   transform-origin: center;
@@ -313,6 +363,7 @@
 
 /* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
+
   .fish__tail-fork,
   .fish__fin,
   .fish__fin--2,

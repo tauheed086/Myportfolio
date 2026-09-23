@@ -1,0 +1,144 @@
+/* ==========================================================================
+   Submerged Hero Narration (Alternating Left to Right)
+   Active only after waves cover the entire display
+   ========================================================================== */
+
+.submerged-narrative-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+  overflow: hidden;
+}
+
+.submerged-beat {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  will-change: transform, opacity;
+  width: min(580px, calc(100vw - 48px));
+  pointer-events: none;
+}
+
+/* Left-aligned beats */
+.submerged-beat--left {
+  left: clamp(24px, 7vw, 120px);
+  align-items: flex-start;
+  text-align: left;
+}
+
+/* Right-aligned beats */
+.submerged-beat--right {
+  right: clamp(24px, 7vw, 120px);
+  align-items: flex-end;
+  text-align: right;
+}
+
+/* Center-aligned bridge beat */
+.submerged-beat--center {
+  left: 50%;
+  transform: translate(-50%, -50%);
+  align-items: center;
+  text-align: center;
+  width: min(720px, calc(100vw - 48px));
+}
+
+.submerged-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font: 500 11px/1 var(--font-mono, monospace);
+  letter-spacing: 0.25em;
+  color: #6ed3df;
+  text-transform: uppercase;
+  margin-bottom: 18px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(8, 32, 48, 0.65);
+  border: 1px solid rgba(110, 211, 223, 0.28);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 0 16px rgba(110, 211, 223, 0.15);
+}
+
+.submerged-eyebrow span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #6ed3df;
+  box-shadow: 0 0 8px #6ed3df;
+}
+
+.submerged-title {
+  font-family: var(--font-serif), 'Cormorant Garamond', Georgia, serif;
+  font-size: clamp(34px, 4.8vw, 68px);
+  font-weight: 400;
+  line-height: 1.12;
+  letter-spacing: -0.025em;
+  margin: 0 0 16px;
+  color: #ffffff;
+  text-wrap: balance;
+  background: linear-gradient(180deg, #ffffff 20%, #bce6f2 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 2px 20px rgba(0, 0, 0, 0.6));
+}
+
+.submerged-title--accent {
+  background: linear-gradient(135deg, #ffffff 15%, #b2eaf2 60%, #6ed3df 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 25px rgba(110, 211, 223, 0.35));
+}
+
+.submerged-desc {
+  font-size: clamp(15px, 1.5vw, 19px);
+  line-height: 1.65;
+  color: #a4cbe0;
+  font-weight: 300;
+  margin: 0;
+  text-wrap: pretty;
+  max-width: 500px;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+}
+
+.submerged-badge-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.submerged-beat--right .submerged-badge-row {
+  justify-content: flex-end;
+}
+
+.submerged-badge {
+  padding: 6px 14px;
+  border-radius: 8px;
+  background: rgba(10, 36, 56, 0.55);
+  border: 1px solid rgba(110, 211, 223, 0.2);
+  font-size: 12px;
+  color: #c9e8f4;
+  font-family: var(--font-mono, monospace);
+  letter-spacing: 0.05em;
+  backdrop-filter: blur(8px);
+}
+
+@media (max-width: 600px) {
+  .submerged-beat--left,
+  .submerged-beat--right {
+    left: 20px;
+    right: 20px;
+    width: calc(100vw - 40px);
+    align-items: flex-start;
+    text-align: left;
+  }
+  .submerged-beat--right .submerged-badge-row {
+    justify-content: flex-start;
+  }
+}

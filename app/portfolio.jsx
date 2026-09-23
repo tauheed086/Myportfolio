@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
-import { ArrowDown, Moon, Sun, Pause, Play, X } from "lucide-react";
+import { ArrowDown, Moon, Sun, Pause, Play, X, FileText } from "lucide-react";
 import WaveScene from "./wave-scene";
 import useOceanScroll from "./use-ocean-scroll";
 import useScrollNavigation from "./use-scroll-navigation";
 import PortfolioSections from "./portfolio-sections";
 import DeepSeaFish from "./deep-sea-fish";
+import SubmergedNarrative from "./submerged-narrative";
+import ResumeDrawer from "./resume-drawer";
 import { profile } from "./content";
 
 const navigation = [{ id: "about", label: "About" }, { id: "projects", label: "My Work" }, { id: "contact", label: "Contact Me" }];
@@ -25,7 +27,7 @@ const getThemeSnapshot = () => {
 const getServerThemeSnapshot = () => false;
 
 export default function Portfolio() {
-  const { journey, submerged, dive } = useOceanScroll();
+  const { journey, submerged, dive, waveProgressRef } = useOceanScroll();
   const { navbar, activeSection } = useScrollNavigation(journey);
   const [paused, setPaused] = useState(true);
   const [sceneOnly, setSceneOnly] = useState(false);
@@ -33,6 +35,7 @@ export default function Portfolio() {
   const [nightOverride, setNightOverride] = useState(null);
   const night = nightOverride ?? isNightSaved;
   const [panel, setPanel] = useState(null);
+  const [resumeDrawerOpen, setResumeDrawerOpen] = useState(false);
   const [hoverNav, setHoverNav] = useState(null);
   const [focusNav, setFocusNav] = useState(null);
   const openPanel = (next) => {
@@ -48,6 +51,7 @@ export default function Portfolio() {
     else document.getElementById(id)?.scrollIntoView({ behavior, block: "start" });
   };
   const dialog = useRef(null);
+  const foregroundCanvasRef = useRef(null);
 
   const toggleTheme = () => {
     const next = !night;
@@ -69,72 +73,105 @@ export default function Portfolio() {
   }, [panel]);
 
   return <main className={`portfolio-page ${night ? "theme-night" : "theme-day"}`}>
-      <header className="top-nav persistent-nav" ref={navbar}>
-        <a className="wordmark" href="#home" aria-label={`${profile.name}, home`} onClick={event => scrollToSection(event, "home")}>
-          <span className="logo-slot" aria-hidden="true">{profile.logo ? <img src={profile.logo} alt="" /> : <span>Logo</span>}</span>
-          <span className="nav-name">{profile.name}</span>
-        </a>
-        <nav className="nav-links" aria-label="Main navigation" onMouseLeave={() => setHoverNav(null)}>
-          <span className="nav-highlight" aria-hidden="true" style={{ transform: `translateX(${Math.max(0, highlight) * 100}%)`, opacity: highlight < 0 ? 0 : 1 }} />
-          {navigation.map((item, index) => <a key={item.id}
-            href={item.id === "contact" ? "#portfolio-panel" : `#${item.id}`}
-            className={`${highlight === index ? "nav-item is-highlighted" : "nav-item"}${hoverNav === index ? " is-hovered" : ""}`}
-            aria-label={item.label} aria-current={activeId === item.id && item.id !== "contact" ? "location" : undefined}
-            aria-haspopup={item.id === "contact" ? "dialog" : undefined}
-            aria-expanded={item.id === "contact" ? panel === "contact" : undefined}
-            aria-controls={item.id === "contact" ? "portfolio-panel" : item.id}
-            onMouseEnter={() => setHoverNav(index)} onFocus={event => setFocusNav(event.currentTarget.matches(":focus-visible") ? index : null)} onBlur={() => setFocusNav(null)}
-            onClick={event => { if (item.id === "contact") { event.preventDefault(); openPanel("contact"); } else scrollToSection(event, item.id); }}>
-            <span className="nav-text-window" aria-hidden="true"><span className="nav-text-roll"><span>{item.label}</span><span>{item.label}</span></span></span>
-          </a>)}
-        </nav>
-        <div className="nav-socials" role="group" aria-label="Social media">
-          {([{ name: "GitHub", icon: "github", url: profile.github }, { name: "LinkedIn", icon: "linkedin", url: profile.linkedin }]).map(social => social.url
-            ? <a className="social-icon" key={social.icon} href={social.url} target="_blank" rel="noreferrer" aria-label={social.name} title={social.name}><span className={`brand-icon brand-${social.icon}`} aria-hidden="true" /></a>
-            : <button className="social-icon" key={social.icon} disabled aria-label={`${social.name} — coming soon`} title={`${social.name} — coming soon`}><span className={`brand-icon brand-${social.icon}`} aria-hidden="true" /></button>)}
-        </div>
-      </header>
+    <header className="top-nav persistent-nav" ref={navbar}>
+      <a className="wordmark" href="#home" aria-label={`${profile.name}, home`} onClick={event => scrollToSection(event, "home")}>
+        <span className="logo-slot" aria-hidden="true">{profile.logo ? <img src={profile.logo} alt="" /> : <span>Logo</span>}</span>
+        <span className="nav-name">{profile.name}</span>
+      </a>
+      <nav className="nav-links" aria-label="Main navigation" onMouseLeave={() => setHoverNav(null)}>
+        <span className="nav-highlight" aria-hidden="true" style={{ transform: `translateX(${Math.max(0, highlight) * 100}%)`, opacity: highlight < 0 ? 0 : 1 }} />
+        {navigation.map((item, index) => <a key={item.id}
+          href={item.id === "contact" ? "#portfolio-panel" : `#${item.id}`}
+          className={`${highlight === index ? "nav-item is-highlighted" : "nav-item"}${hoverNav === index ? " is-hovered" : ""}`}
+          aria-label={item.label} aria-current={activeId === item.id && item.id !== "contact" ? "location" : undefined}
+          aria-haspopup={item.id === "contact" ? "dialog" : undefined}
+          aria-expanded={item.id === "contact" ? panel === "contact" : undefined}
+          aria-controls={item.id === "contact" ? "portfolio-panel" : item.id}
+          onMouseEnter={() => setHoverNav(index)} onFocus={event => setFocusNav(event.currentTarget.matches(":focus-visible") ? index : null)} onBlur={() => setFocusNav(null)}
+          onClick={event => { if (item.id === "contact") { event.preventDefault(); openPanel("contact"); } else scrollToSection(event, item.id); }}>
+          <span className="nav-text-window" aria-hidden="true"><span className="nav-text-roll"><span>{item.label}</span><span>{item.label}</span></span></span>
+        </a>)}
+      </nav>
+      <div className="nav-socials" role="group" aria-label="Social media and credentials">
+        <button
+          type="button"
+          className="nav-resume-btn"
+          onClick={() => setResumeDrawerOpen(true)}
+          aria-label="Open résumé drawer"
+          aria-haspopup="dialog"
+          aria-expanded={resumeDrawerOpen}
+        >
+          <FileText size={14} className="nav-resume-icon" aria-hidden="true" />
+          <span>Resumé</span>
+        </button>
+        {([{ name: "GitHub", icon: "github", url: profile.github }, { name: "LinkedIn", icon: "linkedin", url: profile.linkedin }]).map(social => social.url
+          ? <a className="social-icon" key={social.icon} href={social.url} target="_blank" rel="noreferrer" aria-label={social.name} title={social.name}><span className={`brand-icon brand-${social.icon}`} aria-hidden="true" /></a>
+          : <button className="social-icon" key={social.icon} disabled aria-label={`${social.name} — coming soon`} title={`${social.name} — coming soon`}><span className={`brand-icon brand-${social.icon}`} aria-hidden="true" /></button>)}
+      </div>
+    </header>
     <div className="ocean-journey" id="home" ref={journey}>
-    <div className={`wave-portfolio ${sceneOnly ? "scene-only" : ""} ${night ? "theme-night" : "theme-day"}`}>
-    <WaveScene paused={paused || panel !== null || submerged} night={night} />
-    <div className="portfolio-overlay" inert={sceneOnly || submerged}>
-      <section className="intro" aria-label="Introduction">
-        <p className="hero-kicker">{profile.heroKicker}</p>
-        <div className="hero-headline-group">
-          <h1 className="hero-title">
-            {profile.heroTitle?.map((line, idx) => (
-              <span key={idx} className="hero-title-line">{line.split(/(\(alive\))/).map((part, partIndex) => part === "(alive)" ? <span className="hero-code-accent" key={partIndex}>{part}</span> : part)}</span>
-            ))}
-          </h1>
+      <div className={`wave-portfolio ${sceneOnly ? "scene-only" : ""} ${night ? "theme-night" : "theme-day"}`}>
+        <WaveScene paused={paused || panel !== null || submerged} night={night} waveProgressRef={waveProgressRef} foregroundCanvasRef={foregroundCanvasRef} />
+        <div className="portfolio-overlay" inert={sceneOnly || submerged}>
+          <section className="intro hero-brand-section" aria-label="Personal Introduction">
+            <div className="hero-brand-card">
+              <div className="hero-status-pill">
+                <span className="hero-status-dot" aria-hidden="true" />
+                <span>Open to Work</span>
+              </div>
+
+              <h1 className="hero-name-title">
+                <span className="hero-name-text">{profile.name}</span>
+              </h1>
+
+              <div className="hero-role-block">
+                <p className="hero-role-main">
+                  Software Developer
+                </p>
+                <p className="hero-role-sub">
+                  Engineering high-resilience <span className="hero-highlight">Enterprise Automation</span> and reactive <span className="hero-highlight">Modern Web</span> architectures.
+                </p>
+              </div>
+
+              <div className="hero-brand-tags" aria-label="Core Competencies">
+                <span className="hero-brand-pill">Windows Telemetry</span>
+                <span className="hero-brand-pill">Python Engines</span>
+                <span className="hero-brand-pill"> Full-Stack</span>
+                <span className="hero-brand-pill">Perforce Engineering</span>
+              </div>
+
+              <div className="hero-brand-actions">
+                <a className="hero-dive-cta" href="#ocean-depth" onClick={dive} style={{ animationPlayState: paused ? "paused" : "running" }}>
+                  <span>Explore Narrative &amp; Work</span>
+                  <ArrowDown className="hero-dive-icon" size={18} strokeWidth={2} aria-hidden="true" />
+                </a>
+              </div>
+            </div>
+          </section>
+
+          <footer className="bottom-bar"><p>Made with 💙 by {profile.name}</p></footer>
         </div>
-        <div className="hero-actions">
-          <a className="dive-link" href="#ocean-depth" onClick={dive} style={{ animationPlayState: paused ? "paused" : "running" }}>
-            <span>Let’s Dive In</span>
-            <ArrowDown className="dive-arrow" size={28} strokeWidth={1.5} aria-hidden="true" />
-          </a>
+        <canvas ref={foregroundCanvasRef} className="wave-scene-foreground" aria-hidden="true" />
+
+        <div className="scene-controls" style={{ opacity: "var(--controls-opacity, 1)", pointerEvents: "var(--controls-pointer, auto)", transition: "opacity 0.2s ease-out" }}><button className="theme-toggle" onClick={toggleTheme} aria-label="Night mode" aria-pressed={night}>{night ? <Sun size={13} /> : <Moon size={13} />}<span>{night ? "Day scene" : "Night scene"}</span></button><span /><button onClick={() => setSceneOnly(!sceneOnly)} aria-pressed={sceneOnly}>{sceneOnly ? "Show portfolio" : "View scene only"}</button><span /> <button className="motion-button" aria-label={paused ? "Play animation" : "Pause animation"} onClick={() => setPaused(!paused)}>{paused ? <Play size={12} /> : <Pause size={12} />}</button></div>
+
+        <dialog id="portfolio-panel" ref={dialog} className="info-panel" aria-labelledby="panel-title" onCancel={() => setPanel(null)} onClose={() => setPanel(null)} onClick={event => { if (event.target === event.currentTarget) setPanel(null); }}>
+          <div className="panel-content"><button className="close-panel" aria-label="Close panel" onClick={() => setPanel(null)}><X size={23} strokeWidth={1.4} /></button>
+            {panel === "contact" && <><p className="panel-label">LET’S CONNECT</p><h2 id="panel-title">Something in mind?</h2><p className="panel-intro">A project, a collaboration, or a good conversation. Every great thing starts with hello.</p>{profile.email ? <a className="contact-email" href={`mailto:${profile.email}`}>{profile.email} ↗</a> : <p className="contact-placeholder">Your email goes here.<small>Contact details will be added later.</small></p>}</>}
+          </div>
+        </dialog>
+        <div className="ocean-water" aria-hidden="true">
+          <div className="ocean-wave">
+            <div className="ocean-crest"><img src="/ocean-wave-hd.png" alt="" width="2076" height="757" decoding="async" /></div>
+            <div className="ocean-extension" />
+          </div>
         </div>
-      </section>
-
-      <footer className="bottom-bar"><p>React · Python · MERN</p></footer>
-    </div>
-
-    <div className="scene-controls" style={{ opacity: submerged ? 0 : 1, pointerEvents: submerged ? "none" : "auto", transition: "opacity 0.4s" }}><button className="theme-toggle" onClick={toggleTheme} aria-label="Night mode" aria-pressed={night}>{night ? <Sun size={13} /> : <Moon size={13} />}<span>{night ? "Day scene" : "Night scene"}</span></button><span /><button onClick={() => setSceneOnly(!sceneOnly)} aria-pressed={sceneOnly}>{sceneOnly ? "Show portfolio" : "View scene only"}</button><span /> <button className="motion-button" aria-label={paused ? "Play animation" : "Pause animation"} onClick={() => setPaused(!paused)}>{paused ? <Play size={12} /> : <Pause size={12} />}</button></div>
-
-    <dialog id="portfolio-panel" ref={dialog} className="info-panel" aria-labelledby="panel-title" onCancel={() => setPanel(null)} onClose={() => setPanel(null)} onClick={event => { if (event.target === event.currentTarget) setPanel(null); }}>
-      <div className="panel-content"><button className="close-panel" aria-label="Close panel" onClick={() => setPanel(null)}><X size={23} strokeWidth={1.4} /></button>
-        {panel === "contact" && <><p className="panel-label">LET’S CONNECT</p><h2 id="panel-title">Something in mind?</h2><p className="panel-intro">A project, a collaboration, or a good conversation. Every great thing starts with hello.</p>{profile.email ? <a className="contact-email" href={`mailto:${profile.email}`}>{profile.email} ↗</a> : <p className="contact-placeholder">Your email goes here.<small>Contact details will be added later.</small></p>}</>}
+        <SubmergedNarrative />
       </div>
-    </dialog>
-    <div className="ocean-water" aria-hidden="true">
-      <div className="ocean-wave">
-        <div className="ocean-crest"><img src="/ocean-wave-hd.png" alt="" width="2076" height="757" decoding="async" /></div>
-        <div className="ocean-extension" />
-      </div>
-    </div>
-    </div>
-    <div id="ocean-depth" className="ocean-depth-target" aria-hidden="true" />
+      <div id="ocean-depth" className="ocean-depth-target" aria-hidden="true" />
     </div>
     <PortfolioSections />
     <DeepSeaFish submerged={submerged} paused={paused} />
+    <ResumeDrawer isOpen={resumeDrawerOpen} onClose={() => setResumeDrawerOpen(false)} night={night} />
   </main>;
 }

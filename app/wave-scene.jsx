@@ -3,19 +3,23 @@
 import { useEffect, useRef, useState } from "react";
 
 // Water, the boat, and birds share one clock, including pause/reduced motion.
-export default function WaveScene({ paused, night = false }) {
+export default function WaveScene({ paused, night = false, waveProgressRef, foregroundCanvasRef }) {
   const host = useRef(null);
   const pausedRef = useRef(paused);
   const nightRef = useRef(night);
+  const waveProgressRefProp = useRef(waveProgressRef);
+  const foregroundCanvasRefProp = useRef(foregroundCanvasRef);
   const [ready, setReady] = useState(false);
   useEffect(() => { pausedRef.current = paused; }, [paused]);
   useEffect(() => { nightRef.current = night; }, [night]);
+  useEffect(() => { waveProgressRefProp.current = waveProgressRef; }, [waveProgressRef]);
+  useEffect(() => { foregroundCanvasRefProp.current = foregroundCanvasRef; }, [foregroundCanvasRef]);
 
   useEffect(() => {
     const container = host.current;
     if (!container) return;
     let disposed = false;
-    let cleanup = () => {};
+    let cleanup = () => { };
     async function setup() {
       if (!container) return;
       const THREE = await import("three");
@@ -42,6 +46,7 @@ export default function WaveScene({ paused, night = false }) {
         nightMix: { value: nightRef.current ? 1 : 0 },
         travel: { value: new THREE.Vector3().setScalar(nightRef.current ? 1.45 : 0) },
         ripples: { value: ripples },
+        foregroundBird: { value: -1 },
       };
       const material = new THREE.ShaderMaterial({
         uniforms,
@@ -49,7 +54,7 @@ export default function WaveScene({ paused, night = false }) {
           void main() { vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }`,
         fragmentShader: `
           uniform sampler2D painting;
-          uniform float time, aspect, viewportHeight, boatEnergy, nightMix;
+          uniform float time, aspect, viewportHeight, boatEnergy, nightMix, foregroundBird;
           uniform vec3 travel;
           uniform vec2 crop, boat;
           uniform vec4 ripples[8];
@@ -91,8 +96,6 @@ export default function WaveScene({ paused, night = false }) {
             return result;
           }
           vec2 chasePath(float t) {
-            // A looping figure eight above the painted sun, in image coordinates.
-            // The same trail at a short delay makes the second bird pursue the first.
             float phase = t * 0.85 + sin(t * 0.55) * 0.22;
             return vec2(
               0.505 + sin(phase) * 0.095 + sin(phase * 3.0) * 0.008,
@@ -177,6 +180,7 @@ export default function WaveScene({ paused, night = false }) {
               color = mix(color, vec3(0.16, 0.18, 0.23), boatSilhouette(reflected) * broken * 0.22);
             }
             for (int i = 0; i < 2; i++) {
+              if (float(i) == foregroundBird) continue;
               float index = float(i);
               float delay = 0.62 + sin(time * 0.48) * 0.20;
               float flightTime = time - index * delay;
@@ -216,7 +220,11 @@ export default function WaveScene({ paused, night = false }) {
       const startEntry = () => {
         const time = uniforms.time.value;
         const cropX = uniforms.crop.value.x;
-        const boatX = THREE.MathUtils.clamp((0.265 + Math.sin(time * 0.045) * 0.015 - 0.5) / cropX + 0.5, 0.12, 0.40);
+        const progressData = waveProgressRefProp.current?.current;
+        const fillProgress = typeof progressData === "number" ? progressData : (progressData?.progress ?? 0);
+        const baseStartX = THREE.MathUtils.clamp((0.265 + Math.sin(time * 0.045) * 0.015 - 0.5) / cropX + 0.5, 0.12, 0.38);
+        const targetEndX = THREE.MathUtils.clamp((0.88 - 0.5) / cropX + 0.5, 0.65, 0.94);
+        const boatX = THREE.MathUtils.lerp(baseStartX, targetEndX, fillProgress);
         const birdOffset = (index) => {
           const t = time - index * (0.62 + Math.sin(time * 0.48) * 0.20);
           const phase = t * 0.85 + Math.sin(t * 0.55) * 0.22;
@@ -255,13 +263,170 @@ export default function WaveScene({ paused, night = false }) {
         }
       };
       const positionBoat = () => {
-        const imageX = 0.265 + Math.sin(uniforms.time.value * 0.045) * 0.015;
+        const time = uniforms.time.value;
+        const imageX = 0.265 + Math.sin(time * 0.045) * 0.015;
         const crop = uniforms.crop.value;
+
+        // Wave fill progress (0 = initial left position, 1 = right side near edge)
+        const progressData = waveProgressRefProp.current?.current;
+        const fillProgress = typeof progressData === "number" ? progressData : (progressData?.progress ?? 0);
+
+        // Progress-bar logic: as screen fills with waves, ship moves toward right side
+        const baseStartX = THREE.MathUtils.clamp((imageX - 0.5) / crop.x + 0.5, 0.12, 0.38);
+        const targetEndX = THREE.MathUtils.clamp((0.88 - 0.5) / crop.x + 0.5, 0.65, 0.94);
+        const boatX = THREE.MathUtils.lerp(baseStartX, targetEndX, fillProgress);
+
+        // Subtle lift with the wave swell as it sails
+        const swellLift = fillProgress * 0.010;
+        const boatY = (0.322 - 0.5) / crop.y + 0.5 + swellLift;
+
         uniforms.boat.value.set(
-          THREE.MathUtils.clamp((imageX - 0.5) / crop.x + 0.5, 0.12, 0.40) + uniforms.travel.value.x,
-          (0.322 - 0.5) / crop.y + 0.5,
+          boatX + uniforms.travel.value.x,
+          boatY,
         );
       };
+      const drawForegroundBird = (ctx, width, height) => {
+        const time = uniforms.time.value;
+        const crop = uniforms.crop.value;
+        const aspect = uniforms.aspect.value;
+        const viewportHeight = uniforms.viewportHeight.value;
+        const nightMix = uniforms.nightMix.value;
+        const travel = uniforms.travel.value;
+
+        // Determine which bird is in foreground vs background based on 3D orbit depth (z = cos(phase))
+        const phase0 = time * 0.85 + Math.sin(time * 0.55) * 0.22;
+        const delay = 0.62 + Math.sin(time * 0.48) * 0.20;
+        const flightTime1 = time - delay;
+        const phase1 = flightTime1 * 0.85 + Math.sin(flightTime1 * 0.55) * 0.22;
+
+        const z0 = Math.cos(phase0);
+        const z1 = Math.cos(phase1);
+
+        // The closer bird (higher z in orbit) glides above the text; the other glides beneath the text.
+        // As they circle the sun, this naturally and smoothly alternates ("vice versa").
+        const fgIndex = z0 >= z1 ? 0 : 1;
+        uniforms.foregroundBird.value = fgIndex;
+
+        const flightTime = fgIndex === 0 ? time : flightTime1;
+        const phase = fgIndex === 0 ? phase0 : phase1;
+
+        // Exact original chasePath
+        const imageX = 0.505 + Math.sin(phase) * 0.095 + Math.sin(phase * 3.0) * 0.008;
+        const imageY = 0.425 + Math.sin(phase * 2.0) * 0.049 + Math.cos(phase) * 0.015;
+
+        let centerX = (imageX - 0.5) / crop.x + 0.5;
+        let centerY = (imageY - 0.5) / crop.y + 0.5;
+
+        const birdTravel = fgIndex === 0 ? travel.y : travel.z;
+        centerX += birdTravel * (1.12 + fgIndex * 0.07);
+        centerY += Math.sin(Math.min(Math.abs(birdTravel), 1.0) * Math.PI) * 0.035;
+
+        // Skip if bird has flown far off screen (e.g. at night)
+        if (centerX < -0.3 || centerX > 1.3 || centerY < -0.3 || centerY > 1.3) return;
+
+        // Velocity for banking/tilt
+        const chasePathAt = (t) => {
+          const ph = t * 0.85 + Math.sin(t * 0.55) * 0.22;
+          return {
+            x: 0.505 + Math.sin(ph) * 0.095 + Math.sin(ph * 3.0) * 0.008,
+            y: 0.425 + Math.sin(ph * 2.0) * 0.049 + Math.cos(ph) * 0.015,
+          };
+        };
+
+        const pPlus = chasePathAt(flightTime + 0.04);
+        const pMinus = chasePathAt(flightTime - 0.04);
+        const velX = ((pPlus.x - pMinus.x) / crop.x) * aspect;
+        const velY = (pPlus.y - pMinus.y) / crop.y;
+
+        let size = Math.max(7.0, Math.min(15.0, viewportHeight * 0.016)) / viewportHeight;
+        size *= (1.0 - fgIndex * 0.10) * (0.90 + Math.sin(flightTime * 0.85) * 0.12);
+
+        const tilt = Math.max(-0.85, Math.min(0.85, Math.atan2(velY, Math.abs(velX) + 0.0001)))
+          * Math.sign(velX) * 0.65;
+
+        // Wing flap dynamics
+        const flutter = Math.sin(time * 3.8 + fgIndex * 1.9);
+        const glideSin = Math.sin(time * 0.55 + fgIndex * 1.9);
+        const glideT = Math.max(0, Math.min(1, (glideSin - (-0.25)) / (0.65 - (-0.25))));
+        const glide = glideT * glideT * (3 - 2 * glideT);
+        const lift = flutter * 0.45 * (1 - glide) + 0.32 * glide;
+
+        const leftElbow = { x: -0.43, y: 0.13 + lift * 0.45 };
+        const rightElbow = { x: 0.43, y: 0.17 + lift * 0.45 };
+        const leftTip = { x: -0.94, y: 0.12 + lift };
+        const rightTip = { x: 0.90, y: 0.22 + lift };
+
+        const screenX = centerX * width;
+        const screenY = (1.0 - centerY) * height;
+        const birdPixelSize = size * height;
+
+        ctx.save();
+        ctx.translate(screenX, screenY);
+        ctx.rotate(-tilt);
+        ctx.scale(birdPixelSize, -birdPixelSize);
+
+        // Soft drop shadow creates authentic 3D elevation over text
+        ctx.shadowColor = nightMix > 0.5 ? "rgba(0, 5, 15, 0.5)" : "rgba(10, 20, 30, 0.35)";
+        ctx.shadowBlur = 5;
+        ctx.shadowOffsetX = 1;
+        ctx.shadowOffsetY = 3;
+
+        const r = Math.round((0.10 * (1 - nightMix) + 0.012 * nightMix) * 255);
+        const g = Math.round((0.13 * (1 - nightMix) + 0.020 * nightMix) * 255);
+        const b = Math.round((0.15 * (1 - nightMix) + 0.037 * nightMix) * 255);
+        const birdColor = `rgba(${r}, ${g}, ${b}, 0.95)`;
+
+        ctx.fillStyle = birdColor;
+        ctx.strokeStyle = birdColor;
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+
+        // Body ellipse
+        ctx.beginPath();
+        ctx.ellipse(0.0, -0.10, 0.10, 0.14, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Left wing
+        ctx.beginPath();
+        ctx.lineWidth = 0.18;
+        ctx.moveTo(0.0, -0.12);
+        ctx.lineTo(leftElbow.x, leftElbow.y);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.lineWidth = 0.10;
+        ctx.moveTo(leftElbow.x, leftElbow.y);
+        ctx.lineTo(leftElbow.x * 0.5 + leftTip.x * 0.5, leftElbow.y * 0.5 + leftTip.y * 0.5);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.lineWidth = 0.04;
+        ctx.moveTo(leftElbow.x * 0.5 + leftTip.x * 0.5, leftElbow.y * 0.5 + leftTip.y * 0.5);
+        ctx.lineTo(leftTip.x, leftTip.y);
+        ctx.stroke();
+
+        // Right wing
+        ctx.beginPath();
+        ctx.lineWidth = 0.18;
+        ctx.moveTo(0.0, -0.12);
+        ctx.lineTo(rightElbow.x, rightElbow.y);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.lineWidth = 0.10;
+        ctx.moveTo(rightElbow.x, rightElbow.y);
+        ctx.lineTo(rightElbow.x * 0.5 + rightTip.x * 0.5, rightElbow.y * 0.5 + rightTip.y * 0.5);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.lineWidth = 0.04;
+        ctx.moveTo(rightElbow.x * 0.5 + rightTip.x * 0.5, rightElbow.y * 0.5 + rightTip.y * 0.5);
+        ctx.lineTo(rightTip.x, rightTip.y);
+        ctx.stroke();
+
+        ctx.restore();
+      };
+
       const resize = () => {
         const width = container.clientWidth, height = Math.max(1, container.clientHeight);
         renderer.setSize(width, height);
@@ -271,6 +436,15 @@ export default function WaveScene({ paused, night = false }) {
         // Cover the viewport; preserve the original painting's proportions.
         uniforms.crop.value.set(Math.min(1, aspect / 1.5), Math.min(1, 1.5 / aspect));
         positionBoat();
+
+        const fgCanvas = foregroundCanvasRefProp.current?.current;
+        if (fgCanvas) {
+          const dpr = Math.min(window.devicePixelRatio || 1, 2);
+          fgCanvas.width = width * dpr;
+          fgCanvas.height = height * dpr;
+          fgCanvas.style.width = `${width}px`;
+          fgCanvas.style.height = `${height}px`;
+        }
         dirty = true;
       };
       const observer = new ResizeObserver(resize);
@@ -300,6 +474,7 @@ export default function WaveScene({ paused, night = false }) {
       window.addEventListener("pointermove", onPointer, { passive: true });
       window.addEventListener("pointerdown", onPointer, { passive: true });
       const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+      let lastProgress = 0;
       const render = (now) => {
         if (disposed) return;
         frame = requestAnimationFrame(render);
@@ -308,7 +483,23 @@ export default function WaveScene({ paused, night = false }) {
         const targetTheme = nightRef.current ? 1 : 0;
         const themeChanging = uniforms.nightMix.value !== targetTheme;
         const traveling = travelPhase === "leaving" || travelPhase === "entering" || nightRef.current !== lastNight;
-        if (document.hidden || (pausedRef.current && !dirty && !themeChanging && !traveling)) return;
+
+        const progressData = waveProgressRefProp.current?.current;
+        const fillProgress = typeof progressData === "number" ? progressData : (progressData?.progress ?? 0);
+        const velocity = progressData?.velocity ?? 0;
+
+        // Dynamic energy surge: kicks up wake foam, rocking, and bobbing during scroll
+        if (velocity > 0.0005) {
+          uniforms.boatEnergy.value = Math.min(1.0, uniforms.boatEnergy.value + velocity * 14.0);
+        }
+
+        const progressChanging = Math.abs(fillProgress - lastProgress) > 0.0002;
+        if (progressChanging) {
+          dirty = true;
+          lastProgress = fillProgress;
+        }
+
+        if (document.hidden || (pausedRef.current && !dirty && !themeChanging && !traveling && !progressChanging)) return;
         updateTravel(delta, reducedMotion.matches);
         if (themeChanging) {
           const step = reducedMotion.matches ? 1 : delta / 1.4;
@@ -321,6 +512,24 @@ export default function WaveScene({ paused, night = false }) {
         }
         positionBoat();
         dirty = false;
+
+        const fgCanvas = foregroundCanvasRefProp.current?.current;
+        if (fgCanvas) {
+          const width = container.clientWidth;
+          const height = Math.max(1, container.clientHeight);
+          const dpr = Math.min(window.devicePixelRatio || 1, 2);
+          const ctx = fgCanvas.getContext("2d");
+          if (ctx) {
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            ctx.clearRect(0, 0, width, height);
+            drawForegroundBird(ctx, width, height);
+          } else {
+            uniforms.foregroundBird.value = -1;
+          }
+        } else {
+          uniforms.foregroundBird.value = -1;
+        }
+
         renderer.render(scene, camera);
       };
       cleanup = () => {
@@ -330,6 +539,11 @@ export default function WaveScene({ paused, night = false }) {
         window.removeEventListener("pointerdown", onPointer);
         geometry.dispose(); material.dispose(); texture.dispose(); renderer.dispose();
         renderer.domElement.remove();
+        const fgCanvas = foregroundCanvasRefProp.current?.current;
+        if (fgCanvas) {
+          const ctx = fgCanvas.getContext("2d");
+          ctx?.clearRect(0, 0, fgCanvas.width, fgCanvas.height);
+        }
       };
       render(performance.now());
       setReady(true);

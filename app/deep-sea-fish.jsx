@@ -10,6 +10,7 @@ export default function DeepSeaFish({ paused = false }) {
   const containerRef = useRef(null);
   const fishRef = useRef(null);
   const bubblesRef = useRef(null);
+  const refBubblesRef = useRef(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -19,7 +20,8 @@ export default function DeepSeaFish({ paused = false }) {
     const container = containerRef.current;
     const fish = fishRef.current;
     const bubblesEl = bubblesRef.current;
-    if (!container || !fish || !bubblesEl) return;
+    const refBubblesEl = refBubblesRef.current;
+    if (!container || !fish || !bubblesEl || !refBubblesEl) return;
 
     // Responsive path scaling based on viewport dimensions
     const getScaledPath = () => {
@@ -52,37 +54,159 @@ export default function DeepSeaFish({ paused = false }) {
       }));
     };
 
-    // Bubble animation timeline
-    const bubbleBubbles = bubblesEl.querySelectorAll(".ocean-bubbles__bubble");
-    const bubbleTl = gsap.timeline({ paused: true });
-    bubbleTl.set(bubbleBubbles, { y: 40, scale: 0, opacity: 0 });
-    bubbleTl.to(bubbleBubbles, {
-      scale: 1.15,
-      y: -240,
-      opacity: 0.95,
+    let bubbleIndex = 0;
+    let isFishVisible = false;
+    let lastBubbleProgress = 0;
+    let lastBubbleTime = 0;
+    let lastClusterTime = 0;
+    let lastDirection = 1;
+
+    // Interactive cursor bubble throttling
+    let lastMouseX = -999;
+    let lastMouseY = -999;
+    let lastMouseTime = 0;
+
+    const bubbleElements = bubblesEl.querySelectorAll(".ocean-bubbles__bubble");
+    const refBubbleElements = refBubblesEl.querySelectorAll(".bubbles__bubble");
+
+    // Timeline for the reference 3-bubble cluster (from Michelle Barker's ref.html / ref.js)
+    const refBubblesTl = gsap.timeline({ paused: true });
+    refBubblesTl.set(refBubbleElements, {
+      y: 60,
+      scale: 0,
+      opacity: 0
+    });
+    refBubblesTl.to(refBubbleElements, {
+      scale: 1.2,
+      y: -220,
+      opacity: 0.9,
       duration: 1.8,
-      stagger: 0.14,
+      stagger: 0.18,
       ease: "power1.out"
     });
-    bubbleTl.to(
-      bubbleBubbles,
+    refBubblesTl.to(
+      refBubbleElements,
       {
-        scale: 0.8,
+        scale: 1,
         opacity: 0,
         duration: 0.8,
-        ease: "power2.in"
+        ease: "power1.in"
       },
       "-=0.7"
     );
 
-    const emitBubbles = () => {
-      if (!fish) return;
+    const triggerReferenceBubbles = () => {
+      if (!fish || !refBubblesEl) return;
       const rect = fish.getBoundingClientRect();
-      gsap.set(bubblesEl, {
-        x: rect.left + rect.width * 0.5,
-        y: rect.top + rect.height * 0.35
+      if (rect.width === 0 || rect.height === 0) return;
+      const offsetX = lastDirection === -1 ? rect.width * 0.1 : rect.width * 0.7;
+      const offsetY = rect.height * 0.25;
+      gsap.set(refBubblesEl, {
+        x: rect.left + offsetX,
+        y: rect.top + offsetY
       });
-      bubbleTl.restart();
+      refBubblesTl.restart();
+    };
+
+    // Single swimming bubble emitter (calm, balanced, natural trail)
+    const spawnSwimBubble = (count = 1) => {
+      if (!fish || !bubbleElements.length) return;
+      const rect = fish.getBoundingClientRect();
+      if (rect.width === 0 || rect.height === 0) return;
+
+      const centerX = rect.left + rect.width * 0.5;
+      const centerY = rect.top + rect.height * 0.5;
+
+      const spawnX = lastDirection === -1
+        ? centerX - rect.width * 0.32
+        : centerX + rect.width * 0.32;
+      const spawnY = centerY + gsap.utils.random(-6, 6);
+
+      for (let i = 0; i < count; i++) {
+        const bubble = bubbleElements[bubbleIndex % bubbleElements.length];
+        bubbleIndex++;
+
+        const size = gsap.utils.random(16, 30);
+        const driftX = gsap.utils.random(-25, 25) + (lastDirection === -1 ? 18 : -18);
+        const riseY = gsap.utils.random(160, 260);
+        const duration = gsap.utils.random(1.6, 2.4);
+
+        gsap.killTweensOf(bubble);
+        gsap.set(bubble, {
+          x: spawnX + gsap.utils.random(-4, 4),
+          y: spawnY + gsap.utils.random(-4, 4),
+          width: `${size}px`,
+          height: `${size}px`,
+          scale: 0.25,
+          opacity: gsap.utils.random(0.75, 0.92)
+        });
+
+        gsap.to(bubble, {
+          y: spawnY - riseY,
+          x: spawnX + driftX,
+          scale: gsap.utils.random(1.05, 1.3),
+          opacity: 0,
+          duration: duration,
+          ease: "power1.out",
+          overwrite: "auto"
+        });
+      }
+    };
+
+    // Interactive cursor bubble emitter (delicate, tactile trail on pointer movement)
+    const spawnCursorBubble = (x, y) => {
+      if (!bubbleElements.length) return;
+      const bubble = bubbleElements[bubbleIndex % bubbleElements.length];
+      bubbleIndex++;
+
+      const size = gsap.utils.random(10, 20);
+      const driftX = gsap.utils.random(-16, 16);
+      const riseY = gsap.utils.random(90, 160);
+      const duration = gsap.utils.random(1.2, 1.8);
+
+      gsap.killTweensOf(bubble);
+      gsap.set(bubble, {
+        x: x + gsap.utils.random(-3, 3),
+        y: y + gsap.utils.random(-3, 3),
+        width: `${size}px`,
+        height: `${size}px`,
+        scale: 0.2,
+        opacity: gsap.utils.random(0.65, 0.88)
+      });
+
+      gsap.to(bubble, {
+        y: y - riseY,
+        x: x + driftX,
+        scale: gsap.utils.random(1.0, 1.2),
+        opacity: 0,
+        duration: duration,
+        ease: "power1.out",
+        overwrite: "auto"
+      });
+    };
+
+    const handlePointerMove = (e) => {
+      // Spawn cursor bubbles once entering underwater depths
+      if (window.scrollY < 80) return;
+
+      const now = performance.now();
+      const dist = Math.hypot(e.clientX - lastMouseX, e.clientY - lastMouseY);
+
+      // Require moving at least 36px and 140ms between bubbles for a subtle, aesthetic trail
+      if (dist > 36 && now - lastMouseTime > 140) {
+        lastMouseX = e.clientX;
+        lastMouseY = e.clientY;
+        lastMouseTime = now;
+        spawnCursorBubble(e.clientX, e.clientY);
+      }
+    };
+
+    window.addEventListener("pointermove", handlePointerMove, { passive: true });
+
+    const setVisible = (visible) => {
+      isFishVisible = visible;
+      gsap.to(container, { opacity: visible ? 1 : 0, duration: 0.5, overwrite: "auto" });
+      gsap.to(fish, { opacity: visible ? 1 : 0, duration: 0.5, overwrite: "auto" });
     };
 
     // Elements for skeletal x-ray reveal
@@ -90,37 +214,83 @@ export default function DeepSeaFish({ paused = false }) {
     const skeleton = fish.querySelector(".fish__skeleton");
     const inner = fish.querySelector(".fish__inner");
 
-    // Fade in fish and container only when arriving at the #about section
+    // Fade in fish and bubbles right as the wave submerges the screen (~10% of .ocean-journey)
     const visibilityTrigger = ScrollTrigger.create({
-      trigger: "#about",
-      start: "top 45%",
+      trigger: ".ocean-journey",
+      start: "10% top",
       endTrigger: ".ocean-content",
       end: "bottom bottom",
       onEnter: () => {
-        gsap.to(container, { opacity: 1, duration: 0.8, overwrite: "auto" });
-        gsap.to(fish, { opacity: 1, duration: 0.8, overwrite: "auto" });
-        emitBubbles();
+        setVisible(true);
+        triggerReferenceBubbles();
+        spawnSwimBubble(2);
+      },
+      onEnterBack: () => {
+        setVisible(true);
+        triggerReferenceBubbles();
+        spawnSwimBubble(2);
+      },
+      onLeave: () => {
+        setVisible(false);
       },
       onLeaveBack: () => {
-        gsap.to(container, { opacity: 0, duration: 0.4, overwrite: "auto" });
-        gsap.to(fish, { opacity: 0, duration: 0.4, overwrite: "auto" });
+        setVisible(false);
       }
     });
 
-    // Main scroll-driven swimming timeline - starts from #about section
+    // Immediate sync on load if already scrolled past start
+    if (visibilityTrigger.isActive) {
+      setVisible(true);
+    }
+
+    // Gentle, periodic breathing bubble while resting (every 4.5 seconds)
+    const breathInterval = setInterval(() => {
+      if ((isFishVisible || (swimTl.scrollTrigger && swimTl.scrollTrigger.isActive)) && !paused) {
+        spawnSwimBubble(1);
+      }
+    }, 4500);
+
+    // Main scroll-driven swimming timeline - begins right as wave submerges the screen
     const swimTl = gsap.timeline({
       scrollTrigger: {
-        trigger: "#about",
-        start: "top 45%",
+        trigger: ".ocean-journey",
+        start: "10% top",
         endTrigger: ".ocean-content",
         end: "bottom bottom",
-        scrub: 1.6,
+        scrub: 0.5,
         onUpdate: (self) => {
-          // Dynamic horizontal flip when scrolling upwards vs downwards
-          if (self.direction === -1) {
-            gsap.to(fish, { rotationY: 180, duration: 0.4, overwrite: "auto" });
-          } else {
-            gsap.to(fish, { rotationY: 0, duration: 0.4, overwrite: "auto" });
+          // Dynamic horizontal flip ONLY when direction actually changes
+          if (self.direction !== lastDirection) {
+            lastDirection = self.direction;
+            gsap.to(fish, {
+              rotationY: self.direction === -1 ? 180 : 0,
+              duration: 0.4,
+              overwrite: "auto"
+            });
+          }
+
+          // Ensure visibility is active
+          if (self.isActive && !isFishVisible) {
+            setVisible(true);
+          }
+
+          // Stream bubbles moderately as the fish swims through the water
+          if (isFishVisible || self.isActive) {
+            const now = performance.now();
+            const deltaProgress = Math.abs(self.progress - lastBubbleProgress);
+
+            // Spaced-out, calm emission: 1 bubble every significant swim increment
+            if (deltaProgress > 0.02 || (deltaProgress > 0.004 && now - lastBubbleTime > 420)) {
+              lastBubbleProgress = self.progress;
+              lastBubbleTime = now;
+              spawnSwimBubble(1);
+
+              // Sparse reference cluster on sustained swim (8s cooldown)
+              if (now - lastClusterTime > 8000) {
+                lastClusterTime = now;
+                triggerReferenceBubbles();
+              }
+            }
           }
         }
       }
@@ -156,15 +326,34 @@ export default function DeepSeaFish({ paused = false }) {
       }
     }
 
-    // Section trigger for bubbles at the projects section
+    // Section triggers for bubbles at About and Projects sections
+    const aboutSection = document.getElementById("about");
+    let aboutTrigger = null;
+    if (aboutSection) {
+      aboutTrigger = ScrollTrigger.create({
+        trigger: aboutSection,
+        start: "top 70%",
+        onEnter: () => {
+          triggerReferenceBubbles();
+        },
+        onEnterBack: () => {
+          triggerReferenceBubbles();
+        }
+      });
+    }
+
     const projectsSection = document.getElementById("projects");
     let projectsTrigger = null;
     if (projectsSection) {
       projectsTrigger = ScrollTrigger.create({
         trigger: projectsSection,
-        start: "top 60%",
-        onEnter: () => emitBubbles(),
-        onEnterBack: () => emitBubbles()
+        start: "top 70%",
+        onEnter: () => {
+          triggerReferenceBubbles();
+        },
+        onEnterBack: () => {
+          triggerReferenceBubbles();
+        }
       });
     }
 
@@ -174,14 +363,17 @@ export default function DeepSeaFish({ paused = false }) {
     window.addEventListener("resize", handleResize);
 
     return () => {
+      clearInterval(breathInterval);
       window.removeEventListener("resize", handleResize);
+      window.removeEventListener("pointermove", handlePointerMove);
       visibilityTrigger.kill();
+      if (aboutTrigger) aboutTrigger.kill();
       if (projectsTrigger) projectsTrigger.kill();
       if (swimTl.scrollTrigger) swimTl.scrollTrigger.kill();
       swimTl.kill();
-      bubbleTl.kill();
+      refBubblesTl.kill();
     };
-  }, []);
+  }, [paused]);
 
   return (
     <div
@@ -235,14 +427,20 @@ export default function DeepSeaFish({ paused = false }) {
         </div>
       </div>
 
-      {/* Dynamic Bubble Emitter */}
-      <div ref={bubblesRef} className="ocean-bubbles">
-        <div className="ocean-bubbles__inner">
-          <div className="ocean-bubbles__bubble" />
-          <div className="ocean-bubbles__bubble" />
-          <div className="ocean-bubbles__bubble" />
-          <div className="ocean-bubbles__bubble" />
+      {/* Reference Bubble Cluster (exact from Michelle Barker's ref.html / ref.css) */}
+      <div ref={refBubblesRef} className="bubbles" aria-hidden="true">
+        <div className="bubbles__inner">
+          <div className="bubbles__bubble" />
+          <div className="bubbles__bubble" />
+          <div className="bubbles__bubble" />
         </div>
+      </div>
+
+      {/* Continuous Dynamic Swimming & Cursor Bubble Stream */}
+      <div ref={bubblesRef} className="ocean-bubbles" aria-hidden="true">
+        {Array.from({ length: 30 }).map((_, i) => (
+          <div key={i} className="ocean-bubbles__bubble" />
+        ))}
       </div>
     </div>
   );
