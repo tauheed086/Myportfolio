@@ -12,13 +12,14 @@ export default function useOceanScroll() {
   useEffect(() => {
     const element = journey.current;
     if (!element) return;
+    const wave = element.querySelector(".ocean-wave");
     const stage = element.querySelector(".wave-portfolio");
     const crest = element.querySelector(".ocean-crest");
     const extension = element.querySelector(".ocean-extension");
     if (!stage || !crest) return;
     const preference = window.matchMedia("(prefers-reduced-motion: reduce)");
-    let frame = 0, previousSubmerged = false;
-    let displayedProgress = null, lastFrameTime = 0;
+    let frame = 0, previousSubmerged = false, surfaceFolded = false;
+    let displayedProgress = null;
     let stageHeight = 1, crestHeight = 1, extensionHeight = 1, distance = 1, elementTop = 0;
     const measure = () => {
       stageHeight = stage.clientHeight;
@@ -27,14 +28,10 @@ export default function useOceanScroll() {
       distance = Math.max(1, element.offsetHeight - stageHeight);
       elementTop = element.getBoundingClientRect().top + window.scrollY;
     };
-    const update = (now = performance.now()) => {
+    const update = () => {
       frame = 0;
       const target = clamp((window.scrollY - elementTop) / distance);
-      const delta = Math.min(Math.max(now - lastFrameTime, 0), 64);
-      lastFrameTime = now;
-      if (displayedProgress === null || preference.matches) displayedProgress = target;
-      else displayedProgress += (target - displayedProgress) * (1 - Math.exp(-delta / 12));
-      if (Math.abs(target - displayedProgress) < 0.0002) displayedProgress = target;
+      displayedProgress = target;
       const progress = displayedProgress;
 
       // 1. Boat sail progress before/during wave swell
@@ -54,28 +51,41 @@ export default function useOceanScroll() {
       const extraDepth = Math.max(0, extensionHeight - stageHeight - 16);
       const waveY = stageHeight - surgeRise * (stageHeight + crestHeight) - diveDescent * extraDepth;
 
-      const controlsOpacity = 1 - ease(clamp(progress / 0.05));
-      const heroFold = ease(clamp(progress / 0.14));
-      element.style.setProperty("--wave-y", `${waveY}px`);
-      element.style.setProperty("--controls-opacity", String(controlsOpacity));
-      element.style.setProperty("--controls-pointer", controlsOpacity > 0.05 ? "auto" : "none");
-      element.style.setProperty("--hero-fold", String(heroFold));
-      element.style.setProperty("--hero-fold-rotate", `${heroFold * 36}deg`);
-      element.style.setProperty("--hero-fold-y", `${heroFold * -45}px`);
-      element.style.setProperty("--hero-fold-scale", String(1 - heroFold * 0.12));
-      element.style.setProperty("--hero-fold-opacity", String(Math.max(0, 1 - heroFold * 1.35)));
-      element.style.setProperty("--hero-fold-pointer", heroFold > 0.6 ? "none" : "auto");
-      element.style.setProperty("--water-darkness", String(diveProgress));
-      element.style.setProperty("--depth-progress", String(diveProgress));
-      element.style.setProperty("--surface-opacity", String(1 - ease(clamp(progress / 0.12))));
-      element.style.setProperty("--scene-opacity", String(1 - ease(clamp((progress - 0.03) / 0.22))));
-      element.style.setProperty("--ocean-opacity", preference.matches ? String(ease(clamp(progress / 0.2))) : "1");
+      if (wave) {
+        wave.style.transform = `translate3d(0, ${Math.round(waveY * 10) / 10}px, 0)`;
+      }
+
+      // Only calculate and set surface hero properties while surface is actually visible (progress <= 0.24)
+      if (progress <= 0.24) {
+        surfaceFolded = false;
+        const controlsOpacity = 1 - ease(clamp(progress / 0.05));
+        const heroFold = ease(clamp(progress / 0.14));
+        element.style.setProperty("--controls-opacity", String(controlsOpacity));
+        element.style.setProperty("--controls-pointer", controlsOpacity > 0.05 ? "auto" : "none");
+        element.style.setProperty("--hero-fold", String(heroFold));
+        element.style.setProperty("--hero-fold-rotate", `${heroFold * 36}deg`);
+        element.style.setProperty("--hero-fold-y", `${heroFold * -45}px`);
+        element.style.setProperty("--hero-fold-scale", String(1 - heroFold * 0.12));
+        element.style.setProperty("--hero-fold-opacity", String(Math.max(0, 1 - heroFold * 1.35)));
+        element.style.setProperty("--hero-fold-pointer", heroFold > 0.6 ? "none" : "auto");
+        element.style.setProperty("--surface-opacity", String(1 - ease(clamp(progress / 0.12))));
+        element.style.setProperty("--scene-opacity", String(1 - ease(clamp((progress - 0.03) / 0.22))));
+        element.style.setProperty("--ocean-opacity", preference.matches ? String(ease(clamp(progress / 0.2))) : "1");
+      } else if (!surfaceFolded) {
+        surfaceFolded = true;
+        element.style.setProperty("--controls-opacity", "0");
+        element.style.setProperty("--controls-pointer", "none");
+        element.style.setProperty("--hero-fold-opacity", "0");
+        element.style.setProperty("--hero-fold-pointer", "none");
+        element.style.setProperty("--surface-opacity", "0");
+        element.style.setProperty("--scene-opacity", "0");
+      }
+
       const nextSubmerged = progress >= 0.10;
       if (nextSubmerged !== previousSubmerged) {
         previousSubmerged = nextSubmerged;
         setSubmerged(nextSubmerged);
       }
-      if (displayedProgress !== target) frame = requestAnimationFrame(update);
     };
     const schedule = () => { if (!frame) frame = requestAnimationFrame(update); };
     const resize = () => { measure(); schedule(); };
@@ -117,6 +127,11 @@ export default function useOceanScroll() {
     const startY = window.scrollY;
     const distance = targetY - startY;
     if (Math.abs(distance) < 2) return;
+
+    if (window.__lenis) {
+      window.__lenis.scrollTo(targetY, { duration: 1.5 });
+      return;
+    }
 
     // Slow, cinematic 1.6s glide for a calm, organic ocean dive
     const duration = 1600;

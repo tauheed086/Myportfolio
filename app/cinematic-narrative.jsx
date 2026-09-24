@@ -204,7 +204,7 @@ export default function CinematicNarrative() {
             04 // THE HORIZON
           </div>
           <p className="narrative-quote">
-            “From low-level OS deployment to interactive 3D web experiences. Curiosity, then code.”
+            “From low-level OS deployment to interactive 3D web experiences. while(alive): learn(); code(); build(); repeat();”
           </p>
           <div className="narrative-cta-row">
             <a href="#projects" onClick={scrollToProjects} className="narrative-action-link">

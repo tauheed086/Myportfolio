@@ -1,5 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600&family=IBM+Plex+Mono:wght@400;500&display=swap');
 @import "tailwindcss";
+@import "lenis/dist/lenis.css";
 
 :root {
   color-scheme: light;
@@ -923,8 +924,8 @@ h3 {
 /* Scroll-driven ocean entry. The crest and its water extension share one layer. */
 .ocean-journey {
   position: relative;
-  height: 350svh;
-  background: #020e14;
+  height: 330svh;
+  background: #051f28;
   --wave-y: 100vh;
   --water-surface: #499ab0;
   --water-darkness: 0;
@@ -984,7 +985,7 @@ h3 {
   top: 0;
   left: -2%;
   width: 104%;
-  transform: translate3d(0, var(--wave-y), 0);
+  transform: translate3d(0, var(--wave-y, 100vh), 0);
   will-change: transform;
 }
 
@@ -1034,9 +1035,10 @@ h3 {
     #0e414c 40%,
     #0a333d 52%,
     #07272f 65%,
-    #051d24 78%,
-    #04151a 90%,
-    #020e14 100%
+    #051f28 78%,
+    #041a23 88%,
+    #03141c 95%,
+    #051f28 100%
   );
 }
 
@@ -1143,14 +1145,37 @@ h3 {
 
 .ocean-content {
   position: relative;
-  background: linear-gradient(180deg, #020e14 0%, #020e14 240px, #010b10 45%, #01080d 70%, #010609 100%);
+  background: linear-gradient(
+    180deg,
+    #051f28 0%,
+    #041a23 180px,
+    #03141c 400px,
+    #020e14 700px,
+    #01090e 100%
+  );
   color: #e5f2f2;
   margin-top: -2px;
+}
+
+.ocean-content::before {
+  content: "";
+  position: absolute;
+  top: -80px;
+  left: 0;
+  right: 0;
+  height: 100px;
+  background: linear-gradient(to bottom, transparent 0%, rgba(5, 31, 40, 0.45) 45%, #051f28 100%);
+  pointer-events: none;
+  z-index: 1;
 }
 
 .depth-section {
   min-height: 100svh;
   padding: 160px 7% 100px;
+}
+
+#about.depth-section {
+  padding-top: 24px;
 }
 
 .depth-section-inner {
@@ -1242,6 +1267,10 @@ h3 {
 
   .depth-section {
     padding: 180px 6% 80px;
+  }
+
+  #about.depth-section {
+    padding-top: 36px;
   }
 
   .depth-projects article {

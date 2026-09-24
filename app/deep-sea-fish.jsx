@@ -257,14 +257,14 @@ export default function DeepSeaFish({ paused = false }) {
         start: "10% top",
         endTrigger: ".ocean-content",
         end: "bottom bottom",
-        scrub: 0.5,
+        scrub: true,
         onUpdate: (self) => {
-          // Dynamic horizontal flip ONLY when direction actually changes
-          if (self.direction !== lastDirection) {
+          // Dynamic horizontal flip ONLY when direction actually changes with intentional velocity
+          if (self.direction !== lastDirection && Math.abs(self.getVelocity()) > 20) {
             lastDirection = self.direction;
             gsap.to(fish, {
               rotationY: self.direction === -1 ? 180 : 0,
-              duration: 0.4,
+              duration: 0.35,
               overwrite: "auto"
             });
           }
@@ -279,8 +279,8 @@ export default function DeepSeaFish({ paused = false }) {
             const now = performance.now();
             const deltaProgress = Math.abs(self.progress - lastBubbleProgress);
 
-            // Spaced-out, calm emission: 1 bubble every significant swim increment
-            if (deltaProgress > 0.02 || (deltaProgress > 0.004 && now - lastBubbleTime > 420)) {
+            // Spaced-out, calm emission
+            if (deltaProgress > 0.05 && now - lastBubbleTime > 550) {
               lastBubbleProgress = self.progress;
               lastBubbleTime = now;
               spawnSwimBubble(1);

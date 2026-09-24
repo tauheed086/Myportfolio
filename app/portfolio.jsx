@@ -2,6 +2,9 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { ArrowDown, Moon, Sun, Pause, Play, X, FileText } from "lucide-react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import Lenis from "lenis";
 import WaveScene from "./wave-scene";
 import useOceanScroll from "./use-ocean-scroll";
 import useScrollNavigation from "./use-scroll-navigation";
@@ -43,12 +46,27 @@ export default function Portfolio() {
   };
   const activeId = panel === "contact" ? "contact" : activeSection;
   const highlight = hoverNav ?? focusNav ?? navigation.findIndex(item => item.id === activeId);
+  const lenisRef = useRef(null);
+
   const scrollToSection = (event, id) => {
     event.preventDefault();
     setPanel(null);
-    const behavior = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth";
-    if (id === "home") window.scrollTo({ top: 0, behavior });
-    else document.getElementById(id)?.scrollIntoView({ behavior, block: "start" });
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      if (id === "home") window.scrollTo({ top: 0, behavior: "instant" });
+      else document.getElementById(id)?.scrollIntoView({ behavior: "instant", block: "start" });
+      return;
+    }
+    if (lenisRef.current) {
+      if (id === "home") {
+        lenisRef.current.scrollTo(0, { duration: 1.2 });
+      } else {
+        const target = document.getElementById(id);
+        if (target) lenisRef.current.scrollTo(target, { duration: 1.2 });
+      }
+    } else {
+      if (id === "home") window.scrollTo({ top: 0, behavior: "smooth" });
+      else document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
   };
   const dialog = useRef(null);
   const foregroundCanvasRef = useRef(null);
@@ -59,6 +77,43 @@ export default function Portfolio() {
     try { localStorage.setItem("portfolio-theme", next ? "night" : "day"); }
     catch { /* Saving a preference is optional. */ }
   };
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    gsap.registerPlugin(ScrollTrigger);
+
+    const lenis = new Lenis({
+      duration: 1.15,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      orientation: "vertical",
+      gestureOrientation: "vertical",
+      smoothWheel: true,
+      wheelMultiplier: 1.0,
+      touchMultiplier: 1.5,
+    });
+    lenisRef.current = lenis;
+    window.__lenis = lenis;
+
+    // Direct synchronization between Lenis and GSAP ScrollTrigger
+    lenis.on("scroll", ScrollTrigger.update);
+
+    const updateTicker = (time) => {
+      lenis.raf(time * 1000);
+    };
+
+    gsap.ticker.add(updateTicker);
+    // Disable GSAP lagSmoothing so animations do not drag or fall behind scroll input
+    gsap.ticker.lagSmoothing(0);
+
+    return () => {
+      gsap.ticker.remove(updateTicker);
+      lenis.destroy();
+      lenisRef.current = null;
+      delete window.__lenis;
+    };
+  }, []);
 
   useEffect(() => {
     const preference = window.matchMedia("(prefers-reduced-motion: reduce)");

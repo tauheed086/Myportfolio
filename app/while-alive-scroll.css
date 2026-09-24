@@ -1,0 +1,204 @@
+/* ==========================================================================
+   while(alive): learn(); code(); build(); repeat();
+   Scroll-Driven Kinetic Animation Effect (Reference: Jhey Tompkins - MYgaaem)
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap');
+
+:root {
+  --start: 0;
+  --end: 360;
+  --lightness: 75%;
+  --base-chroma: 0.3;
+}
+
+.while-alive-stage {
+  position: relative;
+  width: 100%;
+  padding-top: 30vh;
+  padding-bottom: 30vh;
+  margin-block: 20px;
+}
+
+.while-alive-container {
+  --font-size-min: 16;
+  --font-size-max: 22;
+  --font-ratio-min: 1.1;
+  --font-ratio-max: 1.33;
+  --font-width-min: 375;
+  --font-width-max: 1500;
+  --font-level: 6;
+
+  /* Jhey's exact fluid typography formula */
+  --fluid-min: calc(
+    var(--font-size-min) * pow(var(--font-ratio-min), var(--font-level, 0))
+  );
+  --fluid-max: calc(
+    var(--font-size-max) * pow(var(--font-ratio-max), var(--font-level, 0))
+  );
+  --fluid-preferred: calc(
+    (var(--fluid-max) - var(--fluid-min)) /
+      (var(--font-width-max) - var(--font-width-min))
+  );
+  --fluid-type: clamp(
+    (var(--fluid-min) / 16) * 1rem,
+    ((var(--fluid-min) / 16) * 1rem) -
+      (((var(--fluid-preferred) * var(--font-width-min)) / 16) * 1rem) +
+      (var(--fluid-preferred) * 100vw),
+    (var(--fluid-max) / 16) * 1rem
+  );
+
+  display: flex;
+  align-items: flex-start;
+  gap: 0.35ch;
+  line-height: 1.25;
+  width: 100%;
+  font-family: var(--font-geist-sans), 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: var(--fluid-type);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  position: relative;
+}
+
+/* Sticky anchor: while(alive): sticks at viewport center */
+.depth-section h2.while-alive-heading,
+.while-alive-heading {
+  position: sticky;
+  top: calc(50vh - 0.625em);
+  top: calc(50% - 0.5lh);
+  font-size: inherit !important;
+  font-family: inherit !important;
+  line-height: inherit !important;
+  font-weight: 600 !important;
+  letter-spacing: inherit !important;
+  margin: 0 !important;
+  display: inline-block;
+  height: fit-content;
+  white-space: nowrap;
+  background: linear-gradient(
+    180deg,
+    #ffffff 45%,
+    rgba(255, 255, 255, 0.45) 100%
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  z-index: 2;
+  user-select: none;
+}
+
+/* Scrolling list of items - normal line height stacked right below each other */
+.while-alive-list {
+  font-weight: 600;
+  padding-inline: 0 !important;
+  margin: 0 !important;
+  list-style-type: none !important;
+  font-size: inherit;
+  font-family: inherit;
+  line-height: inherit;
+  letter-spacing: inherit;
+  --step: calc((var(--end) - var(--start)) / (var(--count, 4) - 1));
+}
+
+.while-alive-list li {
+  margin: 0;
+  padding: 0;
+  line-height: 1.25;
+  white-space: nowrap;
+  opacity: 0.2;
+  transition: opacity 0.15s ease-out, filter 0.15s ease-out;
+}
+
+.while-alive-list li:first-of-type {
+  opacity: 1;
+}
+
+/* Chromatic coloring from ref.css */
+.while-alive-list li:not(:last-of-type) {
+  color: oklch(
+    var(--lightness) var(--base-chroma)
+      calc(var(--start) + (var(--step) * var(--i)))
+  );
+}
+
+/* Fallback colors for non-oklch */
+@supports not (color: oklch(75% 0.3 0)) {
+  .while-alive-list li[style*="--i: 0"],
+  .while-alive-list li[style*="--i:0"] {
+    color: #ff5b79;
+  }
+  .while-alive-list li[style*="--i: 1"],
+  .while-alive-list li[style*="--i:1"] {
+    color: #4ade80;
+  }
+  .while-alive-list li[style*="--i: 2"],
+  .while-alive-list li[style*="--i:2"] {
+    color: #38bdf8;
+  }
+}
+
+/* Last item: repeat(); has the clean metallic gradient */
+.while-alive-list li:last-of-type {
+  background: linear-gradient(
+    180deg,
+    #ffffff 45%,
+    rgba(255, 255, 255, 0.45) 100%
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+/* Native CSS Scroll-Driven Animation (Chromium) */
+@supports (animation-timeline: scroll()) and (animation-range: 0% 100%) {
+  .while-alive-list li {
+    opacity: 0.2;
+    animation-name: whileAliveBrighten;
+    animation-fill-mode: both;
+    animation-timing-function: linear;
+    animation-range: cover calc(50% - 1lh) calc(50% + 1lh);
+    animation-timeline: view();
+  }
+
+  .while-alive-list li:first-of-type {
+    --start-opacity: 1;
+  }
+
+  .while-alive-list li:last-of-type {
+    --brightness: 1;
+    --end-opacity: 1;
+  }
+
+  @keyframes whileAliveBrighten {
+    0% {
+      opacity: var(--start-opacity, 0.2);
+    }
+    50% {
+      opacity: 1;
+      filter: brightness(var(--brightness, 1.25));
+    }
+    100% {
+      opacity: var(--end-opacity, 0.2);
+    }
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .while-alive-stage {
+    padding-top: 20vh;
+    padding-bottom: 20vh;
+  }
+  .while-alive-container {
+    gap: 0.25ch;
+  }
+}
+
+@media (max-width: 480px) {
+  .while-alive-container {
+    --font-level: 5;
+    font-size: clamp(1.4rem, 6.2vw, 2.2rem);
+  }
+}

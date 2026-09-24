@@ -22,41 +22,74 @@ export default function SubmergedNarrative() {
     // Initially hide all beats
     gsap.set(beats, { opacity: 0, pointerEvents: "none" });
 
-    // The text animation starts right from here as the wave crest reaches the top of the screen (~12% of .ocean-journey)
+    // The text animation starts right from here as the wave crest reaches the top of the screen (~10% of .ocean-journey)
     // and continues until the bottom of the ocean journey where About begins.
     const tl = gsap.timeline({
       scrollTrigger: {
         trigger: ".ocean-journey",
-        start: "12% top",
-        end: "96% bottom",
-        scrub: 0.5
+        start: "10% top",
+        end: "bottom bottom",
+        scrub: true
       }
     });
 
     // Beat 1: LEFT SIDE - Beneath the Surface (starts animating in right from this scroll point)
     gsap.set(beats[0], { x: -40, y: 20 });
-    tl.to(beats[0], { opacity: 1, x: 0, y: 0, duration: 1.6, ease: "power1.out" }, 0)
-      .to(beats[0], { opacity: 0, y: -20, duration: 1.0, ease: "power1.in" }, 2.6);
+    tl.to(beats[0], { opacity: 1, x: 0, y: 0, duration: 1.4, ease: "power1.out" }, 0)
+      .to(beats[0], { opacity: 0, y: -20, duration: 1.0, ease: "power1.in" }, 2.4);
 
     // Beat 2: RIGHT SIDE - The Craftsman
     gsap.set(beats[1], { x: 40, y: 20 });
-    tl.to(beats[1], { opacity: 1, x: 0, y: 0, duration: 1.6, ease: "power1.out" }, 3.8)
-      .to(beats[1], { opacity: 0, y: -20, duration: 1.2, ease: "power1.in" }, 6.6);
+    tl.to(beats[1], { opacity: 1, x: 0, y: 0, duration: 1.4, ease: "power1.out" }, 3.4)
+      .to(beats[1], { opacity: 0, y: -20, duration: 1.0, ease: "power1.in" }, 5.8);
 
     // Beat 3: LEFT SIDE - Systems at Work
     gsap.set(beats[2], { x: -40, y: 20 });
-    tl.to(beats[2], { opacity: 1, x: 0, y: 0, duration: 1.6, ease: "power1.out" }, 7.6)
-      .to(beats[2], { opacity: 0, y: -20, duration: 1.2, ease: "power1.in" }, 10.4);
+    tl.to(beats[2], { opacity: 1, x: 0, y: 0, duration: 1.4, ease: "power1.out" }, 6.8)
+      .to(beats[2], { opacity: 0, y: -20, duration: 1.0, ease: "power1.in" }, 9.2);
 
     // Beat 4: RIGHT SIDE - Proven Impact
     gsap.set(beats[3], { x: 40, y: 20 });
-    tl.to(beats[3], { opacity: 1, x: 0, y: 0, duration: 1.6, ease: "power1.out" }, 11.4)
-      .to(beats[3], { opacity: 0, y: -20, duration: 1.2, ease: "power1.in" }, 14.2);
+    tl.to(beats[3], { opacity: 1, x: 0, y: 0, duration: 1.4, ease: "power1.out" }, 10.2)
+      .to(beats[3], { opacity: 0, y: -20, duration: 1.0, ease: "power1.in" }, 12.6);
 
-    // Beat 5: CENTER - Perspective
-    gsap.set(beats[4], { y: 30, scale: 0.96 });
-    tl.to(beats[4], { opacity: 1, y: 0, scale: 1, duration: 1.8, ease: "power1.out" }, 15.2)
-      .to(beats[4], { opacity: 0, y: -30, duration: 1.4, ease: "power1.in" }, 18.0);
+    // Beat 5: LEFT SIDE - while(alive): learn(); code(); build(); repeat();
+    // Directly below the Award Section in Hero Section 2
+    const aliveList = container.querySelector(".hero2-while-alive-list");
+    const aliveItems = aliveList ? aliveList.querySelectorAll(".hero2-alive-item") : [];
+
+    gsap.set(beats[4], { xPercent: 0, x: -40, y: 20 });
+    if (aliveItems.length) {
+      // Slot kinetic scroll: Window height is 3.9em (3 lines: top dimmed, center active, bottom dimmed)
+      // active line is level with while(alive): at y = 1.3em
+      // Initial state: learn() is active in the center slot (y: 1.3em), code() is dimmed below
+      gsap.set(aliveList, { y: "1.3em" });
+      gsap.set(aliveItems, {
+        opacity: (i) => (i === 0 ? 1 : 0.22),
+      });
+    }
+
+    // Fade and slide in Beat 5 from the left
+    tl.to(beats[4], { opacity: 1, xPercent: 0, x: 0, y: 0, duration: 1.4, ease: "power1.out" }, 13.4);
+
+    // Step through each command matching the slot kinetic scroll:
+    // Line above is dimmed (opacity 0.22), active line is bright at center (opacity 1), line below is dimmed (opacity 0.22)
+    if (aliveList && aliveItems.length === 4) {
+      // Step 1: learn() -> code()
+      tl.to(aliveList, { y: "0em", duration: 1.4, ease: "power2.inOut" }, 15.0)
+        .to(aliveItems[0], { opacity: 0.22, duration: 0.9 }, 15.0)
+        .to(aliveItems[1], { opacity: 1, duration: 0.9 }, 15.4);
+
+      // Step 2: code() -> build()
+      tl.to(aliveList, { y: "-1.3em", duration: 1.4, ease: "power2.inOut" }, 16.8)
+        .to(aliveItems[1], { opacity: 0.22, duration: 0.9 }, 16.8)
+        .to(aliveItems[2], { opacity: 1, duration: 0.9 }, 17.2);
+
+      // Step 3: build() -> repeat()
+      tl.to(aliveList, { y: "-2.6em", duration: 1.4, ease: "power2.inOut" }, 18.6)
+        .to(aliveItems[2], { opacity: 0.22, duration: 0.9 }, 18.6)
+        .to(aliveItems[3], { opacity: 1, duration: 0.9 }, 19.0);
+    }
 
     return () => {
       if (tl.scrollTrigger) tl.scrollTrigger.kill();
@@ -111,7 +144,7 @@ export default function SubmergedNarrative() {
           SYSTEMS AT WORK
         </div>
         <h2 className="submerged-title">
-          Zero-touch automation across Windows fleets.
+          Automation across Windows fleets.
         </h2>
         <p className="submerged-desc">
           Engineered background endpoint telemetry agents, multithreaded backends, and automated silent package deployment for enterprise platforms.
@@ -142,18 +175,28 @@ export default function SubmergedNarrative() {
         </div>
       </div>
 
-      {/* Beat 5: CENTER / BRIDGE */}
-      <div className="submerged-beat submerged-beat--center">
-        <div className="submerged-eyebrow">
+      {/* Beat 5: LEFT SIDE - while(alive): learn(); code(); build(); repeat(); */}
+      <div className="submerged-beat submerged-beat--left submerged-beat--while-alive">
+        {/* <div className="submerged-eyebrow">
           <span />
           PERSPECTIVE
+        </div> */}
+
+        <div className="hero2-while-alive-stage">
+          <span className="hero2-while-alive-prefix">while(alive):</span>
+          <div className="hero2-while-alive-window">
+            <ul className="hero2-while-alive-list">
+              <li className="hero2-alive-item item-0">learn();</li>
+              <li className="hero2-alive-item item-1">code();</li>
+              <li className="hero2-alive-item item-2">build();</li>
+              <li className="hero2-alive-item item-3">repeat();</li>
+            </ul>
+          </div>
         </div>
-        <h2 className="submerged-title" style={{ fontSize: "clamp(28px, 4vw, 54px)" }}>
-          Curiosity, then code.
-        </h2>
-        <p className="submerged-desc" style={{ maxWidth: "600px" }}>
+
+        {/* <p className="submerged-desc" style={{ maxWidth: "600px", marginTop: "20px" }}>
           From low-level system services to interactive 3D web experiences.
-        </p>
+        </p> */}
       </div>
     </div>
   );

@@ -15,7 +15,7 @@ export default function useScrollNavigation(journey) {
     const sections = [...root.querySelectorAll("[data-nav-section]")];
     const preference = window.matchMedia("(prefers-reduced-motion: reduce)");
     let frame = 0, positions = [], start = 0, end = 1, compact = 880, expanded = 1200;
-    let previousSection = null;
+    let previousSection = null, lastWidth = -1;
     const measure = () => {
       start = journey.current.getBoundingClientRect().top + window.scrollY;
       positions = sections.map(section => ({ id: section.id, top: section.getBoundingClientRect().top + window.scrollY }));
@@ -27,7 +27,11 @@ export default function useScrollNavigation(journey) {
     const update = () => {
       frame = 0;
       const progress = (window.scrollY - start) / Math.max(1, end - start);
-      nav.style.setProperty("--scroll-nav-width", `${navigationWidth(preference.matches ? 0 : progress, compact, expanded)}px`);
+      const targetWidth = Math.round(navigationWidth(preference.matches ? 0 : progress, compact, expanded));
+      if (Math.abs(targetWidth - lastWidth) >= 1) {
+        lastWidth = targetWidth;
+        nav.style.setProperty("--scroll-nav-width", `${targetWidth}px`);
+      }
       const current = visibleSection(positions, window.scrollY, window.innerHeight);
       if (current !== previousSection) {
         previousSection = current;

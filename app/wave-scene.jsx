@@ -210,7 +210,6 @@ export default function WaveScene({ paused, night = false, waveProgressRef, fore
       });
       scene.add(new THREE.Mesh(geometry, material));
       let frame = 0, lastTime = performance.now(), lastPointer = 0, rippleIndex = 0;
-      let dirty = true;
       let travelPhase = nightRef.current ? "away" : "home";
       let lastNight = nightRef.current;
       const travelSpeed = 0.42;
@@ -427,12 +426,16 @@ export default function WaveScene({ paused, night = false, waveProgressRef, fore
         ctx.restore();
       };
 
+      let cachedWidth = 1200;
+      let cachedHeight = 800;
+
       const resize = () => {
-        const width = container.clientWidth, height = Math.max(1, container.clientHeight);
-        renderer.setSize(width, height);
-        const aspect = width / height;
+        cachedWidth = container.clientWidth;
+        cachedHeight = Math.max(1, container.clientHeight);
+        renderer.setSize(cachedWidth, cachedHeight);
+        const aspect = cachedWidth / cachedHeight;
         uniforms.aspect.value = aspect;
-        uniforms.viewportHeight.value = height;
+        uniforms.viewportHeight.value = cachedHeight;
         // Cover the viewport; preserve the original painting's proportions.
         uniforms.crop.value.set(Math.min(1, aspect / 1.5), Math.min(1, 1.5 / aspect));
         positionBoat();
@@ -440,12 +443,11 @@ export default function WaveScene({ paused, night = false, waveProgressRef, fore
         const fgCanvas = foregroundCanvasRefProp.current?.current;
         if (fgCanvas) {
           const dpr = Math.min(window.devicePixelRatio || 1, 2);
-          fgCanvas.width = width * dpr;
-          fgCanvas.height = height * dpr;
-          fgCanvas.style.width = `${width}px`;
-          fgCanvas.style.height = `${height}px`;
+          fgCanvas.width = cachedWidth * dpr;
+          fgCanvas.height = cachedHeight * dpr;
+          fgCanvas.style.width = `${cachedWidth}px`;
+          fgCanvas.style.height = `${cachedHeight}px`;
         }
-        dirty = true;
       };
       const observer = new ResizeObserver(resize);
       observer.observe(container);
@@ -478,11 +480,14 @@ export default function WaveScene({ paused, night = false, waveProgressRef, fore
       const render = (now) => {
         if (disposed) return;
         frame = requestAnimationFrame(render);
+        if (document.hidden || pausedRef.current) {
+          lastTime = now;
+          return;
+        }
         const delta = Math.min((now - lastTime) / 1000, 0.05);
         lastTime = now;
         const targetTheme = nightRef.current ? 1 : 0;
         const themeChanging = uniforms.nightMix.value !== targetTheme;
-        const traveling = travelPhase === "leaving" || travelPhase === "entering" || nightRef.current !== lastNight;
 
         const progressData = waveProgressRefProp.current?.current;
         const fillProgress = typeof progressData === "number" ? progressData : (progressData?.progress ?? 0);
@@ -495,11 +500,8 @@ export default function WaveScene({ paused, night = false, waveProgressRef, fore
 
         const progressChanging = Math.abs(fillProgress - lastProgress) > 0.0002;
         if (progressChanging) {
-          dirty = true;
           lastProgress = fillProgress;
         }
-
-        if (document.hidden || (pausedRef.current && !dirty && !themeChanging && !traveling && !progressChanging)) return;
         updateTravel(delta, reducedMotion.matches);
         if (themeChanging) {
           const step = reducedMotion.matches ? 1 : delta / 1.4;
@@ -511,18 +513,15 @@ export default function WaveScene({ paused, night = false, waveProgressRef, fore
           uniforms.boatEnergy.value *= Math.exp(-delta * 1.3);
         }
         positionBoat();
-        dirty = false;
 
         const fgCanvas = foregroundCanvasRefProp.current?.current;
         if (fgCanvas) {
-          const width = container.clientWidth;
-          const height = Math.max(1, container.clientHeight);
           const dpr = Math.min(window.devicePixelRatio || 1, 2);
           const ctx = fgCanvas.getContext("2d");
           if (ctx) {
             ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-            ctx.clearRect(0, 0, width, height);
-            drawForegroundBird(ctx, width, height);
+            ctx.clearRect(0, 0, cachedWidth, cachedHeight);
+            drawForegroundBird(ctx, cachedWidth, cachedHeight);
           } else {
             uniforms.foregroundBird.value = -1;
           }
