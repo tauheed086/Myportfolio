@@ -77,3 +77,80 @@ export const projects = [
     outcome: "Boosted user engagement, streamlined community updates, and established reliable documentation for long-term maintenance."
   }
 ];
+
+export const careerTimeline = [
+  {
+    id: "01",
+    period: "Jun 2018 – Oct 2021",
+    type: "education",
+    category: "01 // FOUNDATIONS & ENGINEERING DIPLOMA",
+    title: "Diploma in Computer Science & Engineering",
+    organization: "Board of Technical Education",
+    location: "Vijaypur, Karnataka",
+    narrative: "Where the journey into software craftsmanship began. Spent three formative years building rigorous fundamentals in C, data structures, computer architecture, and low-level system logic.",
+    credential: {
+      type: "Academic Credential",
+      code: "BTE-CSE-2021",
+      institution: "Board of Technical Education",
+      subTitle: "Belagavi Board · Vijaypur",
+      status: "Completed",
+      highlights: ["C & Logic Design", "Data Structures", "OS Fundamentals"]
+    }
+  },
+  {
+    id: "02",
+    period: "Nov 2021 – May 2024",
+    type: "education",
+    category: "02 // UNDERGRADUATE DEGREE",
+    title: "B.E. in Computer Science & Engineering",
+    organization: "Visvesvaraya Technological University",
+    affiliation: "BLDEA's V.P. Dr. P.G. Halakatti College of Eng. & Tech.",
+    location: "Vijaypur, Karnataka",
+    narrative: "Deepened engineering rigor over four intense years—diving into advanced algorithms, operating systems, distributed architectures, and neural networks. Graduated with honors, recognized with state-level research recognition.",
+    credential: {
+      type: "University Degree",
+      code: "VTU-CSE-2024",
+      institution: "Visvesvaraya Tech University",
+      subTitle: "BLDEA CET · First Class with Distinction",
+      status: "Graduated with Honors",
+      highlights: ["Algorithms & Systems", "Database Design", "Deep Learning Research"]
+    }
+  },
+  {
+    id: "03",
+    period: "May 2024 – Dec 2024",
+    type: "experience",
+    category: "03 // INDUSTRY INTERNSHIP",
+    title: "Python Developer Intern",
+    organization: "Pinnacle Technologies Pvt Ltd",
+    location: "Thane, Maharashtra",
+    narrative: "Bridged academic computer science with production software delivery. Built and deployed full-stack Django platforms, hardened VPS Linux environments, tuned MySQL queries, and collaborated across agile engineering sprints.",
+    credential: {
+      type: "Professional Role",
+      code: "PINNACLE-DEV-2024",
+      institution: "Pinnacle Technologies Pvt Ltd",
+      subTitle: "Full-Stack & Backend Engineering",
+      status: "Completed (8 Months)",
+      highlights: ["Python & Django", "Linux VPS Deployment", "MySQL Query Tuning"]
+    }
+  },
+  {
+    id: "04",
+    period: "Jan 2025 – Present",
+    type: "experience",
+    category: "04 // PROFESSIONAL EXPERIENCE",
+    title: "Software Developer",
+    organization: "Seamless Automations Pvt Ltd",
+    location: "Thane, Maharashtra",
+    narrative: "Stepped up to lead critical system automation initiatives. Engineering lightweight Windows background telemetry agents, multithreaded backend coordination engines, and high-throughput analytical data pipelines.",
+    credential: {
+      type: "Current Employment",
+      code: "SEAMLESS-SDE-ACTIVE",
+      institution: "Seamless Automations Pvt Ltd",
+      subTitle: "Enterprise Systems & Fleet Automation",
+      status: "Active Role",
+      highlights: ["Windows Endpoint Telemetry", "Flask / Waitress Engines", "Silent Package Deployer"]
+    }
+  }
+];
+

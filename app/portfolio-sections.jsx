@@ -1,4 +1,5 @@
 import { profile, projects } from "./content";
+import AboutTimeline from "./about-timeline";
 
 export default function PortfolioSections() {
   return (
@@ -15,6 +16,9 @@ export default function PortfolioSections() {
               Download résumé ↗
             </a>
           )}
+
+          {/* Scrollytelling Career & Education Timeline */}
+          <AboutTimeline />
         </div>
       </section>
 
