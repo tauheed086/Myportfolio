@@ -29,6 +29,7 @@
   perspective-origin: center center;
   transform-style: preserve-3d;
   pointer-events: none;
+  z-index: 70;
 }
 
 .fish {

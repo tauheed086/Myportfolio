@@ -118,7 +118,7 @@ export const careerTimeline = [
   },
   {
     id: "03",
-    period: "May 2024 – Dec 2024",
+    period: "May 2024 – Nov 2024",
     type: "experience",
     category: "03 // INDUSTRY INTERNSHIP",
     title: "Python Developer Intern",
@@ -130,13 +130,13 @@ export const careerTimeline = [
       code: "PINNACLE-DEV-2024",
       institution: "Pinnacle Technologies Pvt Ltd",
       subTitle: "Full-Stack & Backend Engineering",
-      status: "Completed (8 Months)",
+      status: "Completed (6 Months)",
       highlights: ["Python & Django", "Linux VPS Deployment", "MySQL Query Tuning"]
     }
   },
   {
     id: "04",
-    period: "Jan 2025 – Present",
+    period: "Nov 2024 – Present",
     type: "experience",
     category: "04 // PROFESSIONAL EXPERIENCE",
     title: "Software Developer",
@@ -145,7 +145,7 @@ export const careerTimeline = [
     narrative: "Stepped up to lead critical system automation initiatives. Engineering lightweight Windows background telemetry agents, multithreaded backend coordination engines, and high-throughput analytical data pipelines.",
     credential: {
       type: "Current Employment",
-      code: "SEAMLESS-SDE-ACTIVE",
+      code: "Software Developer",
       institution: "Seamless Automations Pvt Ltd",
       subTitle: "Enterprise Systems & Fleet Automation",
       status: "Active Role",

@@ -3,11 +3,11 @@
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { 
-  GraduationCap, 
-  Briefcase, 
-  Building2, 
-  CheckCircle2, 
+import {
+  GraduationCap,
+  Briefcase,
+  Building2,
+  CheckCircle2,
   Sparkles,
   Compass
 } from "lucide-react";

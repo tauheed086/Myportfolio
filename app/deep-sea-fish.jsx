@@ -215,10 +215,11 @@ export default function DeepSeaFish({ paused = false }) {
     const inner = fish.querySelector(".fish__inner");
 
     // Fade in fish and bubbles right as the wave submerges the screen (~10% of .ocean-journey)
+    // and conclude when the About section ends
     const visibilityTrigger = ScrollTrigger.create({
       trigger: ".ocean-journey",
       start: "10% top",
-      endTrigger: ".ocean-content",
+      endTrigger: "#about",
       end: "bottom bottom",
       onEnter: () => {
         setVisible(true);
@@ -251,11 +252,12 @@ export default function DeepSeaFish({ paused = false }) {
     }, 4500);
 
     // Main scroll-driven swimming timeline - begins right as wave submerges the screen
+    // and completes smoothly at the end of the About section
     const swimTl = gsap.timeline({
       scrollTrigger: {
         trigger: ".ocean-journey",
         start: "10% top",
-        endTrigger: ".ocean-content",
+        endTrigger: "#about",
         end: "bottom bottom",
         scrub: true,
         onUpdate: (self) => {
@@ -326,27 +328,15 @@ export default function DeepSeaFish({ paused = false }) {
       }
     }
 
-    // Section triggers for bubbles at About and Projects sections
+    // Smoothly fade out the fish as About section reaches completion
+    swimTl.to(fish, { opacity: 0, duration: 1.0, ease: "power2.in" }, 11.0);
+
+    // Section trigger for bubbles at About section entrance
     const aboutSection = document.getElementById("about");
     let aboutTrigger = null;
     if (aboutSection) {
       aboutTrigger = ScrollTrigger.create({
         trigger: aboutSection,
-        start: "top 70%",
-        onEnter: () => {
-          triggerReferenceBubbles();
-        },
-        onEnterBack: () => {
-          triggerReferenceBubbles();
-        }
-      });
-    }
-
-    const projectsSection = document.getElementById("projects");
-    let projectsTrigger = null;
-    if (projectsSection) {
-      projectsTrigger = ScrollTrigger.create({
-        trigger: projectsSection,
         start: "top 70%",
         onEnter: () => {
           triggerReferenceBubbles();
@@ -368,7 +358,6 @@ export default function DeepSeaFish({ paused = false }) {
       window.removeEventListener("pointermove", handlePointerMove);
       visibilityTrigger.kill();
       if (aboutTrigger) aboutTrigger.kill();
-      if (projectsTrigger) projectsTrigger.kill();
       if (swimTl.scrollTrigger) swimTl.scrollTrigger.kill();
       swimTl.kill();
       refBubblesTl.kill();

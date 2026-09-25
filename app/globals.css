@@ -994,12 +994,10 @@ h3 {
   content: "";
   position: absolute;
   inset: 0;
-  background: radial-gradient(
-    ellipse 95% 85% at 50% 30%,
-    transparent 50%,
-    rgba(2, 14, 20, 0.22) 75%,
-    rgba(2, 14, 20, 0.5) 100%
-  );
+  background: radial-gradient(ellipse 95% 85% at 50% 30%,
+      transparent 50%,
+      rgba(2, 14, 20, 0.22) 75%,
+      rgba(2, 14, 20, 0.5) 100%);
   pointer-events: none;
 }
 
@@ -1024,22 +1022,20 @@ h3 {
   position: relative;
   height: 300svh;
   margin-top: -1px;
-  background: linear-gradient(
-    180deg,
-    var(--water-surface) 0%,
-    #3b93a3 4%,
-    #2e8191 9%,
-    #23707f 15%,
-    #1a5f6e 22%,
-    #13505d 30%,
-    #0e414c 40%,
-    #0a333d 52%,
-    #07272f 65%,
-    #051f28 78%,
-    #041a23 88%,
-    #03141c 95%,
-    #051f28 100%
-  );
+  background: linear-gradient(180deg,
+      var(--water-surface) 0%,
+      #3b93a3 4%,
+      #2e8191 9%,
+      #23707f 15%,
+      #1a5f6e 22%,
+      #13505d 30%,
+      #0e414c 40%,
+      #0a333d 52%,
+      #07272f 65%,
+      #051f28 78%,
+      #041a23 88%,
+      #03141c 95%,
+      #051f28 100%);
 }
 
 .ocean-depth-target {
@@ -1145,14 +1141,12 @@ h3 {
 
 .ocean-content {
   position: relative;
-  background: linear-gradient(
-    180deg,
-    #051f28 0%,
-    #041a23 180px,
-    #03141c 400px,
-    #020e14 700px,
-    #01090e 100%
-  );
+  background: linear-gradient(180deg,
+      #051f28 0%,
+      #041a23 180px,
+      #03141c 400px,
+      #020e14 700px,
+      #01090e 100%);
   color: #e5f2f2;
   margin-top: -2px;
 }
@@ -1176,6 +1170,7 @@ h3 {
 
 #about.depth-section {
   padding-top: 24px;
+  padding-bottom: 0px;
 }
 
 .depth-section-inner {

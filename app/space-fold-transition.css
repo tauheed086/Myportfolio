@@ -1,0 +1,61 @@
+/* ==========================================================================
+   Seamless Continuous Space Theme Applied to #projects (My Work)
+   Unified 100% with the deep ocean color tone (#01090e) for a cinematic transition.
+   ========================================================================== */
+
+#projects.space-realm {
+  position: relative;
+  z-index: 10;
+  background: #01090e !important;
+  color: #f1f5f9;
+  min-height: 100vh;
+  padding-top: 130px;
+  padding-bottom: 120px;
+  overflow: hidden;
+  box-shadow: none;
+}
+
+/* Full-viewport starfield canvas */
+.space-starfield-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Matching deep ocean cyan-teal atmospheric glow (Zero purple/indigo) */
+.space-realm-backdrop {
+  position: absolute;
+  inset: 0;
+  background: 
+    radial-gradient(circle at 20% 35%, rgba(114, 204, 211, 0.05) 0%, transparent 50%),
+    radial-gradient(circle at 80% 65%, rgba(72, 198, 239, 0.04) 0%, transparent 50%),
+    radial-gradient(circle at 50% 85%, rgba(145, 230, 225, 0.03) 0%, transparent 45%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.space-realm .depth-section-inner {
+  position: relative;
+  z-index: 2;
+  will-change: transform, opacity, filter;
+}
+
+.space-realm .depth-eyebrow {
+  color: #72ccd3 !important;
+  letter-spacing: 0.25em !important;
+}
+
+.space-realm .depth-projects article {
+  border-top-color: rgba(114, 204, 211, 0.15) !important;
+  transition: all 0.3s ease;
+}
+
+.space-realm .depth-projects article:hover {
+  background: rgba(114, 204, 211, 0.04);
+  border-radius: 12px;
+  padding-left: 16px;
+  padding-right: 16px;
+}
