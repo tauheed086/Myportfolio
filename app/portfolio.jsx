@@ -136,14 +136,11 @@ export default function Portfolio() {
       <nav className="nav-links" aria-label="Main navigation" onMouseLeave={() => setHoverNav(null)}>
         <span className="nav-highlight" aria-hidden="true" style={{ transform: `translateX(${Math.max(0, highlight) * 100}%)`, opacity: highlight < 0 ? 0 : 1 }} />
         {navigation.map((item, index) => <a key={item.id}
-          href={item.id === "contact" ? "#portfolio-panel" : `#${item.id}`}
+          href={`#${item.id}`}
           className={`${highlight === index ? "nav-item is-highlighted" : "nav-item"}${hoverNav === index ? " is-hovered" : ""}`}
-          aria-label={item.label} aria-current={activeId === item.id && item.id !== "contact" ? "location" : undefined}
-          aria-haspopup={item.id === "contact" ? "dialog" : undefined}
-          aria-expanded={item.id === "contact" ? panel === "contact" : undefined}
-          aria-controls={item.id === "contact" ? "portfolio-panel" : item.id}
+          aria-label={item.label} aria-current={activeId === item.id ? "location" : undefined}
           onMouseEnter={() => setHoverNav(index)} onFocus={event => setFocusNav(event.currentTarget.matches(":focus-visible") ? index : null)} onBlur={() => setFocusNav(null)}
-          onClick={event => { if (item.id === "contact") { event.preventDefault(); openPanel("contact"); } else scrollToSection(event, item.id); }}>
+          onClick={event => scrollToSection(event, item.id)}>
           <span className="nav-text-window" aria-hidden="true"><span className="nav-text-roll"><span>{item.label}</span><span>{item.label}</span></span></span>
         </a>)}
       </nav>

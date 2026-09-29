@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
@@ -37,12 +37,12 @@ export default function PortfolioSections() {
       gsap.set(projectsIntro, { opacity: 0, y: 25, scale: 0.96, filter: "blur(6px)" });
     }
 
-    // Master Timeline pinned at bottom of About (snappy 460% scroll height)
+    // Master Timeline pinned at bottom of About (extended 580% scroll height to White Smoky Planet)
     const transitionTl = gsap.timeline({
       scrollTrigger: {
         trigger: aboutSec,
         start: "bottom bottom",
-        end: "+=460%",
+        end: "+=580%",
         pin: true,
         scrub: 0.5,
         anticipatePin: 1,
@@ -242,6 +242,14 @@ export default function PortfolioSections() {
 
         <SpaceTravelScene flightProgressRef={flightProgressRef} />
       </div>
+
+      {/* Nav Anchor for Contact section link coordination */}
+      <div
+        id="contact"
+        data-nav-section
+        aria-hidden="true"
+        style={{ position: "relative", height: 1, pointerEvents: "none" }}
+      />
     </div>
   );
 }

@@ -295,12 +295,131 @@ function createStarTexture() {
 }
 
 // =========================================================================
+// Procedural White Smoky Planet Texture Generators
+// Ethereal alabaster swirls, turbulent vapor ribbons, and iridescent mist
+// =========================================================================
+
+function createSmokyPlanetTexture() {
+  const canvas = document.createElement("canvas");
+  canvas.width = 1024;
+  canvas.height = 512;
+  const ctx = canvas.getContext("2d");
+
+  // 1. Deep pearl-silver / alabaster luminous base gradient
+  const baseGrad = ctx.createLinearGradient(0, 0, 0, 512);
+  baseGrad.addColorStop(0.0, "#e2e8f0");
+  baseGrad.addColorStop(0.2, "#f8fafc");
+  baseGrad.addColorStop(0.5, "#ffffff");
+  baseGrad.addColorStop(0.8, "#f1f5f9");
+  baseGrad.addColorStop(1.0, "#e2e8f0");
+  ctx.fillStyle = baseGrad;
+  ctx.fillRect(0, 0, 1024, 512);
+
+  // 2. High-resolution turbulent smoke ribbons (horizontal jet-streams of white vapor)
+  for (let y = 0; y < 512; y += 2) {
+    const freq1 = Math.sin(y * 0.04);
+    const freq2 = Math.cos(y * 0.08);
+    const bandAlpha = 0.08 + Math.abs(freq1 * freq2) * 0.22;
+    const tone = y % 4 === 0 ? "255, 255, 255" : "226, 232, 240";
+    ctx.fillStyle = `rgba(${tone}, ${bandAlpha})`;
+    ctx.fillRect(0, y, 1024, 2);
+  }
+
+  // 3. Billowing smoke puffs & atmospheric cloud eddies (swirls)
+  for (let i = 0; i < 90; i++) {
+    const x = Math.random() * 1024;
+    const y = 30 + Math.random() * 452;
+    const r = 35 + Math.random() * 95;
+    const radial = ctx.createRadialGradient(x, y, 0, x, y, r);
+    const alphaPeak = 0.25 + Math.random() * 0.35;
+    radial.addColorStop(0, `rgba(255, 255, 255, ${alphaPeak})`);
+    radial.addColorStop(0.4, `rgba(248, 250, 252, ${alphaPeak * 0.6})`);
+    radial.addColorStop(0.8, "rgba(226, 232, 240, 0.08)");
+    radial.addColorStop(1, "transparent");
+    ctx.fillStyle = radial;
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // 4. Subtle cool-slate depth crevices (giving the smoke 3D depth and definition)
+  for (let i = 0; i < 45; i++) {
+    const x = Math.random() * 1024;
+    const y = 50 + Math.random() * 412;
+    const rx = 40 + Math.random() * 80;
+    const ry = 15 + Math.random() * 35;
+    const angle = (Math.random() - 0.5) * 0.4;
+    const shadowGrad = ctx.createRadialGradient(x, y, 0, x, y, rx);
+    shadowGrad.addColorStop(0, "rgba(148, 163, 184, 0.22)");
+    shadowGrad.addColorStop(0.6, "rgba(203, 213, 225, 0.08)");
+    shadowGrad.addColorStop(1, "transparent");
+    ctx.fillStyle = shadowGrad;
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(angle);
+    ctx.beginPath();
+    ctx.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // 5. Pearlescent iridescent mist veil (pure white ethereal sheen)
+  for (let i = 0; i < 35; i++) {
+    const x = Math.random() * 1024;
+    const y = Math.random() * 512;
+    const r = 60 + Math.random() * 120;
+    const mist = ctx.createRadialGradient(x, y, 0, x, y, r);
+    mist.addColorStop(0, "rgba(255, 255, 255, 0.45)");
+    mist.addColorStop(0.5, "rgba(241, 245, 249, 0.15)");
+    mist.addColorStop(1, "transparent");
+    ctx.fillStyle = mist;
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.wrapS = THREE.RepeatWrapping;
+  texture.wrapT = THREE.ClampToEdgeWrapping;
+  return texture;
+}
+
+function createAtmosphereSmokeTexture() {
+  const canvas = document.createElement("canvas");
+  canvas.width = 512;
+  canvas.height = 256;
+  const ctx = canvas.getContext("2d");
+  ctx.clearRect(0, 0, 512, 256);
+
+  // Soft translucent smoke wisps
+  for (let i = 0; i < 45; i++) {
+    const x = Math.random() * 512;
+    const y = Math.random() * 256;
+    const r = 40 + Math.random() * 85;
+    const grad = ctx.createRadialGradient(x, y, 0, x, y, r);
+    grad.addColorStop(0, "rgba(255, 255, 255, 0.38)");
+    grad.addColorStop(0.5, "rgba(241, 245, 249, 0.14)");
+    grad.addColorStop(1, "transparent");
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.wrapS = THREE.RepeatWrapping;
+  texture.wrapT = THREE.ClampToEdgeWrapping;
+  return texture;
+}
+
+// =========================================================================
 // Main 3D Space Travel WebGL Scene Component
 // =========================================================================
 export default function SpaceTravelScene({ flightProgressRef }) {
   const containerRef = useRef(null);
+  const brandGateRef = useRef(null);
+  const smokeEntranceRef = useRef(null);
   const [activeProjectIndex, setActiveProjectIndex] = useState(-1);
-  const [showBrandGate, setShowBrandGate] = useState(false);
   const [selectedProject, setSelectedProject] = useState(null);
   const [isHoveringPlanet, setIsHoveringPlanet] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
@@ -363,9 +482,12 @@ export default function SpaceTravelScene({ flightProgressRef }) {
     renderer.toneMappingExposure = 1.15;
     container.appendChild(renderer.domElement);
 
-    // 2. Cinematic Lighting
+    // 2. Cinematic Lighting & Atmospheric Fog
     const ambientLight = new THREE.AmbientLight(0x162b3d, 1.6);
     scene.add(ambientLight);
+
+    // Ethereal White Mist Fog (Density increases dynamically as camera pierces White Smoky Planet)
+    scene.fog = new THREE.FogExp2(0xf8fafc, 0);
 
     const sunLight = new THREE.DirectionalLight(0xffffff, 3.2);
     sunLight.position.set(280, 180, 120);
@@ -383,8 +505,8 @@ export default function SpaceTravelScene({ flightProgressRef }) {
       const idx = i * 3;
       starPositions[idx] = (Math.random() - 0.5) * 2200;
       starPositions[idx + 1] = (Math.random() - 0.5) * 1500;
-      // Distributed along the forward flight corridor from +300 to -4500
-      starPositions[idx + 2] = 300 - Math.random() * 4800;
+      // Extended along forward flight corridor to White Smoky Planet at -5100
+      starPositions[idx + 2] = 300 - Math.random() * 6500;
 
       // Color temperature variation (radiant blue-white, golden amber, cool cyan)
       const tone = Math.random();
@@ -422,7 +544,7 @@ export default function SpaceTravelScene({ flightProgressRef }) {
       const idx = i * 3;
       dustPositions[idx] = (Math.random() - 0.5) * 1100;
       dustPositions[idx + 1] = (Math.random() - 0.5) * 800;
-      dustPositions[idx + 2] = 200 - Math.random() * 3200;
+      dustPositions[idx + 2] = 200 - Math.random() * 4500;
 
       dustColors[idx] = 0.45;
       dustColors[idx + 1] = 0.85;
@@ -608,7 +730,60 @@ export default function SpaceTravelScene({ flightProgressRef }) {
       planetGroups.push(group);
     });
 
+    // =========================================================================
+    // The Ethereal Destination: White Smoky Planet (Contact World)
+    // Centered directly on flight vector at z = -5100
+    // =========================================================================
+    const smokyGroup = new THREE.Group();
+    smokyGroup.position.set(0, 0, -5100);
 
+    const smokyRadius = 66;
+
+    // 1. Core Luminous Smoky Sphere
+    const smokyGeo = new THREE.SphereGeometry(smokyRadius, 64, 64);
+    const smokyTexture = createSmokyPlanetTexture();
+    const smokyMat = new THREE.MeshStandardMaterial({
+      map: smokyTexture,
+      roughness: 0.85,
+      metalness: 0.05,
+      color: 0xffffff,
+      emissive: new THREE.Color(0xf8fafc),
+      emissiveIntensity: 0.55,
+      transparent: true,
+      opacity: 0
+    });
+    const smokyCoreMesh = new THREE.Mesh(smokyGeo, smokyMat);
+    smokyGroup.add(smokyCoreMesh);
+
+    // 2. Swirling Translucent Atmosphere Smoke Veil (Counter-rotating)
+    const atmoGeo = new THREE.SphereGeometry(smokyRadius * 1.06, 48, 48);
+    const atmoTexture = createAtmosphereSmokeTexture();
+    const atmoMat = new THREE.MeshStandardMaterial({
+      map: atmoTexture,
+      transparent: true,
+      opacity: 0,
+      blending: THREE.AdditiveBlending,
+      side: THREE.DoubleSide,
+      depthWrite: false
+    });
+    const smokyVeilMesh = new THREE.Mesh(atmoGeo, atmoMat);
+    smokyGroup.add(smokyVeilMesh);
+
+    // 3. Ethereal White Mist Outer Corona / Halo
+    const haloGeo = new THREE.SphereGeometry(smokyRadius * 1.22, 36, 36);
+    const haloMat = new THREE.MeshBasicMaterial({
+      color: 0xffffff,
+      transparent: true,
+      opacity: 0,
+      blending: THREE.AdditiveBlending,
+      side: THREE.BackSide,
+      depthWrite: false
+    });
+    const smokyHaloMesh = new THREE.Mesh(haloGeo, haloMat);
+    smokyGroup.add(smokyHaloMesh);
+
+    smokyGroup.visible = false;
+    scene.add(smokyGroup);
 
     // 5. Raycasting Interaction (Hover & Click)
     const raycaster = new THREE.Raycaster();
@@ -685,15 +860,77 @@ export default function SpaceTravelScene({ flightProgressRef }) {
       const rawTargetProgress = flightProgressRef?.current ?? 0;
       smoothedProgress += (rawTargetProgress - smoothedProgress) * 0.12;
 
-      // 100% hide all 3D planets and HUD during ocean-to-space dissolve phase
-      // Only the serene starfield is rendered until space flight begins
+      if (typeof window !== "undefined") {
+        const prevProg = window.__flightProgress || 0;
+        window.__flightProgress = smoothedProgress;
+        if ((prevProg < 0.92 && smoothedProgress >= 0.92) || (prevProg >= 0.92 && smoothedProgress < 0.92)) {
+          window.dispatchEvent(new CustomEvent("flight-progress"));
+        }
+      }
+
+      // 100% hide all 3D project planets during ocean-to-space dissolve phase
       const arePlanetsActive = smoothedProgress > 0.03 && rawTargetProgress > 0.001;
       planetGroups.forEach((g) => {
         g.visible = arePlanetsActive;
       });
 
-      // Camera Z moves along flight corridor from +250 to -4450 across all 5 worlds
-      const camZ = 250 - smoothedProgress * 4700;
+      // The White Smoky Planet ONLY appears AFTER the GitHub modal has finished (progress >= 0.88)
+      // Completely hidden during project planets and while the GitHub modal is displayed!
+      const isSmokyActive = arePlanetsActive && smoothedProgress >= 0.88;
+      smokyGroup.visible = isSmokyActive;
+
+      if (isSmokyActive) {
+        // Materialize smoothly in the background as the modal dissolves (0.88 -> 0.92)
+        const entranceFactor = Math.min(1, Math.max(0, (smoothedProgress - 0.88) / 0.04));
+        smokyMat.opacity = entranceFactor;
+        atmoMat.opacity = 0.72 * entranceFactor;
+        haloMat.opacity = 0.25 * entranceFactor;
+
+        // When approaching and penetrating the atmosphere (0.94 -> 1.00),
+        // expand the veil and mist so smoke rushes outward past the camera!
+        if (smoothedProgress > 0.94) {
+          const penetration = (smoothedProgress - 0.94) / 0.06;
+          const expandScale = 1.0 + penetration * 2.2;
+          smokyVeilMesh.scale.set(expandScale, expandScale, expandScale);
+          smokyHaloMesh.scale.set(expandScale * 1.3, expandScale * 1.3, expandScale * 1.3);
+          // Gently fade out core mesh so camera smoothly passes inside the hollow smoky world
+          smokyMat.opacity = Math.max(0, 1 - penetration * 1.3);
+        } else {
+          smokyVeilMesh.scale.set(1, 1, 1);
+          smokyHaloMesh.scale.set(1, 1, 1);
+        }
+
+        const emergeScale = 0.82 + 0.18 * entranceFactor;
+        smokyGroup.scale.set(emergeScale, emergeScale, emergeScale);
+      }
+
+      // Volumetric atmospheric immersion fog when diving into the White Smoky Planet
+      if (scene.fog) {
+        if (smoothedProgress >= 0.93) {
+          const fogProgress = Math.min(1, Math.max(0, (smoothedProgress - 0.93) / 0.07));
+          scene.fog.density = fogProgress * 0.022;
+        } else {
+          scene.fog.density = 0;
+        }
+      }
+
+      // Smooth direct opacity and transform for Atmospheric Smoke Interior Overlay
+      if (smokeEntranceRef.current) {
+        if (smoothedProgress >= 0.93) {
+          const entry = Math.min(1, Math.max(0, (smoothedProgress - 0.93) / 0.07));
+          smokeEntranceRef.current.style.opacity = entry.toFixed(3);
+          smokeEntranceRef.current.style.visibility = entry > 0.01 ? "visible" : "hidden";
+          smokeEntranceRef.current.style.pointerEvents = entry > 0.96 ? "auto" : "none";
+          smokeEntranceRef.current.style.transform = `scale(${1.08 - entry * 0.08})`;
+        } else {
+          smokeEntranceRef.current.style.opacity = "0";
+          smokeEntranceRef.current.style.visibility = "hidden";
+          smokeEntranceRef.current.style.pointerEvents = "none";
+        }
+      }
+
+      // Camera Z moves along flight corridor from +250 to -5250 (reaching White Smoky Planet at -5100)
+      const camZ = 250 - smoothedProgress * 5450;
       camera.position.z += (camZ - camera.position.z) * 0.15;
 
       // Camera lateral banking curve towards active planets
@@ -705,51 +942,66 @@ export default function SpaceTravelScene({ flightProgressRef }) {
         steerX = 0;
         steerY = 0;
         activeIdx = -1;
-      } else if (smoothedProgress >= 0.06 && smoothedProgress <= 0.19) {
+      } else if (smoothedProgress >= 0.06 && smoothedProgress <= 0.18) {
         steerX = -14;
         steerY = 2;
-        activeIdx = 0; // Seamie Software Installer
-      } else if (smoothedProgress > 0.19 && smoothedProgress < 0.24) {
+        activeIdx = 0; // Seamie Software Installer (z = -550)
+      } else if (smoothedProgress > 0.18 && smoothedProgress < 0.22) {
         steerX = 0;
         steerY = 0;
         activeIdx = -1; // Traveling through stars between worlds
-      } else if (smoothedProgress >= 0.24 && smoothedProgress <= 0.37) {
+      } else if (smoothedProgress >= 0.22 && smoothedProgress <= 0.34) {
         steerX = 14;
         steerY = -2;
-        activeIdx = 1; // Quick Win Bot
-      } else if (smoothedProgress > 0.37 && smoothedProgress < 0.42) {
+        activeIdx = 1; // Quick Win Bot (z = -1350)
+      } else if (smoothedProgress > 0.34 && smoothedProgress < 0.38) {
         steerX = 0;
         steerY = 0;
         activeIdx = -1; // Traveling through stars between worlds
-      } else if (smoothedProgress >= 0.42 && smoothedProgress <= 0.55) {
+      } else if (smoothedProgress >= 0.38 && smoothedProgress <= 0.49) {
         steerX = -13;
         steerY = 1;
-        activeIdx = 2; // Turf Hero
-      } else if (smoothedProgress > 0.55 && smoothedProgress < 0.60) {
+        activeIdx = 2; // Turf Hero (z = -2150)
+      } else if (smoothedProgress > 0.49 && smoothedProgress < 0.53) {
         steerX = 0;
         steerY = 0;
         activeIdx = -1; // Traveling through stars between worlds
-      } else if (smoothedProgress >= 0.60 && smoothedProgress <= 0.73) {
+      } else if (smoothedProgress >= 0.53 && smoothedProgress <= 0.64) {
         steerX = 13;
         steerY = -1;
-        activeIdx = 3; // Synovial Fluid Detection
-      } else if (smoothedProgress > 0.73 && smoothedProgress < 0.78) {
+        activeIdx = 3; // Synovial Fluid Detection (z = -2950)
+      } else if (smoothedProgress > 0.64 && smoothedProgress < 0.68) {
         steerX = 0;
         steerY = 0;
         activeIdx = -1; // Traveling through stars between worlds
-      } else if (smoothedProgress >= 0.78 && smoothedProgress <= 0.89) {
+      } else if (smoothedProgress >= 0.68 && smoothedProgress <= 0.78) {
         steerX = 0;
         steerY = 0;
-        activeIdx = 4; // Nexus LMS
+        activeIdx = 4; // Nexus LMS (z = -3750)
       } else {
-        // Beyond Planet 4: The Brand Gate Station
+        // Beyond Planet 4: Flight towards GitHub Station & White Smoky Planet
         steerX = 0;
         steerY = 0;
         activeIdx = -1;
       }
 
-      const isGate = arePlanetsActive && smoothedProgress > 0.89;
-      setShowBrandGate((prev) => (prev !== isGate ? isGate : prev));
+      // Smooth direct opacity for GitHub Station (Explore the Source on GitHub)
+      if (brandGateRef.current) {
+        let gateOp = 0;
+        if (arePlanetsActive && smoothedProgress >= 0.79 && smoothedProgress <= 0.89) {
+          if (smoothedProgress < 0.82) {
+            gateOp = (smoothedProgress - 0.79) / 0.03;
+          } else if (smoothedProgress <= 0.86) {
+            gateOp = 1;
+          } else {
+            gateOp = Math.max(0, (0.89 - smoothedProgress) / 0.03);
+          }
+        }
+        brandGateRef.current.style.opacity = gateOp.toFixed(3);
+        brandGateRef.current.style.transform = `translate(-50%, -50%) scale(${0.92 + gateOp * 0.08})`;
+        brandGateRef.current.style.pointerEvents = gateOp > 0.5 ? "auto" : "none";
+        brandGateRef.current.style.visibility = gateOp > 0.01 ? "visible" : "hidden";
+      }
 
       camera.position.x += (steerX - camera.position.x) * 0.08;
       camera.position.y += (steerY - camera.position.y) * 0.08;
@@ -778,7 +1030,7 @@ export default function SpaceTravelScene({ flightProgressRef }) {
 
         // Wrap around when passing behind camera
         if (starPosArr[zIdx] > camera.position.z + 120) {
-          starPosArr[zIdx] -= 4800;
+          starPosArr[zIdx] -= 6500;
           starPosArr[i * 3] = camera.position.x + (Math.random() - 0.5) * 2200;
           starPosArr[i * 3 + 1] = camera.position.y + (Math.random() - 0.5) * 1500;
         }
@@ -792,7 +1044,7 @@ export default function SpaceTravelScene({ flightProgressRef }) {
         dustPosArr[zIdx] += dustSpeed;
 
         if (dustPosArr[zIdx] > camera.position.z + 80) {
-          dustPosArr[zIdx] -= 3200;
+          dustPosArr[zIdx] -= 4500;
           dustPosArr[i * 3] = camera.position.x + (Math.random() - 0.5) * 1100;
           dustPosArr[i * 3 + 1] = camera.position.y + (Math.random() - 0.5) * 800;
         }
@@ -808,6 +1060,14 @@ export default function SpaceTravelScene({ flightProgressRef }) {
       planetMeshes.forEach((mesh, i) => {
         mesh.rotation.y += (0.25 + i * 0.05) * delta;
       });
+
+      // Rotate the White Smoky Planet (Contact World)
+      smokyCoreMesh.rotation.y += 0.16 * delta;
+      smokyVeilMesh.rotation.y -= 0.26 * delta;
+      smokyVeilMesh.rotation.x += 0.06 * delta;
+      const smokyTime = clock.getElapsedTime() * 1.2;
+      const haloScale = 1.0 + Math.sin(smokyTime) * 0.03;
+      smokyHaloMesh.scale.set(haloScale, haloScale, haloScale);
 
       // Orbit satellite moonlet (Nexus LMS at index 4)
       if (planetGroups[4]?.userData.moon) {
@@ -926,9 +1186,18 @@ export default function SpaceTravelScene({ flightProgressRef }) {
         </div>
       )}
 
-      {/* Brand Casing & GitHub Station (After 4th Planet) */}
-      {showBrandGate && (
-        <div className="space-brand-gate" role="region" aria-label="Developer Repositories & Contact">
+      {/* Brand Casing & GitHub Station (Between Planet 4 & White Smoky Planet) */}
+      <div
+        ref={brandGateRef}
+        className="space-brand-gate"
+        role="region"
+        aria-label="Developer Repositories & Contact"
+        style={{
+          opacity: 0,
+          pointerEvents: "none",
+          visibility: "hidden"
+        }}
+      >
          
 
           <h2 className="brand-gate-title">Explore the Source on GitHub</h2>
@@ -979,7 +1248,28 @@ export default function SpaceTravelScene({ flightProgressRef }) {
             )}
           </div>
         </div>
-      )}
+
+      {/* 
+        ========================================================================
+        Atmospheric Smoke Entrance & Interior Planet Realm
+        Emerges from 0.93 to 1.00 as camera dives inside the White Smoky Planet
+        ========================================================================
+      */}
+      <div
+        ref={smokeEntranceRef}
+        className="planet-smoke-interior"
+        aria-hidden="true"
+        style={{
+          opacity: 0,
+          visibility: "hidden",
+          pointerEvents: "none"
+        }}
+      >
+        <div className="smoke-cloud-layer smoke-cloud-deep" />
+        <div className="smoke-cloud-layer smoke-cloud-mid" />
+        <div className="smoke-cloud-layer smoke-cloud-top" />
+        <div className="smoke-mist-overlay" />
+      </div>
 
       {/* Cinematic Project Details Dossier Modal */}
       {selectedProject && isMounted && createPortal(

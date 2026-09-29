@@ -32,7 +32,10 @@ export default function useScrollNavigation(journey) {
         lastWidth = targetWidth;
         nav.style.setProperty("--scroll-nav-width", `${targetWidth}px`);
       }
-      const current = visibleSection(positions, window.scrollY, window.innerHeight);
+      let current = visibleSection(positions, window.scrollY, window.innerHeight);
+      if (typeof window !== "undefined" && window.__flightProgress >= 0.92) {
+        current = "contact";
+      }
       if (current !== previousSection) {
         previousSection = current;
         setActiveSection(current);
@@ -45,6 +48,7 @@ export default function useScrollNavigation(journey) {
     observer.observe(nav);
     sections.forEach(section => observer.observe(section));
     window.addEventListener("scroll", schedule, { passive: true });
+    window.addEventListener("flight-progress", schedule);
     window.addEventListener("resize", resize);
     window.addEventListener("pageshow", resize);
     preference.addEventListener("change", schedule);
@@ -54,6 +58,7 @@ export default function useScrollNavigation(journey) {
       cancelAnimationFrame(frame);
       observer.disconnect();
       window.removeEventListener("scroll", schedule);
+      window.removeEventListener("flight-progress", schedule);
       window.removeEventListener("resize", resize);
       window.removeEventListener("pageshow", resize);
       preference.removeEventListener("change", schedule);
