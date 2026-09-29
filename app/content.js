@@ -36,20 +36,41 @@ export const projects = [
   },
   {
     id: "02",
-    title: "Quick Win Data Automation",
-    subtitle: "High-Throughput Web Crawling & Pipeline",
+    title: "Quick Win Bot",
+    subtitle: "High-Throughput Web Crawling & Pipeline Automation",
     category: "Data Engineering & Python",
-    type: "DATA PIPELINE / CRAWLER",
-    description: "Architected and optimized Python-based web crawlers for multi-source financial and fund data extraction. Enhanced data integrity, debugged system bottlenecks, and optimized MySQL indexing and storage operations for rapid retrieval.",
-    stack: ["Python", "Web Crawlers", "MySQL", "Data Pipelines", "Performance Optimization"],
+    type: "DATA PIPELINE / BOT AUTOMATION",
+    description: "Architected and optimized Python-based web crawlers and automated bots for multi-source financial and fund data extraction. Enhanced data integrity, debugged system bottlenecks, and optimized MySQL indexing and storage operations for rapid retrieval.",
+    stack: ["Python", "Web Crawlers", "Bot Automation", "MySQL", "Data Pipelines", "Performance Optimization"],
     visual: "dashboard",
     placeholder: false,
-    problem: "Fragmented data sources caused extraction delays and storage bottlenecks across large fund datasets.",
-    approach: "Engineered scalable crawlers with fault tolerance and concurrency, coupled with tailored MySQL schema indexing for fast analytical retrieval.",
+    problem: "Fragmented financial data sources caused extraction delays and storage bottlenecks across large fund datasets.",
+    approach: "Engineered scalable automated crawler bots with fault tolerance and concurrency, coupled with tailored MySQL schema indexing for fast analytical retrieval.",
     outcome: "Significantly boosted data ingestion throughput while ensuring airtight data integrity and zero pipeline downtime."
   },
   {
     id: "03",
+    title: "Turf Hero",
+    subtitle: "Real-Time Cricket Scoring & Tournament Engine",
+    category: "Full-Stack SaaS & Real-Time SSE",
+    type: "REAL-TIME TOURNAMENT SAAS",
+    isLive: true,
+    liveUrl: "https://turf-hero.vercel.app/public/home",
+    description: "A full-stack tournament management and real-time ball-by-ball cricket scoring platform engineered for lightning-fast live spectator broadcasting and deterministic rule enforcement.",
+    stack: ["React 18", "Vite", "NestJS", "Prisma", "PostgreSQL", "TypeScript", "Server-Sent Events (SSE)"],
+    visual: "dashboard",
+    placeholder: false,
+    problem: "Grassroots sports tournaments suffer from manual paper scoring, inconsistent net run-rate calculations, and lack of real-time match streaming for spectators.",
+    approach: "Architected a deterministic finite-state scoring engine handling extras, wickets, striker rotations, and DLS rain adjustments, with sub-second live match broadcasting to public spectators using SSE streams.",
+    outcome: "Delivers sub-second broadcast latency, automated background projections for Net Run Rate (NRR), standings, and tournament leaderboards.",
+    highlights: [
+      "Deterministic finite-state scoring engine handling extras, wickets, striker rotations, and DLS rain adjustments",
+      "Sub-second live match broadcasting to public spectators using Server-Sent Events (SSE) streams",
+      "Automated background projections for Net Run Rate (NRR), standings, and tournament leaderboards"
+    ]
+  },
+  {
+    id: "04",
     title: "Synovial Fluid Detection",
     subtitle: "Deep Learning Medical Computer Vision",
     category: "Deep Learning & AI",
@@ -64,18 +85,27 @@ export const projects = [
     award: "State-Level Best Project of the Academic Year — KSCST Award"
   },
   {
-    id: "04",
-    title: "Non-Profit Web Platforms",
-    subtitle: "Full-Stack Web Development & VPS Deployment",
-    category: "Full Stack Web",
-    type: "FULL-STACK / INFRASTRUCTURE",
-    description: "Developed and deployed full-stack web platforms for non-profit organizations using Django, Python, HTML5, CSS3, and JavaScript on cloud VPS environments, with automated backup workflows.",
-    stack: ["Python", "Django", "JavaScript", "HTML/CSS", "Linux VPS", "MySQL"],
+    id: "05",
+    title: "Nexus LMS",
+    subtitle: "Enterprise Library Management Platform",
+    category: "High-Concurrency Cloud Architecture",
+    type: "ENTERPRISE POS & CIRCULATION",
+    isLive: true,
+    liveUrl: "https://library-management-system-flax-nine.vercel.app/login",
+    repoUrl: "https://github.com/tauheed086/Library-Management-System",
+    description: "An enterprise-grade, high-concurrency library management platform engineered for institutional scale with simulated barcode circulation, 5-tier RBAC, and ACID-compliant fine transactions.",
+    stack: ["Next.js 16", "React 19", "TypeScript", "Node.js", "Express", "Prisma ORM", "PostgreSQL", "Tailwind CSS v4", "Docker"],
     visual: "commerce",
     placeholder: false,
-    problem: "Non-profit organizations needed secure, accessible platforms with custom CMS capabilities hosted on cost-effective VPS infrastructure.",
-    approach: "Delivered responsive interfaces coupled with robust Django backends, database query optimization, and hardened server deployment.",
-    outcome: "Boosted user engagement, streamlined community updates, and established reliable documentation for long-term maintenance."
+    problem: "Institutional libraries need to process hundreds of simultaneous checkout/check-in operations without race conditions, while tracking fine ledgers and enforcing strict permission tiers.",
+    approach: "Engineered atomic POS circulation using Prisma database transactions, a 5-tier Role-Based Access Control system (Admin, Librarian, Assistant, Faculty, Student) with JWT guards, and real-time fine calculation ledgers.",
+    outcome: "Airtight transaction isolation under concurrent operations, automated barcode ID card generation, and real-time financial tracking for overdue fees.",
+    highlights: [
+      "Atomic circulation POS with Prisma transactions to prevent race conditions during concurrent checkouts",
+      "5-tier Role-Based Access Control (Admin, Librarian, Assistant, Faculty, Student) with JWT guards",
+      "Real-time financial ledger tracking partial payments, waivers, and overdue fine calculations",
+      "Modern UI with Framer Motion micro-interactions and printable visual barcode ID generation"
+    ]
   }
 ];
 

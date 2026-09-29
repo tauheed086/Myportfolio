@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import * as THREE from "three";
 import { profile, projects } from "./content";
 
@@ -141,6 +142,54 @@ function createEmeraldBioTexture() {
     ctx.stroke();
   }
 
+    const texture = new THREE.CanvasTexture(canvas);
+  texture.wrapS = THREE.RepeatWrapping;
+  texture.wrapT = THREE.ClampToEdgeWrapping;
+  return texture;
+}
+
+function createTurfArenaTexture() {
+  const canvas = document.createElement("canvas");
+  canvas.width = 512;
+  canvas.height = 256;
+  const ctx = canvas.getContext("2d");
+
+  // Emerald stadium pitch base with electric sports energy
+  const grad = ctx.createLinearGradient(0, 0, 0, 256);
+  grad.addColorStop(0.0, "#022c22");
+  grad.addColorStop(0.2, "#065f46");
+  grad.addColorStop(0.5, "#059669");
+  grad.addColorStop(0.8, "#047857");
+  grad.addColorStop(1.0, "#022c22");
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, 512, 256);
+
+  // Concentric stadium boundary rings & crease lines
+  for (let i = 0; i < 16; i++) {
+    const y = 20 + i * 14;
+    ctx.strokeStyle = i % 4 === 0 ? "rgba(110, 231, 183, 0.4)" : "rgba(52, 211, 153, 0.18)";
+    ctx.lineWidth = i % 4 === 0 ? 2 : 1;
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(512, y);
+    ctx.stroke();
+  }
+
+  // Floodlit pitch glowing energy arcs
+  for (let i = 0; i < 22; i++) {
+    const x = Math.random() * 512;
+    const y = 30 + Math.random() * 196;
+    const r = 20 + Math.random() * 45;
+    const radial = ctx.createRadialGradient(x, y, 0, x, y, r);
+    radial.addColorStop(0, "rgba(52, 211, 153, 0.55)");
+    radial.addColorStop(0.5, "rgba(16, 185, 129, 0.2)");
+    radial.addColorStop(1, "transparent");
+    ctx.fillStyle = radial;
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
   const texture = new THREE.CanvasTexture(canvas);
   texture.wrapS = THREE.RepeatWrapping;
   texture.wrapT = THREE.ClampToEdgeWrapping;
@@ -254,8 +303,13 @@ export default function SpaceTravelScene({ flightProgressRef }) {
   const [showBrandGate, setShowBrandGate] = useState(false);
   const [selectedProject, setSelectedProject] = useState(null);
   const [isHoveringPlanet, setIsHoveringPlanet] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
 
-  // Lock scroll and handle Escape key when Project Details Modal is open
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  // Lock scroll, handle Escape key, and hide floating navigation when Modal is open
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === "Escape" && selectedProject) {
@@ -266,11 +320,13 @@ export default function SpaceTravelScene({ flightProgressRef }) {
     if (selectedProject) {
       window.addEventListener("keydown", handleKeyDown);
       document.body.style.overflow = "hidden";
+      document.body.classList.add("modal-open");
       if (typeof window !== "undefined" && window.__lenis) {
         window.__lenis.stop();
       }
     } else {
       document.body.style.overflow = "";
+      document.body.classList.remove("modal-open");
       if (typeof window !== "undefined" && window.__lenis) {
         window.__lenis.start();
       }
@@ -279,6 +335,7 @@ export default function SpaceTravelScene({ flightProgressRef }) {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
       document.body.style.overflow = "";
+      document.body.classList.remove("modal-open");
       if (typeof window !== "undefined" && window.__lenis) {
         window.__lenis.start();
       }
@@ -420,10 +477,11 @@ export default function SpaceTravelScene({ flightProgressRef }) {
     const planetGroups = [];
 
     // Planet Configs along the flight path:
-    // P0: z = -550 (left)
-    // P1: z = -1500 (right)
-    // P2: z = -2400 (left)
-    // P3: z = -3300 (center)
+    // P0: z = -550 (left) - Seamie
+    // P1: z = -1350 (right) - Quick Win Bot
+    // P2: z = -2150 (left) - Turf Hero
+    // P3: z = -2950 (right) - Synovial Fluid Detection
+    // P4: z = -3750 (center) - Nexus LMS
     const planetConfigs = [
       {
         id: 0,
@@ -438,9 +496,9 @@ export default function SpaceTravelScene({ flightProgressRef }) {
       },
       {
         id: 1,
-        name: "Quick Win Data Automation",
+        name: "Quick Win Bot",
         radius: 52,
-        pos: new THREE.Vector3(48, -6, -1500),
+        pos: new THREE.Vector3(48, -6, -1350),
         texture: createSolarAmberTexture(),
         ring: { color: "#f59e0b", inner: 68, outer: 108, rotX: 1.15, rotY: 0.28 },
         hasAurora: false,
@@ -449,9 +507,20 @@ export default function SpaceTravelScene({ flightProgressRef }) {
       },
       {
         id: 2,
+        name: "Turf Hero",
+        radius: 48,
+        pos: new THREE.Vector3(-44, 5, -2150),
+        texture: createTurfArenaTexture(),
+        ring: { color: "#10b981", inner: 62, outer: 98, rotX: 1.2, rotY: -0.25 },
+        hasAurora: false,
+        hasMoon: false,
+        emissiveColor: 0x059669
+      },
+      {
+        id: 3,
         name: "Synovial Fluid Detection",
         radius: 46,
-        pos: new THREE.Vector3(-44, 4, -2400),
+        pos: new THREE.Vector3(44, -4, -2950),
         texture: createEmeraldBioTexture(),
         ring: null,
         hasAurora: true,
@@ -459,10 +528,10 @@ export default function SpaceTravelScene({ flightProgressRef }) {
         emissiveColor: 0x059669
       },
       {
-        id: 3,
-        name: "Non-Profit Web Platforms",
+        id: 4,
+        name: "Nexus LMS",
         radius: 50,
-        pos: new THREE.Vector3(0, 0, -3300),
+        pos: new THREE.Vector3(0, 0, -3750),
         texture: createTerraOceanTexture(),
         ring: null,
         hasAurora: false,
@@ -623,8 +692,8 @@ export default function SpaceTravelScene({ flightProgressRef }) {
         g.visible = arePlanetsActive;
       });
 
-      // Camera Z moves along flight corridor from +250 to -4050
-      const camZ = 250 - smoothedProgress * 4100;
+      // Camera Z moves along flight corridor from +250 to -4450 across all 5 worlds
+      const camZ = 250 - smoothedProgress * 4700;
       camera.position.z += (camZ - camera.position.z) * 0.15;
 
       // Camera lateral banking curve towards active planets
@@ -636,42 +705,50 @@ export default function SpaceTravelScene({ flightProgressRef }) {
         steerX = 0;
         steerY = 0;
         activeIdx = -1;
-      } else if (smoothedProgress >= 0.08 && smoothedProgress <= 0.25) {
+      } else if (smoothedProgress >= 0.06 && smoothedProgress <= 0.19) {
         steerX = -14;
         steerY = 2;
-        activeIdx = 0;
-      } else if (smoothedProgress > 0.25 && smoothedProgress < 0.32) {
+        activeIdx = 0; // Seamie Software Installer
+      } else if (smoothedProgress > 0.19 && smoothedProgress < 0.24) {
         steerX = 0;
         steerY = 0;
         activeIdx = -1; // Traveling through stars between worlds
-      } else if (smoothedProgress >= 0.32 && smoothedProgress <= 0.48) {
+      } else if (smoothedProgress >= 0.24 && smoothedProgress <= 0.37) {
         steerX = 14;
         steerY = -2;
-        activeIdx = 1;
-      } else if (smoothedProgress > 0.48 && smoothedProgress < 0.55) {
+        activeIdx = 1; // Quick Win Bot
+      } else if (smoothedProgress > 0.37 && smoothedProgress < 0.42) {
         steerX = 0;
         steerY = 0;
         activeIdx = -1; // Traveling through stars between worlds
-      } else if (smoothedProgress >= 0.55 && smoothedProgress <= 0.70) {
-        steerX = -12;
+      } else if (smoothedProgress >= 0.42 && smoothedProgress <= 0.55) {
+        steerX = -13;
         steerY = 1;
-        activeIdx = 2;
-      } else if (smoothedProgress > 0.70 && smoothedProgress < 0.76) {
+        activeIdx = 2; // Turf Hero
+      } else if (smoothedProgress > 0.55 && smoothedProgress < 0.60) {
         steerX = 0;
         steerY = 0;
         activeIdx = -1; // Traveling through stars between worlds
-      } else if (smoothedProgress >= 0.76 && smoothedProgress <= 0.88) {
+      } else if (smoothedProgress >= 0.60 && smoothedProgress <= 0.73) {
+        steerX = 13;
+        steerY = -1;
+        activeIdx = 3; // Synovial Fluid Detection
+      } else if (smoothedProgress > 0.73 && smoothedProgress < 0.78) {
         steerX = 0;
         steerY = 0;
-        activeIdx = 3;
+        activeIdx = -1; // Traveling through stars between worlds
+      } else if (smoothedProgress >= 0.78 && smoothedProgress <= 0.89) {
+        steerX = 0;
+        steerY = 0;
+        activeIdx = 4; // Nexus LMS
       } else {
-        // Beyond Planet 3: The Brand Gate Station
+        // Beyond Planet 4: The Brand Gate Station
         steerX = 0;
         steerY = 0;
         activeIdx = -1;
       }
 
-      const isGate = arePlanetsActive && smoothedProgress > 0.88;
+      const isGate = arePlanetsActive && smoothedProgress > 0.89;
       setShowBrandGate((prev) => (prev !== isGate ? isGate : prev));
 
       camera.position.x += (steerX - camera.position.x) * 0.08;
@@ -732,20 +809,20 @@ export default function SpaceTravelScene({ flightProgressRef }) {
         mesh.rotation.y += (0.25 + i * 0.05) * delta;
       });
 
-      // Orbit satellite moonlet
-      if (planetGroups[3]?.userData.moon) {
+      // Orbit satellite moonlet (Nexus LMS at index 4)
+      if (planetGroups[4]?.userData.moon) {
         const time = clock.getElapsedTime() * 0.8;
         const dist = 76;
-        planetGroups[3].userData.moon.position.x = Math.cos(time) * dist;
-        planetGroups[3].userData.moon.position.z = Math.sin(time) * dist;
+        planetGroups[4].userData.moon.position.x = Math.cos(time) * dist;
+        planetGroups[4].userData.moon.position.z = Math.sin(time) * dist;
       }
 
-      // Pulse emerald aurora
-      if (planetGroups[2]?.userData.aurora) {
+      // Pulse emerald aurora (Synovial Fluid Detection at index 3)
+      if (planetGroups[3]?.userData.aurora) {
         const time = clock.getElapsedTime() * 1.5;
-        planetGroups[2].userData.aurora.rotation.y += 0.3 * delta;
+        planetGroups[3].userData.aurora.rotation.y += 0.3 * delta;
         const scale = 1.0 + Math.sin(time) * 0.04;
-        planetGroups[2].userData.aurora.scale.set(scale, scale, scale);
+        planetGroups[3].userData.aurora.scale.set(scale, scale, scale);
       }
 
       setActiveProjectIndex(activeIdx);
@@ -798,6 +875,8 @@ export default function SpaceTravelScene({ flightProgressRef }) {
               ? "left"
               : activeProjectIndex === 2
               ? "right"
+              : activeProjectIndex === 3
+              ? "left"
               : "center"
           }`}
           onClick={() => setSelectedProject(activeProj)}
@@ -813,15 +892,36 @@ export default function SpaceTravelScene({ flightProgressRef }) {
           <div className="hud-badge-tag">
             <span className="hud-beacon-pip" />
             <span>0{activeProjectIndex + 1} // {activeProj.category.toUpperCase()}</span>
+            {activeProj.isLive && (
+              <span className="hud-live-tag">
+                <span className="live-pulse-dot" />
+                LIVE APP
+              </span>
+            )}
           </div>
 
           <h3 className="hud-project-title">{activeProj.title}</h3>
           {activeProj.subtitle && <p className="hud-project-subtitle">{activeProj.subtitle}</p>}
 
-          <div className="hud-explore-btn">
-            <span className="btn-sparkle">✦</span>
-            <span>CLICK PLANET TO EXPLORE</span>
-            <span className="btn-arrow">↗</span>
+          <div className="hud-actions-row">
+            <div className="hud-explore-btn">
+              <span className="btn-sparkle">✦</span>
+              <span>CLICK PLANET TO EXPLORE</span>
+              <span className="btn-arrow">↗</span>
+            </div>
+            {activeProj.liveUrl && (
+              <a
+                href={activeProj.liveUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="hud-direct-live-btn"
+                onClick={(e) => e.stopPropagation()}
+                title="Launch Live Application"
+              >
+                <span>LAUNCH APP</span>
+                <span className="btn-arrow">↗</span>
+              </a>
+            )}
           </div>
         </div>
       )}
@@ -829,10 +929,7 @@ export default function SpaceTravelScene({ flightProgressRef }) {
       {/* Brand Casing & GitHub Station (After 4th Planet) */}
       {showBrandGate && (
         <div className="space-brand-gate" role="region" aria-label="Developer Repositories & Contact">
-          <div className="brand-gate-kicker">
-            <span className="gate-beacon-pip" />
-            <span>03 // THE CODE HORIZON · SOURCE REPOSITORIES</span>
-          </div>
+         
 
           <h2 className="brand-gate-title">Explore the Source on GitHub</h2>
 
@@ -841,9 +938,7 @@ export default function SpaceTravelScene({ flightProgressRef }) {
             Every project begins with clean code, modular architecture, and curiosity.
           </p>
 
-          <div className="brand-gate-code-badge">
-            <code>while(alive): build(); learn(); repeat();</code>
-          </div>
+          
 
           <div className="brand-gate-actions">
             <a
@@ -887,10 +982,12 @@ export default function SpaceTravelScene({ flightProgressRef }) {
       )}
 
       {/* Cinematic Project Details Dossier Modal */}
-      {selectedProject && (
+      {selectedProject && isMounted && createPortal(
         <div
           className="project-modal-backdrop"
           onClick={() => setSelectedProject(null)}
+          onWheel={(e) => e.stopPropagation()}
+          data-lenis-prevent="true"
           role="dialog"
           aria-modal="true"
           aria-labelledby="modal-project-title"
@@ -898,14 +995,29 @@ export default function SpaceTravelScene({ flightProgressRef }) {
           <div
             className={`project-modal-card planet-theme-${selectedProject.id}`}
             onClick={(e) => e.stopPropagation()}
+            onWheel={(e) => e.stopPropagation()}
+            data-lenis-prevent="true"
           >
+            {/* Ambient Sci-Fi Cyber Corner Accents & Glow */}
+            <div className="modal-cyber-glow" aria-hidden="true" />
+            <div className="modal-cyber-corner corner-tl" aria-hidden="true" />
+            <div className="modal-cyber-corner corner-tr" aria-hidden="true" />
+            <div className="modal-cyber-corner corner-bl" aria-hidden="true" />
+            <div className="modal-cyber-corner corner-br" aria-hidden="true" />
+
             {/* Modal Header */}
             <div className="modal-header">
               <div className="modal-tag-group">
                 <span className="modal-dot" />
                 <span className="modal-category">
-                  0{selectedProject.id} // {selectedProject.category.toUpperCase()}
+                  PLANET // {selectedProject.id} · {selectedProject.category.toUpperCase()}
                 </span>
+                {selectedProject.isLive && (
+                  <span className="modal-live-tag">
+                    <span className="live-pulse-dot" />
+                    LIVE PRODUCTION
+                  </span>
+                )}
                 {selectedProject.award && (
                   <span className="modal-award-badge">
                     ★ {selectedProject.award}
@@ -940,48 +1052,88 @@ export default function SpaceTravelScene({ flightProgressRef }) {
               ))}
             </div>
 
-            {/* Modal Content Sections */}
-            <div className="modal-body-grid">
-              <div className="modal-card">
-                <span className="modal-card-label">PROJECT OVERVIEW</span>
-                <p className="modal-card-text">{selectedProject.description}</p>
-              </div>
-
-              <div className="modal-subgrid">
+            {/* Dedicated Scrollable Content Container (Native smooth scroll) */}
+            <div
+              className="modal-scrollable-body"
+              data-lenis-prevent="true"
+              onWheel={(e) => e.stopPropagation()}
+            >
+              {/* Modal Content Sections */}
+              <div className="modal-body-grid">
                 <div className="modal-card">
-                  <span className="modal-card-label">CHALLENGE</span>
-                  <p className="modal-card-subtext">{selectedProject.problem}</p>
+                  <span className="modal-card-label">PROJECT OVERVIEW</span>
+                  <p className="modal-card-text">{selectedProject.description}</p>
                 </div>
-                {selectedProject.approach && (
-                  <div className="modal-card">
-                    <span className="modal-card-label">APPROACH</span>
-                    <p className="modal-card-subtext">{selectedProject.approach}</p>
+
+                {selectedProject.highlights && (
+                  <div className="modal-card modal-card-highlights">
+                    <span className="modal-card-label">CORE ARCHITECTURAL HIGHLIGHTS</span>
+                    <ul className="modal-highlights-list">
+                      {selectedProject.highlights.map((h, i) => (
+                        <li key={i}>
+                          <span className="highlight-bullet">▹</span>
+                          <span>{h}</span>
+                        </li>
+                      ))}
+                    </ul>
                   </div>
                 )}
-                <div className="modal-card">
-                  <span className="modal-card-label">KEY OUTCOMES</span>
-                  <p className="modal-card-subtext">{selectedProject.outcome}</p>
+
+                <div className="modal-subgrid">
+                  <div className="modal-card">
+                    <span className="modal-card-label">CHALLENGE</span>
+                    <p className="modal-card-subtext">{selectedProject.problem}</p>
+                  </div>
+                  {selectedProject.approach && (
+                    <div className="modal-card">
+                      <span className="modal-card-label">APPROACH</span>
+                      <p className="modal-card-subtext">{selectedProject.approach}</p>
+                    </div>
+                  )}
+                  <div className="modal-card">
+                    <span className="modal-card-label">KEY OUTCOMES</span>
+                    <p className="modal-card-subtext">{selectedProject.outcome}</p>
+                  </div>
                 </div>
               </div>
             </div>
 
             {/* Modal Footer */}
             <div className="modal-footer">
-              {selectedProject.liveUrl ? (
-                <a
-                  className="modal-live-btn"
-                  href={selectedProject.liveUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  <span>VIEW LIVE PROJECT ↗</span>
-                </a>
-              ) : (
-                <div className="modal-status-badge">
-                  <span className="status-dot" />
-                  <span>STATUS: DEPLOYED &amp; OPERATIONAL</span>
-                </div>
-              )}
+              <div className="modal-footer-actions">
+                {selectedProject.liveUrl && (
+                  <a
+                    className="modal-live-btn"
+                    href={selectedProject.liveUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    <span className="live-pulse-dot" />
+                    <span>LAUNCH LIVE APPLICATION ↗</span>
+                  </a>
+                )}
+
+                {selectedProject.repoUrl && (
+                  <a
+                    className="modal-repo-btn"
+                    href={selectedProject.repoUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+                    </svg>
+                    <span>GITHUB REPO ↗</span>
+                  </a>
+                )}
+
+                {!selectedProject.liveUrl && !selectedProject.repoUrl && (
+                  <div className="modal-status-badge">
+                    <span className="status-dot" />
+                    <span>STATUS: DEPLOYED &amp; OPERATIONAL</span>
+                  </div>
+                )}
+              </div>
 
               <button
                 className="modal-dismiss-btn"
@@ -991,7 +1143,8 @@ export default function SpaceTravelScene({ flightProgressRef }) {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

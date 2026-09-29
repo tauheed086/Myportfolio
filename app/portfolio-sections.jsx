@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
@@ -197,15 +197,15 @@ export default function PortfolioSections() {
         className="depth-section"
       >
         <div className="depth-section-inner">
-          <p className="depth-eyebrow">01 / ABOUT</p>
+          
           <h2 id="about-title">Curiosity, then code.</h2>
           <p className="depth-intro">{profile.about}</p>
           <p className="depth-description">{profile.aboutMore}</p>
-          {profile.resume && (
+          {/* {profile.resume && (
             <a className="depth-link" href={profile.resume} download>
               Download résumé ↗
             </a>
-          )}
+          )} */}
 
           {/* Scrollytelling Career & Education Timeline */}
           <AboutTimeline />
@@ -228,7 +228,7 @@ export default function PortfolioSections() {
       >
         {/* Project Section Narrative Intro before 3D planetary flyby */}
         <div className="space-projects-intro" ref={projectsIntroRef}>
-          <p className="depth-eyebrow">02 // PORTFOLIO · CELESTIAL ARCHITECTURES</p>
+
           <h2 className="space-intro-title">Architected &amp; Shipped.</h2>
           <p className="space-intro-subtitle">
             Enterprise system automation, high-throughput pipelines, and deep-learning architectures built for performance and resilience.
