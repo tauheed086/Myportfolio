@@ -1,435 +1,496 @@
 /* ==========================================================================
-   3D Space Flight Realm — Celestial Waypoint Travel
-   Matches 100% deep ocean (#01090e) tone with true 3D Z-axis forward flight.
-   No rectangular cards — floating cosmic destinations, orbital rings, and HUD telemetry.
+   3D Space Flight Realm — Three.js WebGL Celestial Travel
+   Seamless transition from oceanic depths to deep 3D cosmos.
    ========================================================================== */
 
-/* Space Flight Realm Container: Fixed full-screen viewport during space travel */
+/* Space Flight Realm Container: Sits below #about in normal flow, pins on transition */
 .space-realm {
-  position: fixed;
-  inset: 0;
-  width: 100vw;
-  height: 100vh;
-  z-index: 25;
-  background: #01090e;
+  position: relative;
+  z-index: 10;
+  background: #01090e !important;
   color: #f1f5f9;
+  min-height: 100vh;
   overflow: hidden;
-  pointer-events: none;
+  box-shadow: none;
   opacity: 0;
-  visibility: hidden;
-  transition: opacity 0.5s ease, visibility 0.5s ease;
-}
-
-.space-realm.is-active {
-  opacity: 1;
-  visibility: visible;
-  pointer-events: auto;
-}
-
-/* Fullscreen Starfield & Halley's Comet Cursor Canvas */
-.space-starfield-canvas {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
   pointer-events: none;
-  z-index: 1;
 }
 
-/* Deep Space Cyan-Teal Atmospheric Nebula Backdrop */
+/* Matching deep ocean cyan-teal atmospheric glow for seamless ocean-to-space dissolve */
 .space-realm-backdrop {
   position: absolute;
   inset: 0;
   background: 
-    radial-gradient(circle at 50% 50%, rgba(114, 204, 211, 0.07) 0%, transparent 60%),
-    radial-gradient(circle at 15% 25%, rgba(72, 198, 239, 0.05) 0%, transparent 45%),
-    radial-gradient(circle at 85% 75%, rgba(145, 230, 225, 0.04) 0%, transparent 50%),
-    radial-gradient(circle at 50% 100%, rgba(3, 27, 44, 0.6) 0%, transparent 70%);
+    radial-gradient(circle at 20% 35%, rgba(114, 204, 211, 0.07) 0%, transparent 50%),
+    radial-gradient(circle at 80% 65%, rgba(72, 198, 239, 0.05) 0%, transparent 50%),
+    radial-gradient(circle at 50% 85%, rgba(145, 230, 225, 0.04) 0%, transparent 45%);
   pointer-events: none;
-  z-index: 2;
+  z-index: 0;
 }
 
 /* ==========================================================================
-   Space Cockpit HUD (Heads-Up Display)
+   Project Narrative Introduction in Space (Appears right after transition)
    ========================================================================== */
-.space-hud-overlay {
+.space-projects-intro {
   position: absolute;
-  inset: 0;
+  top: 48%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 20;
+  width: min(90%, 780px);
+  text-align: center;
   pointer-events: none;
-  z-index: 10;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  padding: 32px 48px;
-  font-family: var(--font-mono, monospace);
-  color: #72ccd3;
-  font-size: 11px;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-}
-
-.hud-top-bar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 1px solid rgba(114, 204, 211, 0.18);
-  padding-bottom: 14px;
-}
-
-.hud-mission-id {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.hud-pulse-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: #6ee7b7;
-  box-shadow: 0 0 10px #6ee7b7;
-  animation: pulseBeacon 2s infinite ease-in-out;
-}
-
-@keyframes pulseBeacon {
-  0%, 100% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.4); opacity: 0.5; }
-}
-
-/* 4-Sector Constellation Waypoint Matrix */
-.hud-sector-matrix {
-  display: flex;
   align-items: center;
   gap: 16px;
+  will-change: transform, opacity, filter;
 }
 
-.hud-sector-node {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: rgba(147, 197, 253, 0.4);
-  transition: all 0.4s ease;
-  font-size: 11px;
+.space-projects-intro .depth-eyebrow {
+  margin-bottom: 0;
+  letter-spacing: 0.25em;
+  color: #72ccd3;
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
 }
 
-.hud-sector-node.is-active {
-  color: #6ed3df;
-  text-shadow: 0 0 12px rgba(110, 211, 223, 0.8);
-  font-weight: 600;
+.space-intro-title {
+  font-size: clamp(38px, 5.5vw, 68px);
+  font-family: var(--font-serif, Georgia, serif);
+  font-weight: 500;
+  color: #f8fafc;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  text-shadow: 0 4px 30px rgba(0, 0, 0, 0.7);
 }
 
-.hud-sector-node.is-passed {
-  color: #3b82f6;
-  opacity: 0.6;
+.space-intro-subtitle {
+  font-size: clamp(16px, 1.8vw, 20px);
+  color: #94a3b8;
+  line-height: 1.6;
+  max-width: 620px;
+  font-weight: 300;
 }
 
-.hud-node-marker {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: currentColor;
-}
-
-.hud-matrix-line {
-  width: 24px;
-  height: 1px;
-  background: rgba(114, 204, 211, 0.2);
-}
-
-.hud-telemetry-tag {
-  opacity: 0.75;
-}
-
-/* Corner Reticle Brackets */
-.hud-corner-bracket {
-  position: absolute;
-  width: 18px;
-  height: 18px;
-  border-color: rgba(114, 204, 211, 0.3);
-  border-style: solid;
-  pointer-events: none;
-}
-.hud-corner-tl { top: 24px; left: 24px; border-width: 2px 0 0 2px; }
-.hud-corner-tr { top: 24px; right: 24px; border-width: 2px 2px 0 0; }
-.hud-corner-bl { bottom: 24px; left: 24px; border-width: 0 0 2px 2px; }
-.hud-corner-br { bottom: 24px; right: 24px; border-width: 0 2px 2px 0; }
-
-.hud-bottom-bar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-top: 1px solid rgba(114, 204, 211, 0.18);
-  padding-top: 14px;
-}
-
-.hud-instruction {
-  display: flex;
+.space-intro-scroll-hint {
+  display: inline-flex;
   align-items: center;
   gap: 8px;
-  color: #93c5fd;
-  opacity: 0.8;
+  margin-top: 14px;
+  padding: 8px 18px;
+  border-radius: 999px;
+  background: rgba(110, 211, 223, 0.08);
+  border: 1px solid rgba(110, 211, 223, 0.25);
+  color: #72ccd3;
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  animation: pulseHint 2s infinite ease-in-out;
 }
 
-.hud-scroll-arrow {
-  animation: floatArrow 2s infinite ease-in-out;
+@keyframes pulseHint {
+  0%, 100% { opacity: 0.7; transform: translateY(0); }
+  50% { opacity: 1; transform: translateY(3px); }
 }
 
-@keyframes floatArrow {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(4px); }
-}
-
-/* ==========================================================================
-   3D Space Flight Stage
-   ========================================================================== */
-.celestial-stage {
+/* Three.js Container */
+.space-travel-container {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  perspective: 1200px;
-  perspective-origin: center center;
-  transform-style: preserve-3d;
-  z-index: 5;
-  pointer-events: none;
-}
-
-/* ==========================================================================
-   Celestial Waypoint Destination (NO RECTANGULAR CARDS!)
-   Pure holographic, orbital space destination floating in the void.
-   ========================================================================== */
-.celestial-waypoint {
-  position: absolute;
-  width: min(90vw, 1020px);
-  max-height: 84vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-  transform-style: preserve-3d;
-  will-change: transform, opacity, filter;
-  pointer-events: none;
-  padding: 20px 24px;
-}
-
-.celestial-waypoint.is-docked {
+  overflow: hidden;
   pointer-events: auto;
 }
 
-/* Floating Holographic Orbital Gyroscope / Radar System */
-.celestial-orbit-system {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 580px;
-  height: 580px;
-  pointer-events: none;
-  z-index: -1;
-  opacity: 0.65;
-}
-
-.orbit-ring-outer {
+.space-travel-container canvas {
   position: absolute;
   inset: 0;
-  border-radius: 50%;
-  border: 1px dashed rgba(114, 204, 211, 0.22);
-  animation: orbitSpinClockwise 45s linear infinite;
-}
-
-.orbit-ring-middle {
-  position: absolute;
-  inset: 50px;
-  border-radius: 50%;
-  border: 1px solid rgba(114, 204, 211, 0.12);
-  box-shadow: 0 0 40px rgba(114, 204, 211, 0.05);
-  animation: orbitSpinCounter 30s linear infinite;
-}
-
-.orbit-ring-inner {
-  position: absolute;
-  inset: 120px;
-  border-radius: 50%;
-  border: 1px dotted rgba(114, 204, 211, 0.28);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.orbit-pulsar-core {
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  background: radial-gradient(circle, #6ed3df 0%, rgba(110, 211, 223, 0.2) 70%, transparent 100%);
-  box-shadow: 0 0 24px #6ed3df, 0 0 50px rgba(110, 211, 223, 0.5);
-  animation: pulsarFlicker 3s infinite ease-in-out;
-}
-
-.orbit-laser-axis {
-  position: absolute;
-  top: 50%;
-  left: -40px;
-  right: -40px;
-  height: 1px;
-  background: linear-gradient(90deg, transparent 0%, rgba(114, 204, 211, 0.3) 20%, rgba(114, 204, 211, 0.5) 50%, rgba(114, 204, 211, 0.3) 80%, transparent 100%);
-  transform: translateY(-50%);
-}
-
-@keyframes orbitSpinClockwise {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-@keyframes orbitSpinCounter {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(-360deg); }
-}
-
-@keyframes pulsarFlicker {
-  0%, 100% { transform: scale(1); opacity: 0.8; }
-  50% { transform: scale(1.6); opacity: 1; }
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
 }
 
 /* ==========================================================================
-   Waypoint Header & Celestial Typography
+   Floating Spatial Project HUD (Paired with active planet in 3D flight)
    ========================================================================== */
-.celestial-header {
-  margin-bottom: 20px;
-  max-width: 820px;
+.space-project-hud {
+  position: absolute;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 26px 34px;
+  border-radius: 20px;
+  background: rgba(2, 14, 24, 0.82);
+  border: 1px solid rgba(110, 211, 223, 0.35);
+  backdrop-filter: blur(20px);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.75), 0 0 35px rgba(110, 211, 223, 0.15);
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: hudFadeSlideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  max-width: 460px;
+  pointer-events: auto;
 }
 
-.celestial-sector-tag {
+@keyframes hudFadeSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Right-aligned HUD (When planet is on the left) */
+.space-project-hud.hud-pos-right {
+  top: 50%;
+  right: 8%;
+  transform: translateY(-50%);
+  text-align: left;
+}
+
+.space-project-hud.hud-pos-right:hover {
+  transform: translateY(-52%) scale(1.03);
+  border-color: #6ed3df;
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.85), 0 0 50px rgba(110, 211, 223, 0.4);
+}
+
+/* Left-aligned HUD (When planet is on the right) */
+.space-project-hud.hud-pos-left {
+  top: 50%;
+  left: 8%;
+  transform: translateY(-50%);
+  text-align: left;
+}
+
+.space-project-hud.hud-pos-left:hover {
+  transform: translateY(-52%) scale(1.03);
+  border-color: #f59e0b;
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.85), 0 0 50px rgba(245, 158, 11, 0.4);
+}
+
+/* Center-aligned HUD (For the final destination world) */
+.space-project-hud.hud-pos-center {
+  bottom: 8%;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  align-items: center;
+}
+
+.space-project-hud.hud-pos-center:hover {
+  transform: translateX(-50%) translateY(-6px) scale(1.03);
+  border-color: #60a5fa;
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.85), 0 0 50px rgba(96, 165, 250, 0.4);
+}
+
+/* HUD Components */
+.hud-badge-tag {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 5px 14px;
-  border-radius: 20px;
-  border: 1px solid rgba(114, 204, 211, 0.35);
-  background: rgba(1, 15, 23, 0.65);
-  backdrop-filter: blur(10px);
-  margin-bottom: 16px;
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  color: #72ccd3;
+  text-transform: uppercase;
 }
 
-.sector-beacon-dot {
+.hud-beacon-pip {
   width: 6px;
   height: 6px;
   border-radius: 50%;
   background: #6ed3df;
   box-shadow: 0 0 8px #6ed3df;
+  animation: pulseBeacon 2s infinite ease-in-out;
 }
 
-.sector-code {
-  font-family: var(--font-mono, monospace);
-  font-size: 11px;
-  letter-spacing: 0.22em;
-  color: #72ccd3;
-  text-transform: uppercase;
-  font-weight: 500;
+@keyframes pulseBeacon {
+  0%, 100% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.5); opacity: 1; }
 }
 
-.celestial-title {
+.hud-project-title {
   font-family: var(--font-serif, serif);
-  font-size: clamp(32px, 4.4vw, 56px);
-  font-weight: 500;
-  line-height: 1.1;
+  font-size: clamp(28px, 3.4vw, 42px);
+  font-weight: 600;
+  line-height: 1.15;
   color: #f8fafc;
   letter-spacing: -0.02em;
-  text-shadow: 0 0 35px rgba(110, 211, 223, 0.35);
   margin: 0;
+  text-shadow: 0 0 30px rgba(110, 211, 223, 0.3);
+  transition: all 0.3s ease;
 }
 
-.celestial-subtitle {
+.space-project-hud:hover .hud-project-title {
+  color: #ffffff;
+  text-shadow: 0 0 45px rgba(110, 211, 223, 0.7);
+}
+
+.hud-project-subtitle {
   font-family: var(--font-mono, monospace);
-  font-size: clamp(13px, 1.4vw, 15px);
-  color: #6ed3df;
-  font-weight: 400;
-  letter-spacing: 0.08em;
-  margin-top: 10px;
-  opacity: 0.95;
+  font-size: 13px;
+  color: #93c5fd;
+  letter-spacing: 0.06em;
+  margin: 0;
+  opacity: 0.9;
   text-transform: uppercase;
 }
 
-/* Floating Satellite Tech Constellation */
-.celestial-stack-orbit {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 10px;
-  margin-bottom: 24px;
-  max-width: 740px;
-}
-
-.celestial-tech-node {
+.hud-explore-btn {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  padding: 6px 14px;
-  border-radius: 16px;
-  border: 1px solid rgba(114, 204, 211, 0.28);
-  background: rgba(4, 24, 34, 0.6);
-  backdrop-filter: blur(12px);
-  color: #bcecf2;
+  gap: 8px;
+  margin-top: 6px;
+  padding: 8px 20px;
+  border-radius: 30px;
+  border: 1px solid rgba(110, 211, 223, 0.5);
+  background: rgba(110, 211, 223, 0.12);
+  color: #e0f2fe;
   font-family: var(--font-mono, monospace);
-  font-size: 12px;
-  letter-spacing: 0.05em;
-  transition: all 0.25s ease;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  transition: all 0.3s ease;
+  width: fit-content;
 }
 
-.celestial-tech-node:hover {
-  background: rgba(114, 204, 211, 0.15);
-  border-color: #6ed3df;
-  color: #ffffff;
-  transform: translateY(-2px);
-  box-shadow: 0 0 15px rgba(110, 211, 223, 0.4);
-}
-
-.tech-node-pip {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
+.space-project-hud:hover .hud-explore-btn {
   background: #6ed3df;
-  box-shadow: 0 0 6px #6ed3df;
+  color: #010d14;
+  font-weight: 600;
+  box-shadow: 0 0 30px rgba(110, 211, 223, 0.6);
+}
+
+.btn-sparkle {
+  color: #6ee7b7;
+}
+
+.space-project-hud:hover .btn-sparkle {
+  color: #010d14;
+}
+
+.btn-arrow {
+  transition: transform 0.25s ease;
+}
+
+.space-project-hud:hover .btn-arrow {
+  transform: translate(2px, -2px);
 }
 
 /* ==========================================================================
-   Holographic Telemetry & Architectural Specs (No boxed card!)
+   Cinematic Project Details Dossier Modal
    ========================================================================== */
-.celestial-hud-grid {
-  display: grid;
-  grid-template-columns: 1.15fr 0.85fr;
-  gap: 28px;
-  width: 100%;
-  max-width: 900px;
-  text-align: left;
-  border-top: 1px solid rgba(114, 204, 211, 0.2);
-  border-bottom: 1px solid rgba(114, 204, 211, 0.2);
-  padding: 22px 0;
-  margin-bottom: 24px;
+.project-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(1, 10, 18, 0.88);
+  backdrop-filter: blur(24px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  animation: modalBackdropFadeIn 0.3s ease forwards;
+}
+
+@keyframes modalBackdropFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.project-modal-card {
   position: relative;
-}
-
-.celestial-hud-grid::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 55%;
-  width: 1px;
-  background: linear-gradient(180deg, transparent 0%, rgba(114, 204, 211, 0.2) 20%, rgba(114, 204, 211, 0.2) 80%, transparent 100%);
-}
-
-.celestial-telemetry-col {
+  width: min(92vw, 860px);
+  max-height: 88vh;
+  overflow-y: auto;
+  background: rgba(3, 19, 32, 0.95);
+  border: 1px solid rgba(110, 211, 223, 0.35);
+  border-radius: 24px;
+  box-shadow: 
+    0 25px 80px rgba(0, 0, 0, 0.8),
+    0 0 50px rgba(110, 211, 223, 0.15);
+  padding: 36px 40px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 24px;
+  animation: modalPopIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-.hud-metric-label {
+@keyframes modalPopIn {
+  from {
+    opacity: 0;
+    transform: scale(0.92) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Modal Themes */
+.project-modal-card.planet-theme-01 {
+  border-color: rgba(56, 189, 248, 0.4);
+  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.85), 0 0 60px rgba(56, 189, 248, 0.2);
+}
+
+.project-modal-card.planet-theme-02 {
+  border-color: rgba(245, 158, 11, 0.4);
+  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.85), 0 0 60px rgba(245, 158, 11, 0.2);
+}
+
+.project-modal-card.planet-theme-03 {
+  border-color: rgba(16, 185, 129, 0.4);
+  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.85), 0 0 60px rgba(16, 185, 129, 0.2);
+}
+
+.project-modal-card.planet-theme-04 {
+  border-color: rgba(96, 165, 250, 0.4);
+  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.85), 0 0 60px rgba(96, 165, 250, 0.2);
+}
+
+/* Modal Header */
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(114, 204, 211, 0.18);
+  padding-bottom: 16px;
+}
+
+.modal-tag-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.modal-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #6ee7b7;
+  box-shadow: 0 0 8px #6ee7b7;
+}
+
+.modal-category {
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  color: #72ccd3;
+  text-transform: uppercase;
+}
+
+.modal-award-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 6px;
+  border: 1px solid rgba(251, 191, 36, 0.45);
+  background: rgba(245, 158, 11, 0.12);
+  color: #fef08a;
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  letter-spacing: 0.05em;
+}
+
+.modal-close-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1px solid rgba(114, 204, 211, 0.3);
+  background: rgba(1, 15, 23, 0.7);
+  color: #93c5fd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.modal-close-btn:hover {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: #f87171;
+  color: #ffffff;
+  transform: rotate(90deg);
+}
+
+/* Modal Title Area */
+.modal-title-area {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.modal-title {
+  font-family: var(--font-serif, serif);
+  font-size: clamp(28px, 4vw, 42px);
+  font-weight: 600;
+  line-height: 1.15;
+  color: #f8fafc;
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.modal-subtitle {
+  font-family: var(--font-mono, monospace);
+  font-size: 13.5px;
+  color: #6ed3df;
+  letter-spacing: 0.08em;
+  margin: 0;
+  text-transform: uppercase;
+  opacity: 0.95;
+}
+
+/* Modal Tech Stack Row */
+.modal-stack-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.modal-tech-pill {
+  padding: 5px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(114, 204, 211, 0.25);
+  background: rgba(4, 24, 34, 0.6);
+  color: #bcecf2;
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  letter-spacing: 0.05em;
+}
+
+/* Modal Content Grid */
+.modal-body-grid {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 24px;
+}
+
+.modal-card {
+  padding: 20px;
+  border-radius: 16px;
+  border: 1px solid rgba(114, 204, 211, 0.15);
+  background: rgba(1, 15, 23, 0.65);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.modal-subgrid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.modal-card-label {
   font-family: var(--font-mono, monospace);
   font-size: 10px;
   letter-spacing: 0.18em;
@@ -440,154 +501,137 @@
   gap: 6px;
 }
 
-.hud-metric-label::before {
+.modal-card-label::before {
   content: "›";
   color: #6ee7b7;
   font-size: 14px;
   line-height: 0;
 }
 
-.hud-metric-text {
+.modal-card-text {
   font-size: 14px;
   line-height: 1.7;
   color: #cadfe7;
   margin: 0;
 }
 
-.hud-award-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 7px 14px;
-  border-radius: 8px;
-  border: 1px solid rgba(251, 191, 36, 0.4);
-  background: rgba(245, 158, 11, 0.08);
-  color: #fef08a;
-  font-family: var(--font-mono, monospace);
-  font-size: 11px;
-  letter-spacing: 0.06em;
-  box-shadow: 0 0 16px rgba(245, 158, 11, 0.15);
-  margin-bottom: 6px;
-}
-
-.award-star {
-  color: #fbbf24;
-  font-size: 13px;
-  animation: pulseBeacon 2.5s infinite ease-in-out;
-}
-
-.hud-telemetry-subgrid {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.hud-metric-subtext {
+.modal-card-subtext {
   font-size: 12.5px;
   line-height: 1.6;
   color: #9cbcc8;
-  margin: 4px 0 0 0;
+  margin: 0;
 }
 
-/* ==========================================================================
-   Action & Engagement Button (Holographic Sci-Fi HUD Control)
-   ========================================================================== */
-.celestial-action-row {
+/* Modal Footer */
+.modal-footer {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  justify-content: center;
-  gap: 20px;
+  border-top: 1px solid rgba(114, 204, 211, 0.18);
+  padding-top: 20px;
+  gap: 16px;
+  flex-wrap: wrap;
 }
 
-.celestial-orbital-btn {
+.modal-live-btn {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   padding: 10px 26px;
   border-radius: 30px;
   border: 1px solid #6ed3df;
-  background: rgba(110, 211, 223, 0.12);
-  color: #ffffff;
+  background: #6ed3df;
+  color: #01090e;
   font-family: var(--font-mono, monospace);
   font-size: 12px;
-  letter-spacing: 0.14em;
+  font-weight: 600;
+  letter-spacing: 0.12em;
   text-decoration: none;
   text-transform: uppercase;
   transition: all 0.3s ease;
-  box-shadow: 0 0 20px rgba(110, 211, 223, 0.25), inset 0 0 12px rgba(110, 211, 223, 0.15);
+  box-shadow: 0 0 25px rgba(110, 211, 223, 0.5);
   cursor: pointer;
-  pointer-events: auto;
 }
 
-.celestial-orbital-btn:hover {
-  background: #6ed3df;
-  color: #01090e;
-  box-shadow: 0 0 35px rgba(110, 211, 223, 0.8), 0 0 70px rgba(110, 211, 223, 0.4);
-  transform: translateY(-2px) scale(1.03);
+.modal-live-btn:hover {
+  background: #ffffff;
+  border-color: #ffffff;
+  box-shadow: 0 0 40px rgba(255, 255, 255, 0.8);
+  transform: translateY(-2px);
 }
 
-.celestial-status-indicator {
+.modal-status-badge {
   display: flex;
   align-items: center;
   gap: 8px;
   font-family: var(--font-mono, monospace);
   font-size: 11px;
   letter-spacing: 0.12em;
-}
-
-.status-label {
-  color: #72ccd3;
-  opacity: 0.75;
-}
-
-.status-value {
   color: #6ee7b7;
-  font-weight: 600;
-  text-shadow: 0 0 8px rgba(110, 231, 183, 0.5);
+}
+
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #6ee7b7;
+  box-shadow: 0 0 8px #6ee7b7;
+}
+
+.modal-dismiss-btn {
+  padding: 8px 18px;
+  border-radius: 20px;
+  border: 1px solid rgba(114, 204, 211, 0.25);
+  background: transparent;
+  color: #93c5fd;
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.modal-dismiss-btn:hover {
+  background: rgba(114, 204, 211, 0.15);
+  color: #ffffff;
 }
 
 /* ==========================================================================
    Responsive Adaptations
    ========================================================================== */
 @media (max-width: 860px) {
-  .space-hud-overlay {
-    padding: 18px 20px;
-    font-size: 10px;
-  }
-  
-  .hud-matrix-line {
-    width: 14px;
+  .space-project-hud {
+    padding: 20px 24px;
+    max-width: 90vw;
   }
 
-  .celestial-orbit-system {
-    width: 420px;
-    height: 420px;
+  .space-project-hud.hud-pos-right,
+  .space-project-hud.hud-pos-left {
+    top: auto;
+    bottom: 8%;
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    text-align: center;
+    align-items: center;
   }
 
-  .celestial-hud-grid {
+  .space-project-hud.hud-pos-right:hover,
+  .space-project-hud.hud-pos-left:hover {
+    transform: translateX(-50%) translateY(-4px) scale(1.02);
+  }
+
+  .hud-project-title {
+    font-size: clamp(24px, 5.5vw, 32px);
+  }
+
+  .project-modal-card {
+    padding: 24px 20px;
+    gap: 18px;
+  }
+
+  .modal-body-grid {
     grid-template-columns: 1fr;
     gap: 16px;
-    padding: 14px 0;
-  }
-
-  .celestial-hud-grid::before {
-    display: none;
-  }
-
-  .celestial-title {
-    font-size: clamp(26px, 6vw, 36px);
-  }
-
-  .celestial-subtitle {
-    font-size: 12px;
-  }
-
-  .hud-metric-text {
-    font-size: 13px;
-    line-height: 1.5;
-  }
-
-  .hud-metric-subtext {
-    font-size: 12px;
   }
 }
