@@ -1,21 +1,32 @@
 /* ==========================================================================
-   Seamless Continuous Space Theme Applied to #projects (My Work)
-   Unified 100% with the deep ocean color tone (#01090e) for a cinematic transition.
+   3D Space Flight Realm — Celestial Waypoint Travel
+   Matches 100% deep ocean (#01090e) tone with true 3D Z-axis forward flight.
+   No rectangular cards — floating cosmic destinations, orbital rings, and HUD telemetry.
    ========================================================================== */
 
-#projects.space-realm {
-  position: relative;
-  z-index: 10;
-  background: #01090e !important;
+/* Space Flight Realm Container: Fixed full-screen viewport during space travel */
+.space-realm {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 25;
+  background: #01090e;
   color: #f1f5f9;
-  min-height: 100vh;
-  padding-top: 130px;
-  padding-bottom: 120px;
   overflow: hidden;
-  box-shadow: none;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.5s ease, visibility 0.5s ease;
 }
 
-/* Full-viewport starfield canvas */
+.space-realm.is-active {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+/* Fullscreen Starfield & Halley's Comet Cursor Canvas */
 .space-starfield-canvas {
   position: absolute;
   inset: 0;
@@ -25,37 +36,558 @@
   z-index: 1;
 }
 
-/* Matching deep ocean cyan-teal atmospheric glow (Zero purple/indigo) */
+/* Deep Space Cyan-Teal Atmospheric Nebula Backdrop */
 .space-realm-backdrop {
   position: absolute;
   inset: 0;
   background: 
-    radial-gradient(circle at 20% 35%, rgba(114, 204, 211, 0.05) 0%, transparent 50%),
-    radial-gradient(circle at 80% 65%, rgba(72, 198, 239, 0.04) 0%, transparent 50%),
-    radial-gradient(circle at 50% 85%, rgba(145, 230, 225, 0.03) 0%, transparent 45%);
+    radial-gradient(circle at 50% 50%, rgba(114, 204, 211, 0.07) 0%, transparent 60%),
+    radial-gradient(circle at 15% 25%, rgba(72, 198, 239, 0.05) 0%, transparent 45%),
+    radial-gradient(circle at 85% 75%, rgba(145, 230, 225, 0.04) 0%, transparent 50%),
+    radial-gradient(circle at 50% 100%, rgba(3, 27, 44, 0.6) 0%, transparent 70%);
   pointer-events: none;
-  z-index: 0;
-}
-
-.space-realm .depth-section-inner {
-  position: relative;
   z-index: 2;
+}
+
+/* ==========================================================================
+   Space Cockpit HUD (Heads-Up Display)
+   ========================================================================== */
+.space-hud-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 32px 48px;
+  font-family: var(--font-mono, monospace);
+  color: #72ccd3;
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.hud-top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(114, 204, 211, 0.18);
+  padding-bottom: 14px;
+}
+
+.hud-mission-id {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.hud-pulse-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #6ee7b7;
+  box-shadow: 0 0 10px #6ee7b7;
+  animation: pulseBeacon 2s infinite ease-in-out;
+}
+
+@keyframes pulseBeacon {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.4); opacity: 0.5; }
+}
+
+/* 4-Sector Constellation Waypoint Matrix */
+.hud-sector-matrix {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.hud-sector-node {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: rgba(147, 197, 253, 0.4);
+  transition: all 0.4s ease;
+  font-size: 11px;
+}
+
+.hud-sector-node.is-active {
+  color: #6ed3df;
+  text-shadow: 0 0 12px rgba(110, 211, 223, 0.8);
+  font-weight: 600;
+}
+
+.hud-sector-node.is-passed {
+  color: #3b82f6;
+  opacity: 0.6;
+}
+
+.hud-node-marker {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.hud-matrix-line {
+  width: 24px;
+  height: 1px;
+  background: rgba(114, 204, 211, 0.2);
+}
+
+.hud-telemetry-tag {
+  opacity: 0.75;
+}
+
+/* Corner Reticle Brackets */
+.hud-corner-bracket {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border-color: rgba(114, 204, 211, 0.3);
+  border-style: solid;
+  pointer-events: none;
+}
+.hud-corner-tl { top: 24px; left: 24px; border-width: 2px 0 0 2px; }
+.hud-corner-tr { top: 24px; right: 24px; border-width: 2px 2px 0 0; }
+.hud-corner-bl { bottom: 24px; left: 24px; border-width: 0 0 2px 2px; }
+.hud-corner-br { bottom: 24px; right: 24px; border-width: 0 2px 2px 0; }
+
+.hud-bottom-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid rgba(114, 204, 211, 0.18);
+  padding-top: 14px;
+}
+
+.hud-instruction {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #93c5fd;
+  opacity: 0.8;
+}
+
+.hud-scroll-arrow {
+  animation: floatArrow 2s infinite ease-in-out;
+}
+
+@keyframes floatArrow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(4px); }
+}
+
+/* ==========================================================================
+   3D Space Flight Stage
+   ========================================================================== */
+.celestial-stage {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  perspective: 1200px;
+  perspective-origin: center center;
+  transform-style: preserve-3d;
+  z-index: 5;
+  pointer-events: none;
+}
+
+/* ==========================================================================
+   Celestial Waypoint Destination (NO RECTANGULAR CARDS!)
+   Pure holographic, orbital space destination floating in the void.
+   ========================================================================== */
+.celestial-waypoint {
+  position: absolute;
+  width: min(90vw, 1020px);
+  max-height: 84vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  transform-style: preserve-3d;
   will-change: transform, opacity, filter;
+  pointer-events: none;
+  padding: 20px 24px;
 }
 
-.space-realm .depth-eyebrow {
-  color: #72ccd3 !important;
-  letter-spacing: 0.25em !important;
+.celestial-waypoint.is-docked {
+  pointer-events: auto;
 }
 
-.space-realm .depth-projects article {
-  border-top-color: rgba(114, 204, 211, 0.15) !important;
+/* Floating Holographic Orbital Gyroscope / Radar System */
+.celestial-orbit-system {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 580px;
+  height: 580px;
+  pointer-events: none;
+  z-index: -1;
+  opacity: 0.65;
+}
+
+.orbit-ring-outer {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1px dashed rgba(114, 204, 211, 0.22);
+  animation: orbitSpinClockwise 45s linear infinite;
+}
+
+.orbit-ring-middle {
+  position: absolute;
+  inset: 50px;
+  border-radius: 50%;
+  border: 1px solid rgba(114, 204, 211, 0.12);
+  box-shadow: 0 0 40px rgba(114, 204, 211, 0.05);
+  animation: orbitSpinCounter 30s linear infinite;
+}
+
+.orbit-ring-inner {
+  position: absolute;
+  inset: 120px;
+  border-radius: 50%;
+  border: 1px dotted rgba(114, 204, 211, 0.28);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.orbit-pulsar-core {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #6ed3df 0%, rgba(110, 211, 223, 0.2) 70%, transparent 100%);
+  box-shadow: 0 0 24px #6ed3df, 0 0 50px rgba(110, 211, 223, 0.5);
+  animation: pulsarFlicker 3s infinite ease-in-out;
+}
+
+.orbit-laser-axis {
+  position: absolute;
+  top: 50%;
+  left: -40px;
+  right: -40px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, rgba(114, 204, 211, 0.3) 20%, rgba(114, 204, 211, 0.5) 50%, rgba(114, 204, 211, 0.3) 80%, transparent 100%);
+  transform: translateY(-50%);
+}
+
+@keyframes orbitSpinClockwise {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes orbitSpinCounter {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(-360deg); }
+}
+
+@keyframes pulsarFlicker {
+  0%, 100% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.6); opacity: 1; }
+}
+
+/* ==========================================================================
+   Waypoint Header & Celestial Typography
+   ========================================================================== */
+.celestial-header {
+  margin-bottom: 20px;
+  max-width: 820px;
+}
+
+.celestial-sector-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 14px;
+  border-radius: 20px;
+  border: 1px solid rgba(114, 204, 211, 0.35);
+  background: rgba(1, 15, 23, 0.65);
+  backdrop-filter: blur(10px);
+  margin-bottom: 16px;
+}
+
+.sector-beacon-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #6ed3df;
+  box-shadow: 0 0 8px #6ed3df;
+}
+
+.sector-code {
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  color: #72ccd3;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+.celestial-title {
+  font-family: var(--font-serif, serif);
+  font-size: clamp(32px, 4.4vw, 56px);
+  font-weight: 500;
+  line-height: 1.1;
+  color: #f8fafc;
+  letter-spacing: -0.02em;
+  text-shadow: 0 0 35px rgba(110, 211, 223, 0.35);
+  margin: 0;
+}
+
+.celestial-subtitle {
+  font-family: var(--font-mono, monospace);
+  font-size: clamp(13px, 1.4vw, 15px);
+  color: #6ed3df;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  margin-top: 10px;
+  opacity: 0.95;
+  text-transform: uppercase;
+}
+
+/* Floating Satellite Tech Constellation */
+.celestial-stack-orbit {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 24px;
+  max-width: 740px;
+}
+
+.celestial-tech-node {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(114, 204, 211, 0.28);
+  background: rgba(4, 24, 34, 0.6);
+  backdrop-filter: blur(12px);
+  color: #bcecf2;
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
+  letter-spacing: 0.05em;
+  transition: all 0.25s ease;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.celestial-tech-node:hover {
+  background: rgba(114, 204, 211, 0.15);
+  border-color: #6ed3df;
+  color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 0 15px rgba(110, 211, 223, 0.4);
+}
+
+.tech-node-pip {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #6ed3df;
+  box-shadow: 0 0 6px #6ed3df;
+}
+
+/* ==========================================================================
+   Holographic Telemetry & Architectural Specs (No boxed card!)
+   ========================================================================== */
+.celestial-hud-grid {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 28px;
+  width: 100%;
+  max-width: 900px;
+  text-align: left;
+  border-top: 1px solid rgba(114, 204, 211, 0.2);
+  border-bottom: 1px solid rgba(114, 204, 211, 0.2);
+  padding: 22px 0;
+  margin-bottom: 24px;
+  position: relative;
+}
+
+.celestial-hud-grid::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 55%;
+  width: 1px;
+  background: linear-gradient(180deg, transparent 0%, rgba(114, 204, 211, 0.2) 20%, rgba(114, 204, 211, 0.2) 80%, transparent 100%);
+}
+
+.celestial-telemetry-col {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.hud-metric-label {
+  font-family: var(--font-mono, monospace);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  color: #72ccd3;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.hud-metric-label::before {
+  content: "›";
+  color: #6ee7b7;
+  font-size: 14px;
+  line-height: 0;
+}
+
+.hud-metric-text {
+  font-size: 14px;
+  line-height: 1.7;
+  color: #cadfe7;
+  margin: 0;
+}
+
+.hud-award-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(251, 191, 36, 0.4);
+  background: rgba(245, 158, 11, 0.08);
+  color: #fef08a;
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  box-shadow: 0 0 16px rgba(245, 158, 11, 0.15);
+  margin-bottom: 6px;
+}
+
+.award-star {
+  color: #fbbf24;
+  font-size: 13px;
+  animation: pulseBeacon 2.5s infinite ease-in-out;
+}
+
+.hud-telemetry-subgrid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.hud-metric-subtext {
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: #9cbcc8;
+  margin: 4px 0 0 0;
+}
+
+/* ==========================================================================
+   Action & Engagement Button (Holographic Sci-Fi HUD Control)
+   ========================================================================== */
+.celestial-action-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+}
+
+.celestial-orbital-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 26px;
+  border-radius: 30px;
+  border: 1px solid #6ed3df;
+  background: rgba(110, 211, 223, 0.12);
+  color: #ffffff;
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-decoration: none;
+  text-transform: uppercase;
   transition: all 0.3s ease;
+  box-shadow: 0 0 20px rgba(110, 211, 223, 0.25), inset 0 0 12px rgba(110, 211, 223, 0.15);
+  cursor: pointer;
+  pointer-events: auto;
 }
 
-.space-realm .depth-projects article:hover {
-  background: rgba(114, 204, 211, 0.04);
-  border-radius: 12px;
-  padding-left: 16px;
-  padding-right: 16px;
+.celestial-orbital-btn:hover {
+  background: #6ed3df;
+  color: #01090e;
+  box-shadow: 0 0 35px rgba(110, 211, 223, 0.8), 0 0 70px rgba(110, 211, 223, 0.4);
+  transform: translateY(-2px) scale(1.03);
+}
+
+.celestial-status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+}
+
+.status-label {
+  color: #72ccd3;
+  opacity: 0.75;
+}
+
+.status-value {
+  color: #6ee7b7;
+  font-weight: 600;
+  text-shadow: 0 0 8px rgba(110, 231, 183, 0.5);
+}
+
+/* ==========================================================================
+   Responsive Adaptations
+   ========================================================================== */
+@media (max-width: 860px) {
+  .space-hud-overlay {
+    padding: 18px 20px;
+    font-size: 10px;
+  }
+  
+  .hud-matrix-line {
+    width: 14px;
+  }
+
+  .celestial-orbit-system {
+    width: 420px;
+    height: 420px;
+  }
+
+  .celestial-hud-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    padding: 14px 0;
+  }
+
+  .celestial-hud-grid::before {
+    display: none;
+  }
+
+  .celestial-title {
+    font-size: clamp(26px, 6vw, 36px);
+  }
+
+  .celestial-subtitle {
+    font-size: 12px;
+  }
+
+  .hud-metric-text {
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .hud-metric-subtext {
+    font-size: 12px;
+  }
 }

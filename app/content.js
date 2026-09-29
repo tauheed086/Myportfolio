@@ -60,7 +60,8 @@ export const projects = [
     placeholder: false,
     problem: "Manual identification of synovial fluid volume in MRI scans is time-consuming and subject to inter-observer variability in clinical diagnostics.",
     approach: "Trained and evaluated deep neural network architectures to automatically identify, segment, and quantify synovial fluid accumulations with high diagnostic sensitivity.",
-    outcome: "Earned State-Level Recognition from KSCST and BLDEA College of Engineering & Technology for Best Project of the Academic Year."
+    outcome: "Earned State-Level Recognition from KSCST and BLDEA College of Engineering & Technology for Best Project of the Academic Year.",
+    award: "State-Level Best Project of the Academic Year — KSCST Award"
   },
   {
     id: "04",
