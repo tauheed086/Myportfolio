@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
-import { projects } from "./content";
+import { profile, projects } from "./content";
 
 // =========================================================================
 // Procedural Canvas Texture Generators for 3D Celestial Bodies
@@ -229,12 +229,29 @@ function createRingTexture(hexColor) {
   return texture;
 }
 
+function createStarTexture() {
+  const canvas = document.createElement("canvas");
+  canvas.width = 64;
+  canvas.height = 64;
+  const ctx = canvas.getContext("2d");
+  const grad = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+  grad.addColorStop(0, "rgba(255, 255, 255, 1)");
+  grad.addColorStop(0.2, "rgba(224, 242, 254, 0.95)");
+  grad.addColorStop(0.5, "rgba(56, 189, 248, 0.45)");
+  grad.addColorStop(1, "rgba(1, 10, 18, 0)");
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, 64, 64);
+  const texture = new THREE.CanvasTexture(canvas);
+  return texture;
+}
+
 // =========================================================================
 // Main 3D Space Travel WebGL Scene Component
 // =========================================================================
 export default function SpaceTravelScene({ flightProgressRef }) {
   const containerRef = useRef(null);
   const [activeProjectIndex, setActiveProjectIndex] = useState(-1);
+  const [showBrandGate, setShowBrandGate] = useState(false);
   const [selectedProject, setSelectedProject] = useState(null);
   const [isHoveringPlanet, setIsHoveringPlanet] = useState(false);
 
@@ -297,26 +314,29 @@ export default function SpaceTravelScene({ flightProgressRef }) {
     sunLight.position.set(280, 180, 120);
     scene.add(sunLight);
 
-    // 3. Deep 3D Starfield Array
-    const starCount = 3200;
+    // 3. Dynamic Multi-Layered Moving Starfield Systems
+    const starTexture = createStarTexture();
+
+    // Layer A: Main 3D Deep Space Star Corridor (Continuous forward flight & warp streaming)
+    const starCount = 3600;
     const starPositions = new Float32Array(starCount * 3);
     const starColors = new Float32Array(starCount * 3);
 
     for (let i = 0; i < starCount; i++) {
       const idx = i * 3;
-      starPositions[idx] = (Math.random() - 0.5) * 1800;
-      starPositions[idx + 1] = (Math.random() - 0.5) * 1200;
-      // Stars stretch along entire flight corridor from +600 to -4600
-      starPositions[idx + 2] = 600 - Math.random() * 5200;
+      starPositions[idx] = (Math.random() - 0.5) * 2200;
+      starPositions[idx + 1] = (Math.random() - 0.5) * 1500;
+      // Distributed along the forward flight corridor from +300 to -4500
+      starPositions[idx + 2] = 300 - Math.random() * 4800;
 
-      // Color temperature variation (blue-white, gold, pale cyan)
+      // Color temperature variation (radiant blue-white, golden amber, cool cyan)
       const tone = Math.random();
       if (tone > 0.8) {
-        starColors[idx] = 0.98; starColors[idx + 1] = 0.88; starColors[idx + 2] = 0.65; // Warm
+        starColors[idx] = 1.0; starColors[idx + 1] = 0.9; starColors[idx + 2] = 0.7; // Warm gold
       } else if (tone > 0.4) {
-        starColors[idx] = 0.72; starColors[idx + 1] = 0.88; starColors[idx + 2] = 1.0;  // Cyan-white
+        starColors[idx] = 0.65; starColors[idx + 1] = 0.88; starColors[idx + 2] = 1.0; // Cyan-blue
       } else {
-        starColors[idx] = 1.0;  starColors[idx + 1] = 1.0;  starColors[idx + 2] = 1.0;  // Pure white
+        starColors[idx] = 0.95; starColors[idx + 1] = 0.98; starColors[idx + 2] = 1.0; // Pure white
       }
     }
 
@@ -325,14 +345,75 @@ export default function SpaceTravelScene({ flightProgressRef }) {
     starGeo.setAttribute("color", new THREE.BufferAttribute(starColors, 3));
 
     const starMat = new THREE.PointsMaterial({
-      size: 2.2,
+      size: 3.2,
+      map: starTexture,
       vertexColors: true,
       transparent: true,
-      opacity: 0.85,
-      sizeAttenuation: true
+      opacity: 0.92,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
     });
     const starField = new THREE.Points(starGeo, starMat);
     scene.add(starField);
+
+    // Layer B: Fast Cosmic Warp Dust (Streams past camera with high-speed depth)
+    const dustCount = 550;
+    const dustPositions = new Float32Array(dustCount * 3);
+    const dustColors = new Float32Array(dustCount * 3);
+
+    for (let i = 0; i < dustCount; i++) {
+      const idx = i * 3;
+      dustPositions[idx] = (Math.random() - 0.5) * 1100;
+      dustPositions[idx + 1] = (Math.random() - 0.5) * 800;
+      dustPositions[idx + 2] = 200 - Math.random() * 3200;
+
+      dustColors[idx] = 0.45;
+      dustColors[idx + 1] = 0.85;
+      dustColors[idx + 2] = 1.0; // Radiant cyan ion dust
+    }
+
+    const dustGeo = new THREE.BufferGeometry();
+    dustGeo.setAttribute("position", new THREE.BufferAttribute(dustPositions, 3));
+    dustGeo.setAttribute("color", new THREE.BufferAttribute(dustColors, 3));
+
+    const dustMat = new THREE.PointsMaterial({
+      size: 4.8,
+      map: starTexture,
+      vertexColors: true,
+      transparent: true,
+      opacity: 0.75,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    });
+    const dustField = new THREE.Points(dustGeo, dustMat);
+    scene.add(dustField);
+
+    // Layer C: Distant Deep Galaxy Cosmos (Slow rotating cosmic background)
+    const distantCount = 1400;
+    const distantPositions = new Float32Array(distantCount * 3);
+    for (let i = 0; i < distantCount; i++) {
+      const idx = i * 3;
+      const radius = 2200 + Math.random() * 1200;
+      const theta = Math.random() * Math.PI * 2;
+      const phi = (Math.random() - 0.5) * Math.PI;
+      distantPositions[idx] = radius * Math.cos(phi) * Math.cos(theta);
+      distantPositions[idx + 1] = radius * Math.sin(phi);
+      distantPositions[idx + 2] = radius * Math.cos(phi) * Math.sin(theta) - 2200;
+    }
+
+    const distantGeo = new THREE.BufferGeometry();
+    distantGeo.setAttribute("position", new THREE.BufferAttribute(distantPositions, 3));
+    const distantMat = new THREE.PointsMaterial({
+      size: 2.2,
+      map: starTexture,
+      color: 0x93c5fd,
+      transparent: true,
+      opacity: 0.6,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    });
+    const distantStars = new THREE.Points(distantGeo, distantMat);
+    scene.add(distantStars);
 
     // 4. Create the 4 Celestial Worlds in 3D Space
     const planetMeshes = [];
@@ -458,6 +539,8 @@ export default function SpaceTravelScene({ flightProgressRef }) {
       planetGroups.push(group);
     });
 
+
+
     // 5. Raycasting Interaction (Hover & Click)
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2(-999, -999);
@@ -521,11 +604,13 @@ export default function SpaceTravelScene({ flightProgressRef }) {
     // 7. Smooth 60fps Flight Render Loop
     let animId;
     let smoothedProgress = 0;
+    let lastProgress = 0;
+    let flightVelocity = 0;
     let clock = new THREE.Clock();
 
     const animate = () => {
       animId = requestAnimationFrame(animate);
-      const delta = clock.getDelta();
+      const delta = Math.min(clock.getDelta(), 0.1);
 
       // Read flight progress scrubbed by user scroll
       const rawTargetProgress = flightProgressRef?.current ?? 0;
@@ -538,8 +623,8 @@ export default function SpaceTravelScene({ flightProgressRef }) {
         g.visible = arePlanetsActive;
       });
 
-      // Camera Z moves along flight corridor from +250 to -3350
-      const camZ = 250 - smoothedProgress * 3600;
+      // Camera Z moves along flight corridor from +250 to -4050
+      const camZ = 250 - smoothedProgress * 4100;
       camera.position.z += (camZ - camera.position.z) * 0.15;
 
       // Camera lateral banking curve towards active planets
@@ -551,39 +636,96 @@ export default function SpaceTravelScene({ flightProgressRef }) {
         steerX = 0;
         steerY = 0;
         activeIdx = -1;
-      } else if (smoothedProgress >= 0.08 && smoothedProgress <= 0.26) {
+      } else if (smoothedProgress >= 0.08 && smoothedProgress <= 0.25) {
         steerX = -14;
         steerY = 2;
         activeIdx = 0;
-      } else if (smoothedProgress > 0.26 && smoothedProgress < 0.35) {
+      } else if (smoothedProgress > 0.25 && smoothedProgress < 0.32) {
         steerX = 0;
         steerY = 0;
         activeIdx = -1; // Traveling through stars between worlds
-      } else if (smoothedProgress >= 0.35 && smoothedProgress <= 0.52) {
+      } else if (smoothedProgress >= 0.32 && smoothedProgress <= 0.48) {
         steerX = 14;
         steerY = -2;
         activeIdx = 1;
-      } else if (smoothedProgress > 0.52 && smoothedProgress < 0.61) {
+      } else if (smoothedProgress > 0.48 && smoothedProgress < 0.55) {
         steerX = 0;
         steerY = 0;
         activeIdx = -1; // Traveling through stars between worlds
-      } else if (smoothedProgress >= 0.61 && smoothedProgress <= 0.77) {
+      } else if (smoothedProgress >= 0.55 && smoothedProgress <= 0.70) {
         steerX = -12;
         steerY = 1;
         activeIdx = 2;
-      } else if (smoothedProgress > 0.77 && smoothedProgress < 0.85) {
+      } else if (smoothedProgress > 0.70 && smoothedProgress < 0.76) {
         steerX = 0;
         steerY = 0;
         activeIdx = -1; // Traveling through stars between worlds
-      } else if (smoothedProgress >= 0.85) {
+      } else if (smoothedProgress >= 0.76 && smoothedProgress <= 0.88) {
         steerX = 0;
         steerY = 0;
         activeIdx = 3;
+      } else {
+        // Beyond Planet 3: The Brand Gate Station
+        steerX = 0;
+        steerY = 0;
+        activeIdx = -1;
       }
+
+      const isGate = arePlanetsActive && smoothedProgress > 0.88;
+      setShowBrandGate((prev) => (prev !== isGate ? isGate : prev));
 
       camera.position.x += (steerX - camera.position.x) * 0.08;
       camera.position.y += (steerY - camera.position.y) * 0.08;
       camera.lookAt(camera.position.x * 0.35, camera.position.y * 0.35, camera.position.z - 350);
+
+      // =====================================================================
+      // DYNAMIC STARFIELD MOTION: Continuous Cruising & Scroll Warp Streaming
+      // =====================================================================
+      const scrollVelocity = Math.abs(smoothedProgress - lastProgress) / Math.max(delta, 0.001);
+      lastProgress = smoothedProgress;
+
+      // Smooth flight velocity with damping (warp boost on scroll!)
+      flightVelocity += (scrollVelocity * 450 - flightVelocity) * 0.15;
+
+      // Cruising forward motion + warp boost
+      // When idle, stars drift at 68 units/sec forward. When scrolling, warp acceleration streams stars past camera!
+      const cruisingSpeed = arePlanetsActive ? 68 : 42;
+      const mainSpeed = (cruisingSpeed + flightVelocity * 2.8) * delta;
+      const dustSpeed = (cruisingSpeed * 2.4 + flightVelocity * 5.6) * delta;
+
+      // 1. Move main stars forward towards camera
+      const starPosArr = starGeo.attributes.position.array;
+      for (let i = 0; i < starCount; i++) {
+        const zIdx = i * 3 + 2;
+        starPosArr[zIdx] += mainSpeed;
+
+        // Wrap around when passing behind camera
+        if (starPosArr[zIdx] > camera.position.z + 120) {
+          starPosArr[zIdx] -= 4800;
+          starPosArr[i * 3] = camera.position.x + (Math.random() - 0.5) * 2200;
+          starPosArr[i * 3 + 1] = camera.position.y + (Math.random() - 0.5) * 1500;
+        }
+      }
+      starGeo.attributes.position.needsUpdate = true;
+
+      // 2. Move high-speed warp dust streamers (close foreground flybys)
+      const dustPosArr = dustGeo.attributes.position.array;
+      for (let i = 0; i < dustCount; i++) {
+        const zIdx = i * 3 + 2;
+        dustPosArr[zIdx] += dustSpeed;
+
+        if (dustPosArr[zIdx] > camera.position.z + 80) {
+          dustPosArr[zIdx] -= 3200;
+          dustPosArr[i * 3] = camera.position.x + (Math.random() - 0.5) * 1100;
+          dustPosArr[i * 3 + 1] = camera.position.y + (Math.random() - 0.5) * 800;
+        }
+      }
+      dustGeo.attributes.position.needsUpdate = true;
+
+      // 3. Subtle cosmic celestial spin & follow camera on deep background
+      distantStars.rotation.z += 0.015 * delta;
+      distantStars.position.z = camera.position.z - 2200;
+      starField.rotation.z += 0.003 * delta;
 
       // Rotate all planets on their axes
       planetMeshes.forEach((mesh, i) => {
@@ -622,6 +764,11 @@ export default function SpaceTravelScene({ flightProgressRef }) {
       // Clean disposal
       starGeo.dispose();
       starMat.dispose();
+      dustGeo.dispose();
+      dustMat.dispose();
+      distantGeo.dispose();
+      distantMat.dispose();
+      starTexture.dispose();
       planetMeshes.forEach((m) => {
         m.geometry.dispose();
         if (m.material.map) m.material.map.dispose();
@@ -675,6 +822,66 @@ export default function SpaceTravelScene({ flightProgressRef }) {
             <span className="btn-sparkle">✦</span>
             <span>CLICK PLANET TO EXPLORE</span>
             <span className="btn-arrow">↗</span>
+          </div>
+        </div>
+      )}
+
+      {/* Brand Casing & GitHub Station (After 4th Planet) */}
+      {showBrandGate && (
+        <div className="space-brand-gate" role="region" aria-label="Developer Repositories & Contact">
+          <div className="brand-gate-kicker">
+            <span className="gate-beacon-pip" />
+            <span>03 // THE CODE HORIZON · SOURCE REPOSITORIES</span>
+          </div>
+
+          <h2 className="brand-gate-title">Explore the Source on GitHub</h2>
+
+          <p className="brand-gate-subtitle">
+            From low-level Windows endpoint telemetry engines to multithreaded backend pipelines and reactive web applications.
+            Every project begins with clean code, modular architecture, and curiosity.
+          </p>
+
+          <div className="brand-gate-code-badge">
+            <code>while(alive): build(); learn(); repeat();</code>
+          </div>
+
+          <div className="brand-gate-actions">
+            <a
+              href={profile.github}
+              target="_blank"
+              rel="noreferrer"
+              className="brand-gate-btn brand-gate-btn-primary"
+            >
+              <svg className="gate-btn-icon" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+              </svg>
+              <span>Visit GitHub Repositories</span>
+              <span className="btn-arrow">↗</span>
+            </a>
+
+            <a
+              href={profile.linkedin}
+              target="_blank"
+              rel="noreferrer"
+              className="brand-gate-btn brand-gate-btn-secondary"
+            >
+              <svg className="gate-btn-icon" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
+              </svg>
+              <span>LinkedIn</span>
+              <span className="btn-arrow">↗</span>
+            </a>
+
+            {profile.resume && (
+              <a
+                href={profile.resume}
+                download
+                className="brand-gate-btn brand-gate-btn-secondary"
+              >
+                <span>Download Résumé</span>
+                <span className="btn-arrow">↓</span>
+              </a>
+            )}
           </div>
         </div>
       )}

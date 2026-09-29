@@ -59,12 +59,12 @@ export default function PortfolioSections() {
         },
         onLeave: () => {
           gsap.set(projectsSec, {
-            position: "relative",
-            top: "auto",
-            left: "auto",
-            width: "auto",
-            height: "auto",
-            zIndex: 2,
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100vw",
+            height: "100vh",
+            zIndex: 10,
             opacity: 1,
             pointerEvents: "auto"
           });
@@ -209,16 +209,16 @@ export default function PortfolioSections() {
 
           {/* Scrollytelling Career & Education Timeline */}
           <AboutTimeline />
+
+          {/* Nav Anchor for My Work link coordination */}
+          <div
+            id="projects"
+            data-nav-section
+            aria-hidden="true"
+            style={{ position: "relative", bottom: 0, height: 1, pointerEvents: "none" }}
+          />
         </div>
       </section>
-
-      {/* Nav Anchor for My Work link coordination */}
-      <div
-        id="projects"
-        data-nav-section
-        aria-hidden="true"
-        style={{ position: "relative", top: 0, height: 1, pointerEvents: "none" }}
-      />
 
       {/* 02 // MY WORK (PORTFOLIO) — 3D Celestial WebGL Space Flight */}
       <div

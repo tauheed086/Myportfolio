@@ -9,8 +9,9 @@
   z-index: 10;
   background: #01090e !important;
   color: #f1f5f9;
-  min-height: 100vh;
-  overflow: hidden;
+  height: 0;
+  min-height: 0;
+  overflow: visible;
   box-shadow: none;
   opacity: 0;
   pointer-events: none;
@@ -597,9 +598,167 @@
 }
 
 /* ==========================================================================
+   Brand Casing & GitHub Station (After 4th Planet)
+   ========================================================================== */
+.space-brand-gate {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 25;
+  width: min(92%, 680px);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 42px 36px;
+  border-radius: 28px;
+  background: rgba(2, 14, 24, 0.88);
+  border: 1px solid rgba(110, 211, 223, 0.45);
+  backdrop-filter: blur(24px);
+  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.85), 0 0 60px rgba(110, 211, 223, 0.18);
+  pointer-events: auto;
+  animation: brandGateFadeIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes brandGateFadeIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -46%) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+.brand-gate-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  color: #72ccd3;
+  text-transform: uppercase;
+}
+
+.gate-beacon-pip {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #38bdf8;
+  box-shadow: 0 0 10px #38bdf8;
+  animation: pulseBeacon 1.5s infinite;
+}
+
+.brand-gate-title {
+  font-size: clamp(30px, 4.2vw, 48px);
+  font-family: var(--font-serif, Georgia, serif);
+  font-weight: 500;
+  color: #f8fafc;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+.brand-gate-subtitle {
+  font-size: clamp(14px, 1.6vw, 16px);
+  color: #94a3b8;
+  line-height: 1.65;
+  max-width: 560px;
+  font-weight: 300;
+}
+
+.brand-gate-code-badge {
+  padding: 8px 20px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(110, 211, 223, 0.25);
+  margin-top: 2px;
+}
+
+.brand-gate-code-badge code {
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
+  color: #6ee7b7;
+  letter-spacing: 0.05em;
+}
+
+.brand-gate-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 12px;
+  width: 100%;
+}
+
+.brand-gate-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 24px;
+  border-radius: 999px;
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+}
+
+.brand-gate-btn-primary {
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+  color: #ffffff;
+  border: 1px solid #38bdf8;
+  box-shadow: 0 10px 30px rgba(2, 132, 199, 0.4), 0 0 20px rgba(56, 189, 248, 0.3);
+}
+
+.brand-gate-btn-primary:hover {
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 15px 40px rgba(2, 132, 199, 0.6), 0 0 35px rgba(56, 189, 248, 0.5);
+  color: #ffffff;
+}
+
+.brand-gate-btn-secondary {
+  background: rgba(15, 23, 42, 0.65);
+  color: #cbd5e1;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+}
+
+.brand-gate-btn-secondary:hover {
+  transform: translateY(-2px);
+  border-color: #72ccd3;
+  color: #f8fafc;
+  background: rgba(15, 23, 42, 0.9);
+}
+
+.gate-btn-icon {
+  flex-shrink: 0;
+}
+
+/* ==========================================================================
    Responsive Adaptations
    ========================================================================== */
 @media (max-width: 860px) {
+  .space-brand-gate {
+    padding: 30px 22px;
+    gap: 14px;
+  }
+
+  .brand-gate-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .brand-gate-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
   .space-project-hud {
     padding: 20px 24px;
     max-width: 90vw;
