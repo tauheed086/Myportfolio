@@ -22,6 +22,9 @@ export default function PortfolioSections() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     gsap.registerPlugin(ScrollTrigger);
+    if (typeof window !== "undefined") {
+      window.ScrollTrigger = ScrollTrigger;
+    }
 
     const aboutSec = aboutRef.current;
     const projectsSec = projectsRef.current;
@@ -40,6 +43,7 @@ export default function PortfolioSections() {
     // Master Timeline pinned at bottom of About (extended 580% scroll height to White Smoky Planet)
     const transitionTl = gsap.timeline({
       scrollTrigger: {
+        id: "space-flight-transition",
         trigger: aboutSec,
         start: "bottom bottom",
         end: "+=580%",
@@ -180,9 +184,50 @@ export default function PortfolioSections() {
       0.35
     );
 
+    window.__getSectionScrollTarget = (id) => {
+      if (id === "home") return 0;
+
+      const nav = document.querySelector(".top-nav");
+      const navBottom = nav ? nav.getBoundingClientRect().bottom : 80;
+      const navOffset = navBottom + 16;
+      const journey = document.querySelector(".ocean-journey");
+      const pinSpacer = document.querySelector(".pin-spacer");
+
+      const aboutStart = journey ? (journey.offsetTop + journey.offsetHeight) : 2440;
+
+      if (id === "about") {
+        return Math.max(0, aboutStart - navOffset);
+      }
+
+      const st = ScrollTrigger.getById("space-flight-transition");
+      if (st) {
+        if (id === "projects") {
+          return Math.round(st.start + (st.end - st.start) * 0.18);
+        }
+        if (id === "contact") {
+          return Math.round(st.end);
+        }
+      }
+
+      const aboutHeight = aboutSec ? aboutSec.offsetHeight : 1500;
+      const winH = typeof window !== "undefined" ? window.innerHeight : 800;
+      const pinStart = aboutStart + aboutHeight - winH;
+      const pinDuration = pinSpacer ? (pinSpacer.offsetHeight - aboutHeight) : (aboutHeight * 5.8);
+
+      if (id === "projects") {
+        return Math.round(pinStart + pinDuration * 0.18);
+      }
+      if (id === "contact") {
+        return Math.round(pinStart + pinDuration);
+      }
+
+      return 0;
+    };
+
     return () => {
       if (transitionTl.scrollTrigger) transitionTl.scrollTrigger.kill();
       transitionTl.kill();
+      delete window.__getSectionScrollTarget;
     };
   }, []);
 
@@ -197,7 +242,7 @@ export default function PortfolioSections() {
         className="depth-section"
       >
         <div className="depth-section-inner">
-          
+
           <h2 id="about-title">Curiosity, then code.</h2>
           <p className="depth-intro">{profile.about}</p>
           <p className="depth-description">{profile.aboutMore}</p>
@@ -209,21 +254,15 @@ export default function PortfolioSections() {
 
           {/* Scrollytelling Career & Education Timeline */}
           <AboutTimeline />
-
-          {/* Nav Anchor for My Work link coordination */}
-          <div
-            id="projects"
-            data-nav-section
-            aria-hidden="true"
-            style={{ position: "relative", bottom: 0, height: 1, pointerEvents: "none" }}
-          />
         </div>
       </section>
 
       {/* 02 // MY WORK (PORTFOLIO) — 3D Celestial WebGL Space Flight */}
       <div
+        id="projects"
         ref={projectsRef}
         className="space-realm"
+        data-nav-section
         aria-label="Featured Projects — 3D Celestial Flight"
       >
         {/* Project Section Narrative Intro before 3D planetary flyby */}

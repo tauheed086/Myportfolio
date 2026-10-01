@@ -1171,6 +1171,7 @@ h3 {
 #about.depth-section {
   padding-top: 24px;
   padding-bottom: 0px;
+  scroll-margin-top: 100px;
 }
 
 .depth-section-inner {

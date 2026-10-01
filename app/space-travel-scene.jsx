@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import * as THREE from "three";
 import { profile, projects } from "./content";
+import ContactRealm from "./contact-realm.jsx";
 
 // =========================================================================
 // Procedural Canvas Texture Generators for 3D Celestial Bodies
@@ -142,7 +143,7 @@ function createEmeraldBioTexture() {
     ctx.stroke();
   }
 
-    const texture = new THREE.CanvasTexture(canvas);
+  const texture = new THREE.CanvasTexture(canvas);
   texture.wrapS = THREE.RepeatWrapping;
   texture.wrapT = THREE.ClampToEdgeWrapping;
   return texture;
@@ -423,6 +424,8 @@ export default function SpaceTravelScene({ flightProgressRef }) {
   const [selectedProject, setSelectedProject] = useState(null);
   const [isHoveringPlanet, setIsHoveringPlanet] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [isEnteredSmokePlanet, setIsEnteredSmokePlanet] = useState(false);
+  const isEnteredRef = useRef(false);
 
   useEffect(() => {
     setIsMounted(true);
@@ -875,57 +878,46 @@ export default function SpaceTravelScene({ flightProgressRef }) {
       });
 
       // The White Smoky Planet ONLY appears AFTER the GitHub modal has finished (progress >= 0.88)
-      // Completely hidden during project planets and while the GitHub modal is displayed!
-      const isSmokyActive = arePlanetsActive && smoothedProgress >= 0.88;
+      // Completely hidden during project planets, while GitHub modal is displayed, AND once inside the white smoke
+      const isInsideSmokyPlanet = arePlanetsActive && smoothedProgress >= 0.975;
+      const isSmokyActive = arePlanetsActive && smoothedProgress >= 0.88 && smoothedProgress < 0.965;
       smokyGroup.visible = isSmokyActive;
+
+      // Update sequential entrance state when camera dives completely into the white smoky planet
+      if (isInsideSmokyPlanet !== isEnteredRef.current) {
+        isEnteredRef.current = isInsideSmokyPlanet;
+        setIsEnteredSmokePlanet(isInsideSmokyPlanet);
+      }
 
       if (isSmokyActive) {
         // Materialize smoothly in the background as the modal dissolves (0.88 -> 0.92)
         const entranceFactor = Math.min(1, Math.max(0, (smoothedProgress - 0.88) / 0.04));
         smokyMat.opacity = entranceFactor;
-        atmoMat.opacity = 0.72 * entranceFactor;
-        haloMat.opacity = 0.25 * entranceFactor;
+        atmoMat.opacity = 0.75 * entranceFactor;
+        haloMat.opacity = 0.35 * entranceFactor;
+        smokyVeilMesh.scale.set(1, 1, 1);
+        smokyHaloMesh.scale.set(1, 1, 1);
 
-        // When approaching and penetrating the atmosphere (0.94 -> 1.00),
-        // expand the veil and mist so smoke rushes outward past the camera!
-        if (smoothedProgress > 0.94) {
-          const penetration = (smoothedProgress - 0.94) / 0.06;
-          const expandScale = 1.0 + penetration * 2.2;
-          smokyVeilMesh.scale.set(expandScale, expandScale, expandScale);
-          smokyHaloMesh.scale.set(expandScale * 1.3, expandScale * 1.3, expandScale * 1.3);
-          // Gently fade out core mesh so camera smoothly passes inside the hollow smoky world
-          smokyMat.opacity = Math.max(0, 1 - penetration * 1.3);
-        } else {
-          smokyVeilMesh.scale.set(1, 1, 1);
-          smokyHaloMesh.scale.set(1, 1, 1);
-        }
-
-        const emergeScale = 0.82 + 0.18 * entranceFactor;
+        const emergeScale = 0.85 + 0.15 * entranceFactor;
         smokyGroup.scale.set(emergeScale, emergeScale, emergeScale);
       }
 
-      // Volumetric atmospheric immersion fog when diving into the White Smoky Planet
-      if (scene.fog) {
-        if (smoothedProgress >= 0.93) {
-          const fogProgress = Math.min(1, Math.max(0, (smoothedProgress - 0.93) / 0.07));
-          scene.fog.density = fogProgress * 0.022;
-        } else {
-          scene.fog.density = 0;
-        }
-      }
-
       // Smooth direct opacity and transform for Atmospheric Smoke Interior Overlay
+      // Smoothly envelops the screen in luminous white smoke from 0.93 to 0.965
+      // completely covering the camera before any geometry clipping occurs
       if (smokeEntranceRef.current) {
-        if (smoothedProgress >= 0.93) {
-          const entry = Math.min(1, Math.max(0, (smoothedProgress - 0.93) / 0.07));
-          smokeEntranceRef.current.style.opacity = entry.toFixed(3);
+        if (smoothedProgress >= 0.955) {
+          const entry = Math.min(1, Math.max(0, (smoothedProgress - 0.955) / 0.02));
+          smokeEntranceRef.current.style.opacity = entry >= 0.99 ? "1" : entry.toFixed(3);
           smokeEntranceRef.current.style.visibility = entry > 0.01 ? "visible" : "hidden";
-          smokeEntranceRef.current.style.pointerEvents = entry > 0.96 ? "auto" : "none";
-          smokeEntranceRef.current.style.transform = `scale(${1.08 - entry * 0.08})`;
+          smokeEntranceRef.current.style.pointerEvents = entry >= 0.9 ? "auto" : "none";
+          smokeEntranceRef.current.setAttribute("aria-hidden", entry >= 0.9 ? "false" : "true");
+          smokeEntranceRef.current.style.transform = `scale(${1.03 - entry * 0.03})`;
         } else {
           smokeEntranceRef.current.style.opacity = "0";
           smokeEntranceRef.current.style.visibility = "hidden";
           smokeEntranceRef.current.style.pointerEvents = "none";
+          smokeEntranceRef.current.setAttribute("aria-hidden", "true");
         }
       }
 
@@ -1128,17 +1120,16 @@ export default function SpaceTravelScene({ flightProgressRef }) {
       {/* Floating Spatial Project HUD Card (Tracks with current world) */}
       {activeProj && (
         <div
-          className={`space-project-hud planet-theme-${activeProj.id} hud-pos-${
-            activeProjectIndex === 0
+          className={`space-project-hud planet-theme-${activeProj.id} hud-pos-${activeProjectIndex === 0
               ? "right"
               : activeProjectIndex === 1
-              ? "left"
-              : activeProjectIndex === 2
-              ? "right"
-              : activeProjectIndex === 3
-              ? "left"
-              : "center"
-          }`}
+                ? "left"
+                : activeProjectIndex === 2
+                  ? "right"
+                  : activeProjectIndex === 3
+                    ? "left"
+                    : "center"
+            }`}
           onClick={() => setSelectedProject(activeProj)}
           role="button"
           tabIndex={0}
@@ -1166,7 +1157,7 @@ export default function SpaceTravelScene({ flightProgressRef }) {
           <div className="hud-actions-row">
             <div className="hud-explore-btn">
               <span className="btn-sparkle">✦</span>
-              <span>CLICK PLANET TO EXPLORE</span>
+              <span>Know More</span>
               <span className="btn-arrow">↗</span>
             </div>
             {activeProj.liveUrl && (
@@ -1198,56 +1189,56 @@ export default function SpaceTravelScene({ flightProgressRef }) {
           visibility: "hidden"
         }}
       >
-         
 
-          <h2 className="brand-gate-title">Explore the Source on GitHub</h2>
 
-          <p className="brand-gate-subtitle">
-            From low-level Windows endpoint telemetry engines to multithreaded backend pipelines and reactive web applications.
-            Every project begins with clean code, modular architecture, and curiosity.
-          </p>
+        <h2 className="brand-gate-title">Explore the Source on GitHub</h2>
 
-          
+        <p className="brand-gate-subtitle">
+          From low-level Windows endpoint telemetry engines to multithreaded backend pipelines and reactive web applications.
+          Every project begins with clean code, modular architecture, and curiosity.
+        </p>
 
-          <div className="brand-gate-actions">
+
+
+        <div className="brand-gate-actions">
+          <a
+            href={profile.github}
+            target="_blank"
+            rel="noreferrer"
+            className="brand-gate-btn brand-gate-btn-primary"
+          >
+            <svg className="gate-btn-icon" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
+            </svg>
+            <span>Visit GitHub Repositories</span>
+            <span className="btn-arrow">↗</span>
+          </a>
+
+          <a
+            href={profile.linkedin}
+            target="_blank"
+            rel="noreferrer"
+            className="brand-gate-btn brand-gate-btn-secondary"
+          >
+            <svg className="gate-btn-icon" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" />
+            </svg>
+            <span>LinkedIn</span>
+            <span className="btn-arrow">↗</span>
+          </a>
+
+          {profile.resume && (
             <a
-              href={profile.github}
-              target="_blank"
-              rel="noreferrer"
-              className="brand-gate-btn brand-gate-btn-primary"
-            >
-              <svg className="gate-btn-icon" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
-              </svg>
-              <span>Visit GitHub Repositories</span>
-              <span className="btn-arrow">↗</span>
-            </a>
-
-            <a
-              href={profile.linkedin}
-              target="_blank"
-              rel="noreferrer"
+              href={profile.resume}
+              download
               className="brand-gate-btn brand-gate-btn-secondary"
             >
-              <svg className="gate-btn-icon" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
-              </svg>
-              <span>LinkedIn</span>
-              <span className="btn-arrow">↗</span>
+              <span>Download Résumé</span>
+              <span className="btn-arrow">↓</span>
             </a>
-
-            {profile.resume && (
-              <a
-                href={profile.resume}
-                download
-                className="brand-gate-btn brand-gate-btn-secondary"
-              >
-                <span>Download Résumé</span>
-                <span className="btn-arrow">↓</span>
-              </a>
-            )}
-          </div>
+          )}
         </div>
+      </div>
 
       {/* 
         ========================================================================
@@ -1269,6 +1260,9 @@ export default function SpaceTravelScene({ flightProgressRef }) {
         <div className="smoke-cloud-layer smoke-cloud-mid" />
         <div className="smoke-cloud-layer smoke-cloud-top" />
         <div className="smoke-mist-overlay" />
+
+        {/* The Contact Me Realm featuring Tauheed's Portrait */}
+        <ContactRealm isEntered={isEnteredSmokePlanet} />
       </div>
 
       {/* Cinematic Project Details Dossier Modal */}
@@ -1411,7 +1405,7 @@ export default function SpaceTravelScene({ flightProgressRef }) {
                     rel="noreferrer"
                   >
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+                      <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
                     </svg>
                     <span>GITHUB REPO ↗</span>
                   </a>

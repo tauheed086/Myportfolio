@@ -615,8 +615,8 @@
   }
 
   .about-timeline-track {
-    left: 20px;
-    transform: none;
+    left: 32px;
+    transform: translateX(-50%);
   }
 
   .about-timeline-rows {

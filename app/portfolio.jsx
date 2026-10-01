@@ -48,24 +48,36 @@ export default function Portfolio() {
   const highlight = hoverNav ?? focusNav ?? navigation.findIndex(item => item.id === activeId);
   const lenisRef = useRef(null);
 
+  const getSectionScrollTarget = (id) => {
+    if (typeof window !== "undefined" && typeof window.__getSectionScrollTarget === "function") {
+      return window.__getSectionScrollTarget(id);
+    }
+    if (id === "home") return 0;
+    const ocean = journey?.current ?? document.querySelector(".ocean-journey");
+    const nav = navbar?.current ?? document.querySelector(".top-nav");
+    const navBottom = nav ? nav.getBoundingClientRect().bottom : 80;
+    const navOffset = navBottom + 16;
+    const aboutStart = ocean ? ocean.offsetHeight : 2440;
+    if (id === "about") return Math.max(0, aboutStart - navOffset);
+    return 0;
+  };
+
   const scrollToSection = (event, id) => {
-    event.preventDefault();
+    if (event) event.preventDefault();
+    setHoverNav(null);
+    setFocusNav(null);
     setPanel(null);
+
+    const targetScroll = getSectionScrollTarget(id);
+
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      if (id === "home") window.scrollTo({ top: 0, behavior: "instant" });
-      else document.getElementById(id)?.scrollIntoView({ behavior: "instant", block: "start" });
+      window.scrollTo({ top: targetScroll, behavior: "instant" });
       return;
     }
     if (lenisRef.current) {
-      if (id === "home") {
-        lenisRef.current.scrollTo(0, { duration: 1.2 });
-      } else {
-        const target = document.getElementById(id);
-        if (target) lenisRef.current.scrollTo(target, { duration: 1.2 });
-      }
+      lenisRef.current.scrollTo(targetScroll, { duration: 1.2 });
     } else {
-      if (id === "home") window.scrollTo({ top: 0, behavior: "smooth" });
-      else document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+      window.scrollTo({ top: targetScroll, behavior: "smooth" });
     }
   };
   const dialog = useRef(null);
@@ -97,7 +109,10 @@ export default function Portfolio() {
     window.__lenis = lenis;
 
     // Direct synchronization between Lenis and GSAP ScrollTrigger
-    lenis.on("scroll", ScrollTrigger.update);
+    lenis.on("scroll", () => {
+      ScrollTrigger.update();
+      window.dispatchEvent(new CustomEvent("lenis-scroll"));
+    });
 
     const updateTicker = (time) => {
       lenis.raf(time * 1000);

@@ -1,0 +1,857 @@
+/* ==========================================================================
+   THE CONTACT REALM — Portrait Right, Editorial Content Left
+   Atmospheric, feathered edge dissolve, ethereal build-up animation
+   ========================================================================== */
+
+.contact-realm {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  height: 100vh;
+  height: 100dvh;
+  max-height: 100vh;
+  max-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0;
+  box-sizing: border-box;
+  color: #0f172a;
+  font-family: var(--font-sans, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  pointer-events: auto;
+  z-index: 25;
+  overflow: hidden;
+  overscroll-behavior: none;
+  touch-action: none;
+}
+
+/* Custom Minimalist Scrollbar — Hidden to lock viewport */
+.contact-realm::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+.contact-realm::-webkit-scrollbar-track {
+  background: transparent;
+}
+.contact-realm::-webkit-scrollbar-thumb {
+  background: transparent;
+}
+
+/* Master Grid: Left = Floating Info & Links, Right = Heroic 3D Portrait (Overlapping Spatial Composition) */
+.contact-realm-container {
+  display: grid;
+  grid-template-columns: minmax(440px, 1.12fr) minmax(420px, 1.15fr);
+  gap: 0;
+  align-items: flex-end;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 1540px;
+  margin: 0 auto;
+  position: relative;
+  box-sizing: border-box;
+  padding: 0 0 0 clamp(48px, 6vw, 110px);
+  height: 100%;
+  max-height: 100%;
+}
+
+@media (max-width: 940px) {
+  .contact-realm {
+    padding: 0;
+    justify-content: flex-start;
+    overflow-y: auto;
+    overflow-x: hidden;
+    touch-action: pan-y;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: auto;
+  }
+  .contact-realm-container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: 0;
+    position: relative;
+    height: auto;
+    min-height: 100%;
+  }
+}
+
+/* ==========================================================================
+   LEFT COLUMN: EDITORIAL INFO & LINKS (Floats over the 3D depth field)
+   ========================================================================== */
+.contact-info-col {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  z-index: 10;
+  margin-right: -40px;
+  max-width: 620px;
+  padding: clamp(64px, 8.5vh, 84px) 0 clamp(16px, 2.5vh, 28px) 0;
+  box-sizing: border-box;
+  pointer-events: auto;
+  align-self: center;
+  opacity: 0;
+  transform: translateY(22px);
+  transition: opacity 1s cubic-bezier(0.16, 1, 0.3, 1), transform 1s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+
+@media (max-width: 940px) {
+  .contact-info-col {
+    order: 2;
+    position: relative;
+    z-index: 5;
+    margin: 0;
+    padding: clamp(230px, 35vh, 290px) clamp(16px, 5vw, 24px) 100px clamp(16px, 5vw, 24px);
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    background: transparent !important;
+    background-image: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+.contact-realm.is-entered .contact-info-col {
+  opacity: 1;
+  transform: translateY(0);
+  transition-delay: 0.3s;
+}
+
+/* 1st: Open to Work Live Indicator */
+.status-live-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 18px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(16, 185, 129, 0.45);
+  box-shadow: 0 2px 14px rgba(16, 185, 129, 0.12);
+  width: fit-content;
+  margin-bottom: clamp(12px, 1.8vh, 18px);
+}
+
+.live-dot-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 9px;
+  height: 9px;
+}
+
+.live-dot-ping {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: #10b981;
+  opacity: 0.75;
+  animation: live-pulse-ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+.live-dot-core {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+}
+
+@keyframes live-pulse-ping {
+  0% {
+    transform: scale(0.95);
+    opacity: 0.9;
+  }
+  70% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+}
+
+.status-live-text {
+  font-size: 0.72rem;
+  font-weight: 750;
+  letter-spacing: 0.18em;
+  color: #065f46;
+  text-transform: uppercase;
+}
+
+/* 2nd: Headline */
+.contact-headline {
+  margin: 0;
+  font-size: clamp(2.35rem, 3.1vw, 3.25rem);
+  line-height: 1.08;
+  font-weight: 850;
+  color: #090d16;
+  letter-spacing: -0.045em;
+  max-width: 620px;
+}
+
+.headline-amp {
+  font-weight: 300;
+  font-style: italic;
+  color: #64748b;
+  margin: 0 4px;
+}
+
+@media (max-width: 640px) {
+  .contact-headline {
+    font-size: 1.85rem;
+    line-height: 1.15;
+  }
+}
+
+/* 3rd: Contextual Intent Selection Cards (Hire vs Freelance) */
+.intent-selection-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: clamp(14px, 2vh, 20px) 0 clamp(10px, 1.5vh, 16px) 0;
+  max-width: 620px;
+}
+
+.intent-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+  width: 100%;
+}
+
+@media (max-width: 640px) {
+  .intent-cards-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+}
+
+.intent-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 8px;
+  padding: clamp(10px, 1.4vh, 14px) clamp(12px, 1.2vw, 16px);
+  border-radius: 14px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+  font-family: inherit;
+}
+
+.intent-card:hover {
+  border-color: rgba(9, 13, 22, 0.3);
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
+}
+
+.intent-card.active {
+  border-color: #090d16;
+  background: rgba(255, 255, 255, 0.98);
+  color: #090d16;
+  box-shadow: 0 4px 18px rgba(9, 13, 22, 0.08), 0 0 0 1px #090d16;
+  transform: translateY(-2px);
+}
+
+.intent-card.active .intent-card-title {
+  color: #090d16;
+}
+
+.intent-card.active .intent-card-desc {
+  color: #334155;
+}
+
+.intent-card.active .intent-symbol-wrap {
+  background: rgba(9, 13, 22, 0.08);
+  color: #090d16;
+}
+
+.intent-card.active .intent-radio-indicator,
+.intent-radio-indicator.active {
+  border-color: #090d16;
+}
+
+.intent-card.active .radio-dot-inner {
+  background: #090d16;
+}
+
+.intent-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.intent-symbol-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  background: rgba(15, 23, 42, 0.05);
+  color: #090d16;
+  transition: all 0.25s ease;
+}
+
+.intent-card.active .intent-symbol-wrap {
+  background: #090d16;
+  color: #ffffff;
+}
+
+.intent-radio-indicator {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(148, 163, 184, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.2s ease;
+}
+
+.intent-card.active .intent-radio-indicator {
+  border-color: #090d16;
+}
+
+.radio-dot-inner {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #090d16;
+  animation: dot-pop 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes dot-pop {
+  0% {
+    transform: scale(0);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.intent-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.intent-mini-badge {
+  font-size: 0.6rem;
+  font-weight: 750;
+  letter-spacing: 0.16em;
+  color: #64748b;
+  text-transform: uppercase;
+}
+
+.intent-card-title {
+  margin: 1px 0;
+  font-size: 1.05rem;
+  font-weight: 750;
+  color: #090d16;
+  letter-spacing: -0.015em;
+}
+
+.intent-card-desc {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.42;
+  color: #475569;
+}
+
+/* 4th & 5th: Action Pill Sections */
+.action-pill-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: clamp(10px, 1.5vh, 16px);
+  max-width: 620px;
+}
+
+.section-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.section-mini-tag {
+  font-size: 0.68rem;
+  font-weight: 750;
+  letter-spacing: 0.22em;
+  color: #64748b;
+  text-transform: uppercase;
+}
+
+.context-active-pill {
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: #0284c7;
+  background: rgba(2, 132, 199, 0.08);
+  border: 1px solid rgba(2, 132, 199, 0.25);
+  padding: 3px 10px;
+  border-radius: 9999px;
+  text-transform: uppercase;
+}
+
+.pill-buttons-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* Force all 3 direct contact buttons into a single cohesive row */
+.pill-buttons-row.direct-contact-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 8px;
+  width: 100%;
+}
+
+.direct-contact-row .axel-pill-btn {
+  padding: clamp(9px, 1.2vh, 12px) clamp(14px, 1.2vw, 18px);
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.direct-contact-row .pill-content {
+  gap: 8px;
+  justify-content: center;
+}
+
+.direct-contact-row .pill-text-label {
+  font-size: 0.86rem;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+.direct-contact-row .pill-icon-lead {
+  flex-shrink: 0;
+}
+
+.direct-contact-row .pill-badge-arrow {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  border-radius: 4px;
+}
+
+@media (max-width: 620px) {
+  .pill-buttons-row.direct-contact-row {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .direct-contact-row .axel-pill-btn.primary {
+    flex: 1 1 calc(50% - 8px);
+  }
+}
+
+/* ==========================================================================
+   AXEL-STYLE MINIMALIST PILL BUTTONS (Cursor-Origin Ripple Hover Fill)
+   ========================================================================== */
+.axel-pill-btn {
+  position: relative;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 18px;
+  border-radius: 9999px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: #090d16;
+  font-family: inherit;
+  font-size: 0.86rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+  cursor: pointer;
+  transition: border-color 0.22s ease, transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s ease;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+}
+
+.axel-pill-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(9, 13, 22, 0.14);
+  border-color: #090d16;
+}
+
+/* Liquid ink bubble expanding from the cursor's entrance point */
+.pill-fill-circle {
+  position: absolute;
+  width: 480px;
+  height: 480px;
+  border-radius: 50%;
+  background: #090d16;
+  pointer-events: none;
+  transform-origin: center;
+  transform: translate(-50%, -50%) scale(0);
+  z-index: 1;
+}
+
+.axel-pill-btn .pill-content {
+  position: relative;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  transition: color 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.pill-icon-lead {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: currentColor;
+  opacity: 0.95;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.axel-pill-btn:hover .pill-icon-lead {
+  transform: scale(1.08);
+}
+
+.pill-text-label {
+  font-size: 0.86rem;
+  font-weight: 650;
+  letter-spacing: 0.03em;
+}
+
+/* Minimalist clean arrow — No clunky blue square box */
+.pill-badge-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: currentColor;
+  opacity: 0.65;
+  background: transparent;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.axel-pill-btn:hover .pill-badge-arrow {
+  transform: translate(2px, -2px);
+  opacity: 1;
+}
+
+.axel-pill-btn:hover .pill-content {
+  color: #ffffff;
+}
+
+/* Unified Frosted Glass Contact Action Pills (WhatsApp, Email, Phone) */
+.axel-pill-btn.whatsapp-btn,
+.axel-pill-btn.email-btn,
+.axel-pill-btn.phone-btn,
+.axel-pill-btn.secondary,
+.axel-pill-btn.primary {
+  background: rgba(255, 255, 255, 0.9);
+  color: #090d16;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
+}
+
+.axel-pill-btn.whatsapp-btn .pill-badge-arrow,
+.axel-pill-btn.email-btn .pill-badge-arrow,
+.axel-pill-btn.phone-btn .pill-badge-arrow {
+  opacity: 0.65;
+}
+
+.axel-pill-btn.whatsapp-btn:hover,
+.axel-pill-btn.email-btn:hover,
+.axel-pill-btn.phone-btn:hover,
+.axel-pill-btn.secondary:hover,
+.axel-pill-btn.primary:hover {
+  background: #ffffff;
+  border-color: #090d16;
+  box-shadow: 0 6px 20px rgba(9, 13, 22, 0.12);
+}
+
+/* Social Buttons: GitHub & LinkedIn */
+.axel-pill-btn.social-btn {
+  background: rgba(255, 255, 255, 0.85);
+  color: #090d16;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+}
+
+/* ==========================================================================
+   RIGHT COLUMN: HEROIC 3D PORTRAIT WITH LAYERED SPATIAL DEPTH
+   ========================================================================== */
+.contact-portrait-col {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  position: relative;
+  z-index: 2;
+  height: 100%;
+  width: 100%;
+  overflow: visible;
+  padding-right: 0;
+}
+
+@media (max-width: 940px) {
+  .contact-portrait-col {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    z-index: 1 !important;
+    pointer-events: none !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: flex-start !important;
+    opacity: var(--mobile-scroll-opacity, 1);
+    transform: scale(calc(0.96 + 0.04 * var(--mobile-scroll-opacity, 1))) translateY(calc((1 - var(--mobile-scroll-opacity, 1)) * -18px));
+    will-change: opacity, transform;
+  }
+}
+
+.portrait-buildup-frame {
+  position: relative;
+  width: 100%;
+  max-width: 680px;
+  height: 100vh;
+  height: 100dvh;
+  max-height: 100vh;
+  max-height: 100dvh;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  /* Ethereal Build-Up initial state: 100% hidden until fully entered into the planet */
+  opacity: 0;
+  filter: blur(18px) brightness(1.15);
+  transform: scale(0.96) translateY(14px);
+  transition:
+    opacity 1.3s cubic-bezier(0.16, 1, 0.3, 1),
+    filter 1.3s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 1.3s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, filter, transform;
+  pointer-events: none;
+  /* Vertical smooth fade: dissolves only the bottom cut into the smoke */
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    black 0%,
+    black 84%,
+    rgba(0, 0, 0, 0.7) 91%,
+    rgba(0, 0, 0, 0.2) 97%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    black 0%,
+    black 84%,
+    rgba(0, 0, 0, 0.7) 91%,
+    rgba(0, 0, 0, 0.2) 97%,
+    transparent 100%
+  );
+}
+
+/* Once fully entered into the White Smoky Planet, build-up materializes with ethereal animation! */
+.contact-realm.is-entered .portrait-buildup-frame {
+  opacity: 1;
+  filter: blur(0px) brightness(1.0);
+  transform: scale(1) translateY(0);
+  transition-delay: 0.2s;
+  pointer-events: auto;
+}
+
+.portrait-buildup-img {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  position: relative;
+  /* Horizontal smooth fade: feathers only the sharp outer boundary cuts */
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    rgba(0, 0, 0, 0.25) 2%,
+    rgba(0, 0, 0, 0.75) 4.5%,
+    black 7%,
+    black 96%,
+    rgba(0, 0, 0, 0.8) 98.5%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    rgba(0, 0, 0, 0.25) 2%,
+    rgba(0, 0, 0, 0.75) 4.5%,
+    black 7%,
+    black 96%,
+    rgba(0, 0, 0, 0.8) 98.5%,
+    transparent 100%
+  );
+  filter: contrast(1.05) brightness(1.01);
+}
+
+@media (max-width: 940px) {
+  .portrait-buildup-frame {
+    width: 100%;
+    max-width: 480px;
+    height: 100%;
+    max-height: 100%;
+    margin: 0 auto;
+    opacity: 1 !important;
+    filter: none !important;
+    transform: none !important;
+    pointer-events: auto !important;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    -webkit-mask-image: linear-gradient(
+      to bottom,
+      black 0%,
+      black 58%,
+      rgba(0, 0, 0, 0.75) 74%,
+      rgba(0, 0, 0, 0.25) 88%,
+      transparent 98%
+    );
+    mask-image: linear-gradient(
+      to bottom,
+      black 0%,
+      black 58%,
+      rgba(0, 0, 0, 0.75) 74%,
+      rgba(0, 0, 0, 0.25) 88%,
+      transparent 98%
+    );
+  }
+  .portrait-buildup-img {
+    height: 100%;
+    width: 100%;
+    max-width: 100%;
+    justify-content: center;
+    -webkit-mask-image: linear-gradient(
+      to right,
+      transparent 0%,
+      rgba(0, 0, 0, 0.35) 2.5%,
+      black 8%,
+      black 92%,
+      rgba(0, 0, 0, 0.35) 97.5%,
+      transparent 100%
+    );
+    mask-image: linear-gradient(
+      to right,
+      transparent 0%,
+      rgba(0, 0, 0, 0.35) 2.5%,
+      black 8%,
+      black 92%,
+      rgba(0, 0, 0, 0.35) 97.5%,
+      transparent 100%
+    );
+  }
+}
+
+@media (max-width: 640px) {
+  .contact-headline {
+    font-size: clamp(1.65rem, 5.6vw, 2.05rem);
+    line-height: 1.15;
+    letter-spacing: -0.035em;
+    text-shadow: 0 2px 16px rgba(255, 255, 255, 0.9);
+  }
+  .intent-cards-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    width: 100%;
+  }
+  .intent-card {
+    padding: 11px 12px;
+    border-radius: 14px;
+    min-height: 86px;
+  }
+  .intent-card-title {
+    font-size: 0.88rem;
+    font-weight: 700;
+  }
+  .intent-card-desc {
+    font-size: 0.72rem;
+    line-height: 1.32;
+  }
+  .pill-buttons-row.direct-contact-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    width: 100%;
+  }
+  .direct-contact-row .axel-pill-btn {
+    width: 100%;
+    padding: 10px 14px;
+    box-sizing: border-box;
+    justify-content: center;
+    height: 46px;
+  }
+  .direct-contact-row .phone-btn {
+    grid-column: 1 / -1;
+  }
+  .pill-buttons-row.social-contact-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    width: 100%;
+  }
+  .social-contact-row .axel-pill-btn {
+    width: 100%;
+    padding: 8px 14px;
+    box-sizing: border-box;
+    justify-content: center;
+    height: 42px;
+  }
+}
+
+/* Viewport Height Constraints: Ensures perfect proportion on smaller screens/laptops */
+@media (max-height: 740px) and (min-width: 941px) {
+  .contact-headline {
+    font-size: clamp(2.1rem, 2.7vw, 2.65rem);
+  }
+  .status-live-badge {
+    margin-bottom: 10px;
+    padding: 6px 16px;
+  }
+  .intent-selection-wrap {
+    margin: 10px 0 8px 0;
+  }
+  .intent-card {
+    padding: 10px 14px;
+    gap: 8px;
+  }
+  .intent-card-desc {
+    font-size: 0.78rem;
+    line-height: 1.38;
+  }
+  .action-pill-section {
+    margin-top: 10px;
+    gap: 6px;
+  }
+  .direct-contact-row .axel-pill-btn {
+    padding: 8px 14px;
+  }
+}

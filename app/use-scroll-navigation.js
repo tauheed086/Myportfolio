@@ -18,24 +18,43 @@ export default function useScrollNavigation(journey) {
     let previousSection = null, lastWidth = -1;
     const measure = () => {
       start = journey.current.getBoundingClientRect().top + window.scrollY;
-      positions = sections.map(section => ({ id: section.id, top: section.getBoundingClientRect().top + window.scrollY }));
-      end = positions.find(section => section.id === "about")?.top ?? start + 1;
       const width = document.documentElement.clientWidth;
       compact = Math.min(880, width - (width <= 800 ? 28 : 64));
       expanded = Math.max(compact, Math.min(1200, width - 16));
     };
     const update = () => {
       frame = 0;
+      const pinSpacer = document.querySelector(".pin-spacer");
+      const aboutSec = document.getElementById("about");
+      const aboutTop = journey.current ? (journey.current.offsetTop + journey.current.offsetHeight) : 2440;
+      end = aboutTop;
+
       const progress = (window.scrollY - start) / Math.max(1, end - start);
       const targetWidth = Math.round(navigationWidth(preference.matches ? 0 : progress, compact, expanded));
       if (Math.abs(targetWidth - lastWidth) >= 1) {
         lastWidth = targetWidth;
         nav.style.setProperty("--scroll-nav-width", `${targetWidth}px`);
       }
-      let current = visibleSection(positions, window.scrollY, window.innerHeight);
-      if (typeof window !== "undefined" && window.__flightProgress >= 0.92) {
+
+      const navOffset = (nav.getBoundingClientRect().bottom || 80) + 16;
+      const aboutThreshold = Math.max(0, aboutTop - navOffset - 50);
+
+      const st = typeof window !== "undefined" && window.ScrollTrigger
+        ? window.ScrollTrigger.getById("space-flight-transition")
+        : null;
+
+      const pinStart = st ? st.start : (aboutTop + (aboutSec?.offsetHeight ?? 1500) - window.innerHeight);
+      const pinEnd = st ? st.end : (pinStart + 3600);
+
+      let current = null;
+      if (typeof window !== "undefined" && (window.__flightProgress >= 0.88 || window.scrollY >= pinEnd - 50)) {
         current = "contact";
+      } else if (window.scrollY >= pinStart - 50) {
+        current = "projects";
+      } else if (window.scrollY >= aboutThreshold) {
+        current = "about";
       }
+
       if (current !== previousSection) {
         previousSection = current;
         setActiveSection(current);
@@ -48,6 +67,7 @@ export default function useScrollNavigation(journey) {
     observer.observe(nav);
     sections.forEach(section => observer.observe(section));
     window.addEventListener("scroll", schedule, { passive: true });
+    window.addEventListener("lenis-scroll", schedule);
     window.addEventListener("flight-progress", schedule);
     window.addEventListener("resize", resize);
     window.addEventListener("pageshow", resize);
@@ -58,6 +78,7 @@ export default function useScrollNavigation(journey) {
       cancelAnimationFrame(frame);
       observer.disconnect();
       window.removeEventListener("scroll", schedule);
+      window.removeEventListener("lenis-scroll", schedule);
       window.removeEventListener("flight-progress", schedule);
       window.removeEventListener("resize", resize);
       window.removeEventListener("pageshow", resize);
