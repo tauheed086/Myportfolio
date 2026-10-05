@@ -123,7 +123,7 @@ export const careerTimeline = [
       type: "Academic Credential",
       code: "BTE-CSE-2021",
       institution: "Board of Technical Education",
-      subTitle: "Belagavi Board · Vijaypur",
+      subTitle: "Secab's Maliksandal Polytechnic,Vijaypur",
       status: "Completed",
       highlights: ["C & Logic Design", "Data Structures", "OS Fundamentals"]
     }
@@ -142,7 +142,7 @@ export const careerTimeline = [
       type: "University Degree",
       code: "VTU-CSE-2024",
       institution: "Visvesvaraya Tech University",
-      subTitle: "BLDEA CET · First Class with Distinction",
+      subTitle: "BLDEA College of Engineering and Technology ",
       status: "Graduated with Honors",
       highlights: ["Algorithms & Systems", "Database Design", "Deep Learning Research"]
     }
@@ -173,7 +173,7 @@ export const careerTimeline = [
     title: "Software Developer",
     organization: "Seamless Automations Pvt Ltd",
     location: "Thane, Maharashtra",
-    narrative: "Stepped up to lead critical system automation initiatives. Engineering lightweight Windows background telemetry agents, multithreaded backend coordination engines, and high-throughput analytical data pipelines.",
+    narrative: "Contributed to critical system automation initiatives by engineering lightweight Windows background telemetry agents, multithreaded backend coordination engines, and high-throughput analytical data pipelines.",
     credential: {
       type: "Current Employment",
       code: "Software Developer",

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { playDiveIn, playRiseUp, unlockAudio, updateAmbientScrollAudio } from "./sound-manager";
 
 const clamp = value => Math.max(0, Math.min(1, value));
 const ease = value => value * value * (3 - 2 * value);
@@ -9,6 +10,8 @@ export default function useOceanScroll() {
   const journey = useRef(null);
   const [submerged, setSubmerged] = useState(false);
   const waveProgressRef = useRef({ progress: 0, velocity: 0 });
+  const hasDivedRef = useRef(false);
+  const wasSubmergedRef = useRef(false);
   useEffect(() => {
     const element = journey.current;
     if (!element) return;
@@ -18,7 +21,7 @@ export default function useOceanScroll() {
     const extension = element.querySelector(".ocean-extension");
     if (!stage || !crest) return;
     const preference = window.matchMedia("(prefers-reduced-motion: reduce)");
-    let frame = 0, previousSubmerged = false, surfaceFolded = false;
+    let frame = 0, previousSubmerged = false, surfaceFolded = false, isInitialized = false;
     let displayedProgress = null;
     let stageHeight = 1, crestHeight = 1, extensionHeight = 1, distance = 1, elementTop = 0;
     const measure = () => {
@@ -81,6 +84,30 @@ export default function useOceanScroll() {
         element.style.setProperty("--scene-opacity", "0");
       }
 
+      // Track submerged depth state for emergence detection
+      if (progress >= 0.09) {
+        wasSubmergedRef.current = true;
+      }
+
+      if (isInitialized) {
+        updateAmbientScrollAudio();
+
+        // 1. Dive-in: waves surge upward as user descends into the ocean
+        if (progress >= 0.025 && progress <= 0.22 && !hasDivedRef.current) {
+          hasDivedRef.current = true;
+          playDiveIn();
+        }
+
+        // 2. Rise-up: waves recede and user emerges back onto the surface
+        if (progress <= 0.05 && wasSubmergedRef.current) {
+          wasSubmergedRef.current = false;
+          hasDivedRef.current = false;
+          playRiseUp();
+        } else if (progress <= 0.008) {
+          hasDivedRef.current = false;
+        }
+      }
+
       const nextSubmerged = progress >= 0.10;
       if (nextSubmerged !== previousSubmerged) {
         previousSubmerged = nextSubmerged;
@@ -99,6 +126,7 @@ export default function useOceanScroll() {
     preference.addEventListener("change", schedule);
     measure();
     update();
+    isInitialized = true;
     return () => {
       cancelAnimationFrame(frame);
       observer.disconnect();
@@ -110,7 +138,11 @@ export default function useOceanScroll() {
   }, []);
 
   const dive = event => {
-    event.preventDefault();
+    if (event) event.preventDefault();
+    unlockAudio();
+    playDiveIn();
+    hasDivedRef.current = true;
+    wasSubmergedRef.current = false;
     const element = journey.current;
     if (!element) return;
     const stage = element.querySelector(".wave-portfolio");

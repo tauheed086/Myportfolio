@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { MotionPathPlugin } from "gsap/MotionPathPlugin";
+import { playRandomBubble, isInsideOcean, unlockAudio } from "./sound-manager";
 import "./ocean-fish.css";
 
 export default function DeepSeaFish({ paused = false }) {
@@ -185,6 +186,50 @@ export default function DeepSeaFish({ paused = false }) {
       });
     };
 
+    // Interactive tap bubble burst emitter (generates rising bubbles on tap)
+    const spawnTapBubbles = (x, y) => {
+      if (!bubbleElements.length) return;
+      const count = 3;
+      for (let i = 0; i < count; i++) {
+        const bubble = bubbleElements[bubbleIndex % bubbleElements.length];
+        bubbleIndex++;
+
+        const size = gsap.utils.random(14, 28);
+        const driftX = gsap.utils.random(-26, 26);
+        const riseY = gsap.utils.random(110, 190);
+        const duration = gsap.utils.random(1.2, 1.8);
+        const delay = i * 0.05;
+
+        gsap.killTweensOf(bubble);
+        gsap.set(bubble, {
+          x: x + gsap.utils.random(-12, 12),
+          y: y + gsap.utils.random(-12, 12),
+          width: `${size}px`,
+          height: `${size}px`,
+          scale: 0.1,
+          opacity: 0
+        });
+
+        gsap.to(bubble, {
+          y: y - riseY,
+          x: x + driftX,
+          scale: gsap.utils.random(1.0, 1.35),
+          opacity: gsap.utils.random(0.75, 0.95),
+          duration: 0.18,
+          delay: delay,
+          ease: "power1.out",
+          onComplete: () => {
+            gsap.to(bubble, {
+              y: y - riseY - 50,
+              opacity: 0,
+              duration: duration - 0.18,
+              ease: "power1.in"
+            });
+          }
+        });
+      }
+    };
+
     const handlePointerMove = (e) => {
       // Spawn cursor bubbles once entering underwater depths
       if (window.scrollY < 80) return;
@@ -201,7 +246,22 @@ export default function DeepSeaFish({ paused = false }) {
       }
     };
 
+    const handlePointerDown = (e) => {
+      // Only play bubbles when tapped inside the ocean
+      if (!isInsideOcean() && !isFishVisible) return;
+
+      // Ignore taps on interactive UI controls (buttons, links, inputs, dialogs, scene controls)
+      if (e.target && e.target.closest && e.target.closest("button, a, input, textarea, select, dialog, .scene-controls, .nav-links, .nav-socials")) {
+        return;
+      }
+
+      unlockAudio();
+      playRandomBubble();
+      spawnTapBubbles(e.clientX, e.clientY);
+    };
+
     window.addEventListener("pointermove", handlePointerMove, { passive: true });
+    window.addEventListener("pointerdown", handlePointerDown, { passive: true });
 
     const setVisible = (visible) => {
       isFishVisible = visible;
@@ -356,6 +416,7 @@ export default function DeepSeaFish({ paused = false }) {
       clearInterval(breathInterval);
       window.removeEventListener("resize", handleResize);
       window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointerdown", handlePointerDown);
       visibilityTrigger.kill();
       if (aboutTrigger) aboutTrigger.kill();
       if (swimTl.scrollTrigger) swimTl.scrollTrigger.kill();

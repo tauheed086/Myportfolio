@@ -6,6 +6,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { profile } from "./content";
 import AboutTimeline from "./about-timeline.jsx";
 import SpaceTravelScene from "./space-travel-scene.jsx";
+import { updateAmbientScrollAudio } from "./sound-manager";
 import "./space-fold-transition.css";
 
 export default function PortfolioSections() {
@@ -50,6 +51,9 @@ export default function PortfolioSections() {
         pin: true,
         scrub: 0.5,
         anticipatePin: 1,
+        onUpdate: () => {
+          updateAmbientScrollAudio();
+        },
         onEnter: () => {
           gsap.set(projectsSec, {
             position: "fixed",

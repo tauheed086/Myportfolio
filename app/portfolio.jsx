@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
-import { ArrowDown, Moon, Sun, Pause, Play, X, FileText } from "lucide-react";
+import { ArrowDown, Moon, Sun, Pause, Play, X, FileText, Volume2, VolumeX } from "lucide-react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Lenis from "lenis";
@@ -13,6 +13,7 @@ import DeepSeaFish from "./deep-sea-fish";
 import SubmergedNarrative from "./submerged-narrative";
 import ResumeDrawer from "./resume-drawer";
 import { profile } from "./content";
+import { isSoundEnabled, toggleSound, subscribeSound, unlockAudio, updateAmbientScrollAudio } from "./sound-manager";
 
 const navigation = [{ id: "about", label: "About" }, { id: "projects", label: "My Work" }, { id: "contact", label: "Contact Me" }];
 
@@ -35,6 +36,7 @@ export default function Portfolio() {
   const [paused, setPaused] = useState(true);
   const [sceneOnly, setSceneOnly] = useState(false);
   const isNightSaved = useSyncExternalStore(subscribeTheme, getThemeSnapshot, getServerThemeSnapshot);
+  const soundEnabled = useSyncExternalStore(subscribeSound, isSoundEnabled, () => true);
   const [nightOverride, setNightOverride] = useState(null);
   const night = nightOverride ?? isNightSaved;
   const [panel, setPanel] = useState(null);
@@ -108,11 +110,14 @@ export default function Portfolio() {
     lenisRef.current = lenis;
     window.__lenis = lenis;
 
-    // Direct synchronization between Lenis and GSAP ScrollTrigger
+    // Direct synchronization between Lenis, GSAP ScrollTrigger, and ambient audio
     lenis.on("scroll", () => {
       ScrollTrigger.update();
+      updateAmbientScrollAudio();
       window.dispatchEvent(new CustomEvent("lenis-scroll"));
     });
+
+    window.addEventListener("scroll", updateAmbientScrollAudio, { passive: true });
 
     const updateTicker = (time) => {
       lenis.raf(time * 1000);
@@ -123,6 +128,7 @@ export default function Portfolio() {
     gsap.ticker.lagSmoothing(0);
 
     return () => {
+      window.removeEventListener("scroll", updateAmbientScrollAudio);
       gsap.ticker.remove(updateTicker);
       lenis.destroy();
       lenisRef.current = null;
@@ -160,6 +166,18 @@ export default function Portfolio() {
         </a>)}
       </nav>
       <div className="nav-socials" role="group" aria-label="Social media and credentials">
+        <button
+          type="button"
+          className={`social-icon sound-toggle-btn ${soundEnabled ? "is-active" : "is-muted"}`}
+          onClick={() => {
+            unlockAudio();
+            toggleSound();
+          }}
+          aria-label={soundEnabled ? "Mute audio sound effects" : "Enable audio sound effects"}
+          title={soundEnabled ? "Sound Effects: ON (Click to mute)" : "Sound Effects: MUTED (Click to enable)"}
+        >
+          {soundEnabled ? <Volume2 size={16} aria-hidden="true" /> : <VolumeX size={16} aria-hidden="true" />}
+        </button>
         <button
           type="button"
           className="nav-resume-btn"
@@ -220,7 +238,18 @@ export default function Portfolio() {
         </div>
         <canvas ref={foregroundCanvasRef} className="wave-scene-foreground" aria-hidden="true" />
 
-        <div className="scene-controls" style={{ opacity: "var(--controls-opacity, 1)", pointerEvents: "var(--controls-pointer, auto)", transition: "opacity 0.2s ease-out" }}><button className="theme-toggle" onClick={toggleTheme} aria-label="Night mode" aria-pressed={night}>{night ? <Sun size={13} /> : <Moon size={13} />}<span>{night ? "Day scene" : "Night scene"}</span></button><span /><button onClick={() => setSceneOnly(!sceneOnly)} aria-pressed={sceneOnly}>{sceneOnly ? "Show portfolio" : "View scene only"}</button><span /> <button className="motion-button" aria-label={paused ? "Play animation" : "Pause animation"} onClick={() => setPaused(!paused)}>{paused ? <Play size={12} /> : <Pause size={12} />}</button></div>
+        <div className="scene-controls" style={{ opacity: "var(--controls-opacity, 1)", pointerEvents: "var(--controls-pointer, auto)", transition: "opacity 0.2s ease-out" }}>
+          <button className="theme-toggle" onClick={toggleTheme} aria-label="Night mode" aria-pressed={night}>{night ? <Sun size={13} /> : <Moon size={13} />}<span>{night ? "Day scene" : "Night scene"}</span></button>
+          <span />
+          <button onClick={() => setSceneOnly(!sceneOnly)} aria-pressed={sceneOnly}>{sceneOnly ? "Show portfolio" : "View scene only"}</button>
+          <span />
+          <button className="sound-button" aria-label={soundEnabled ? "Mute sound" : "Enable sound"} onClick={() => { unlockAudio(); toggleSound(); }}>
+            {soundEnabled ? <Volume2 size={12} /> : <VolumeX size={12} />}
+            <span>{soundEnabled ? "Sound on" : "Sound off"}</span>
+          </button>
+          <span />
+          <button className="motion-button" aria-label={paused ? "Play animation" : "Pause animation"} onClick={() => setPaused(!paused)}>{paused ? <Play size={12} /> : <Pause size={12} />}</button>
+        </div>
 
         <dialog id="portfolio-panel" ref={dialog} className="info-panel" aria-labelledby="panel-title" onCancel={() => setPanel(null)} onClose={() => setPanel(null)} onClick={event => { if (event.target === event.currentTarget) setPanel(null); }}>
           <div className="panel-content"><button className="close-panel" aria-label="Close panel" onClick={() => setPanel(null)}><X size={23} strokeWidth={1.4} /></button>

@@ -289,6 +289,23 @@ h3 {
   width: 24px;
 }
 
+.scene-controls .sound-button {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: transparent;
+  border: 0;
+  color: inherit;
+  font-size: inherit;
+  cursor: pointer;
+  padding: 0 2px;
+  transition: color 150ms ease;
+}
+
+.scene-controls .sound-button:hover {
+  color: var(--nav-active, #fff);
+}
+
 .info-panel {
   position: fixed;
   inset: 0;
@@ -844,6 +861,21 @@ h3 {
 
 .top-nav .social-icon {
   transition: transform 200ms, opacity 200ms;
+}
+
+.top-nav .sound-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.top-nav .sound-toggle-btn.is-muted {
+  opacity: 0.5;
+}
+
+.top-nav .sound-toggle-btn.is-muted:hover {
+  opacity: 0.9;
 }
 
 .top-nav button:focus-visible,
