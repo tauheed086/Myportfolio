@@ -42,6 +42,55 @@ const BUBBLE_SRCS = [
 let bubbleAudioPool = [];
 let lastBubbleIndex = -1;
 
+// Preloaded planet hover audio pool (planet-hover.mp3)
+const PLANET_HOVER_SRC = "/sounds/space/planet-hover.mp3";
+let planetHoverAudioPool = [];
+let planetHoverPoolIndex = 0;
+let lastPlanetHoverTime = 0;
+
+function initPlanetHoverPool() {
+  if (typeof window === "undefined" || planetHoverAudioPool.length > 0) return;
+  try {
+    for (let i = 0; i < 4; i++) {
+      const audio = new Audio(PLANET_HOVER_SRC);
+      audio.preload = "auto";
+      audio.volume = 0.5;
+      planetHoverAudioPool.push(audio);
+    }
+  } catch (e) {
+    console.warn("Could not initialize planet hover audio pool:", e);
+  }
+}
+
+// Preloaded fish swimming sound pool (whoosh.mp3, sloosh.mp3)
+const FISH_SWIM_SRCS = [
+  "/sounds/ocean/whoosh.mp3",
+  "/sounds/ocean/sloosh.mp3"
+];
+let fishSwimAudioPool = [];
+let lastFishSwimIndex = -1;
+let lastFishSwimTime = 0;
+
+function initFishSwimPool() {
+  if (typeof window === "undefined" || fishSwimAudioPool.length > 0) return;
+  try {
+    for (let i = 0; i < FISH_SWIM_SRCS.length; i++) {
+      for (let j = 0; j < 2; j++) {
+        const audio = new Audio(FISH_SWIM_SRCS[i]);
+        audio.preload = "auto";
+        audio.volume = 0.26;
+        fishSwimAudioPool.push({
+          soundIndex: i,
+          type: i === 0 ? "whoosh" : "sloosh",
+          audio: audio
+        });
+      }
+    }
+  } catch (e) {
+    console.warn("Could not initialize fish swim audio pool:", e);
+  }
+}
+
 function initBubblePool() {
   if (typeof window === "undefined" || bubbleAudioPool.length > 0) return;
   try {
@@ -107,9 +156,27 @@ export function unlockAudio() {
   if (underAudio) {
     underAudio.load();
   }
+  const spaceAud = getSpaceAudio();
+  if (spaceAud) {
+    spaceAud.load();
+  }
 
   initBubblePool();
   bubbleAudioPool.forEach(item => {
+    try {
+      item.audio.load();
+    } catch {}
+  });
+
+  initPlanetHoverPool();
+  planetHoverAudioPool.forEach(audio => {
+    try {
+      audio.load();
+    } catch {}
+  });
+
+  initFishSwimPool();
+  fishSwimAudioPool.forEach(item => {
     try {
       item.audio.load();
     } catch {}
@@ -151,6 +218,24 @@ export function setSoundEnabled(enabled) {
       currentUnderwaterVolume = 0;
       targetUnderwaterVolume = 0;
     }
+    if (spaceAudio) {
+      spaceAudio.pause();
+      spaceAudio.volume = 0;
+      currentSpaceVolume = 0;
+      targetSpaceVolume = 0;
+    }
+    planetHoverAudioPool.forEach(audio => {
+      try {
+        audio.pause();
+        audio.currentTime = 0;
+      } catch {}
+    });
+    fishSwimAudioPool.forEach(item => {
+      try {
+        item.audio.pause();
+        item.audio.currentTime = 0;
+      } catch {}
+    });
   } else {
     updateAmbientScrollAudio();
   }
@@ -236,14 +321,20 @@ export function playRiseUp() {
 }
 
 // =========================================================================
-// Ambient Underwater Audio Controller
-// Plays continuously in the ocean, slowly fading away as we reach space.
+// Ambient Environmental Audio Controllers: Ocean (Underwater) & Space
+// Continuously crossfades as you travel between the ocean and deep space.
 // =========================================================================
 const MAX_UNDERWATER_VOLUME = 0.48;
 let underwaterAudio = null;
 let currentUnderwaterVolume = 0;
 let targetUnderwaterVolume = 0;
 let underwaterFadeRaf = null;
+
+const MAX_SPACE_VOLUME = 0.50;
+let spaceAudio = null;
+let currentSpaceVolume = 0;
+let targetSpaceVolume = 0;
+let spaceFadeRaf = null;
 
 export function getUnderwaterAudio() {
   if (typeof window === "undefined") return null;
@@ -258,6 +349,21 @@ export function getUnderwaterAudio() {
     }
   }
   return underwaterAudio;
+}
+
+export function getSpaceAudio() {
+  if (typeof window === "undefined") return null;
+  if (!spaceAudio) {
+    try {
+      spaceAudio = new Audio("/sounds/space/space-bg-sound.mp3");
+      spaceAudio.loop = true;
+      spaceAudio.preload = "auto";
+      spaceAudio.volume = 0;
+    } catch (e) {
+      console.warn("Could not initialize space audio:", e);
+    }
+  }
+  return spaceAudio;
 }
 
 function updateVolumeStep() {
@@ -288,6 +394,34 @@ function updateVolumeStep() {
   underwaterFadeRaf = requestAnimationFrame(updateVolumeStep);
 }
 
+function updateSpaceVolumeStep() {
+  const audio = getSpaceAudio();
+  if (!audio) return;
+
+  const diff = targetSpaceVolume - currentSpaceVolume;
+  if (Math.abs(diff) < 0.003) {
+    currentSpaceVolume = targetSpaceVolume;
+    audio.volume = currentSpaceVolume;
+    if (currentSpaceVolume === 0) {
+      if (!audio.paused) {
+        audio.pause();
+      }
+    }
+    spaceFadeRaf = null;
+    return;
+  }
+
+  // Smooth lerp: ~0.08 per frame creates a gentle, organic acoustic fade
+  currentSpaceVolume += diff * 0.08;
+  audio.volume = Math.max(0, Math.min(1, currentSpaceVolume));
+
+  if (currentSpaceVolume > 0.005 && audio.paused && soundEnabled) {
+    audio.play().catch(() => {});
+  }
+
+  spaceFadeRaf = requestAnimationFrame(updateSpaceVolumeStep);
+}
+
 export function setUnderwaterTargetVolume(target) {
   if (!soundEnabled) {
     target = 0;
@@ -306,18 +440,38 @@ export function setUnderwaterTargetVolume(target) {
   }
 }
 
+export function setSpaceTargetVolume(target) {
+  if (!soundEnabled) {
+    target = 0;
+  }
+  targetSpaceVolume = Math.max(0, Math.min(1, target));
+
+  const audio = getSpaceAudio();
+  if (!audio) return;
+
+  if (targetSpaceVolume > 0 && audio.paused && soundEnabled) {
+    audio.play().catch(() => {});
+  }
+
+  if (!spaceFadeRaf) {
+    spaceFadeRaf = requestAnimationFrame(updateSpaceVolumeStep);
+  }
+}
+
 /**
- * Automatically adjusts ambient underwater volume depending on scroll depth:
- * - Surface / Hero (progress <= 0.05): Silent (volume 0)
- * - Entering Ocean (progress 0.05 -> 0.16): Smoothly fades in as waves cover the view
- * - Deep Ocean / Narrative / About: Full immersion (volume ~0.48)
- * - Approaching & Entering Space: Slowly fades away to 0 as cosmic starfield appears
+ * Automatically adjusts ambient audio channels depending on scroll depth:
+ * - Surface / Hero (progress <= 0.05): Silent (underwater 0, space 0)
+ * - Entering Ocean (progress 0.05 -> 0.16): Underwater fades in smoothly (space 0)
+ * - Deep Ocean / Narrative / About: Full ocean immersion (underwater ~0.48, space 0)
+ * - Ocean-to-Space Dissolve: Underwater smoothly fades away to 0 while Space ambient track smoothly fades in to ~0.50!
+ * - Deep Space (Projects / Celestial Flight / Contact): Full space immersion (underwater 0, space ~0.50)
  */
 export function updateAmbientScrollAudio() {
   if (typeof window === "undefined") return;
 
   if (!soundEnabled) {
     setUnderwaterTargetVolume(0);
+    setSpaceTargetVolume(0);
     return;
   }
 
@@ -325,6 +479,7 @@ export function updateAmbientScrollAudio() {
   const ocean = document.querySelector(".ocean-journey");
   if (!ocean) {
     setUnderwaterTargetVolume(0);
+    setSpaceTargetVolume(0);
     return;
   }
 
@@ -334,16 +489,19 @@ export function updateAmbientScrollAudio() {
   const oceanDistance = Math.max(1, oceanHeight - stageHeight);
   const oceanProgress = (scrollY - oceanTop) / oceanDistance;
 
-  // 1. Surface region (sky & hero): underwater sound is 0
+  // 1. Surface region (sky & hero): both ambient sounds are 0
   if (oceanProgress <= 0.05) {
     setUnderwaterTargetVolume(0);
+    setSpaceTargetVolume(0);
+    stopFishSwim();
     return;
   }
 
-  // 2. Entering ocean: as wave crest rises and submerges screen, fade in smoothly
+  // 2. Entering ocean: as wave crest rises and submerges screen, fade underwater in smoothly
   if (oceanProgress < 0.16) {
     const entryProgress = (oceanProgress - 0.05) / 0.11;
     setUnderwaterTargetVolume(entryProgress * MAX_UNDERWATER_VOLUME);
+    setSpaceTargetVolume(0);
     return;
   }
 
@@ -355,33 +513,75 @@ export function updateAmbientScrollAudio() {
 
   if (spaceTrigger) {
     const triggerStart = spaceTrigger.start;
+    const triggerEnd = spaceTrigger.end;
 
-    // A. User is inside the space flight transition
+    // A. User is at or beyond the space flight transition
     if (scrollY >= triggerStart) {
-      const progressInSpace = spaceTrigger.progress;
-      // Slowly fades away as we dissolve into space (first 22% of space sequence)
-      if (progressInSpace >= 0.20) {
-        // Deep space reached: completely silent
+      // Scrolled to or past the end of space transition (Contact Realm)
+      if (scrollY >= triggerEnd) {
         setUnderwaterTargetVolume(0);
-      } else {
-        // Slowly fading into cosmic starfield
-        const fadeOut = 1 - (progressInSpace / 0.20);
-        setUnderwaterTargetVolume(fadeOut * MAX_UNDERWATER_VOLUME);
+        setSpaceTargetVolume(0);
+        stopFishSwim();
+        return;
       }
+
+      const progressInSpace = spaceTrigger.progress;
+
+      // 1. Initial Ocean-to-Space Dissolve: Underwater crossfades out, space fades in (0.00 -> 0.20)
+      if (progressInSpace < 0.20) {
+        const crossfadeProgress = Math.min(1, progressInSpace / 0.20);
+        const underwaterFade = (1 - crossfadeProgress) * 0.5; // lower remaining half of underwater
+        const spaceFade = 0.35 + crossfadeProgress * 0.65;    // space ramps from 0.35 to 1.0
+
+        setUnderwaterTargetVolume(underwaterFade * MAX_UNDERWATER_VOLUME);
+        setSpaceTargetVolume(spaceFade * MAX_SPACE_VOLUME);
+        return;
+      }
+
+      // 2. Active Space Flight (0.20 -> 0.88): Full deep space immersion (all project planets and flight corridor)
+      if (progressInSpace < 0.88) {
+        setUnderwaterTargetVolume(0);
+        setSpaceTargetVolume(MAX_SPACE_VOLUME);
+        stopFishSwim();
+        return;
+      }
+
+      // 3. Space End / Approaching Contact Planet (0.88 -> 0.965):
+      // Smoothly fades out the space ambient sound effect as camera pierces the White Smoky Planet
+      if (progressInSpace < 0.965) {
+        const fadeOutProgress = (progressInSpace - 0.88) / (0.965 - 0.88); // 0.0 -> 1.0
+        const spaceFade = Math.max(0, 1 - fadeOutProgress);                // 1.0 -> 0.0
+
+        setUnderwaterTargetVolume(0);
+        setSpaceTargetVolume(spaceFade * MAX_SPACE_VOLUME);
+        stopFishSwim();
+        return;
+      }
+
+      // 4. Contact Page / Interior White Smoke (progressInSpace >= 0.965):
+      // Space sound is completely silent on the contact page
+      setUnderwaterTargetVolume(0);
+      setSpaceTargetVolume(0);
+      stopFishSwim();
       return;
     }
 
     // B. User is in lower part of About approaching space (last 450px of About)
     const distToSpace = triggerStart - (scrollY + stageHeight * 0.6);
     if (distToSpace < 450 && distToSpace > 0) {
-      const approachFade = Math.max(0.15, distToSpace / 450);
-      setUnderwaterTargetVolume(approachFade * MAX_UNDERWATER_VOLUME);
+      const approachProgress = 1 - (distToSpace / 450); // 0.0 -> 1.0 approaching triggerStart
+      const underwaterFade = 1 - (approachProgress * 0.5); // 1.0 -> 0.5
+      const spaceFade = approachProgress * 0.35;           // 0.0 -> 0.35
+
+      setUnderwaterTargetVolume(underwaterFade * MAX_UNDERWATER_VOLUME);
+      setSpaceTargetVolume(spaceFade * MAX_SPACE_VOLUME);
       return;
     }
   }
 
-  // 4. Default: User is fully in the Ocean narrative and About sections
+  // 4. Default: User is fully in the Ocean narrative and upper/mid About sections
   setUnderwaterTargetVolume(MAX_UNDERWATER_VOLUME);
+  setSpaceTargetVolume(0);
 }
 
 export function playUnderwaterAmbience(volume = MAX_UNDERWATER_VOLUME) {
@@ -390,6 +590,28 @@ export function playUnderwaterAmbience(volume = MAX_UNDERWATER_VOLUME) {
 
 export function stopUnderwaterAmbience() {
   setUnderwaterTargetVolume(0);
+}
+
+export function playSpaceAmbience(volume = MAX_SPACE_VOLUME) {
+  setSpaceTargetVolume(volume);
+}
+
+export function stopSpaceAmbience() {
+  setSpaceTargetVolume(0);
+}
+
+export function isInsideSpace() {
+  if (typeof window === "undefined" || !window.ScrollTrigger) return false;
+  const spaceTrigger = window.ScrollTrigger.getById("space-flight-transition");
+  if (!spaceTrigger) return false;
+  return window.scrollY >= spaceTrigger.start && window.scrollY < spaceTrigger.end && spaceTrigger.progress >= 0.18 && spaceTrigger.progress < 0.965;
+}
+
+export function isInsideContact() {
+  if (typeof window === "undefined" || !window.ScrollTrigger) return false;
+  const spaceTrigger = window.ScrollTrigger.getById("space-flight-transition");
+  if (!spaceTrigger) return false;
+  return window.scrollY >= spaceTrigger.end || (window.scrollY >= spaceTrigger.start && spaceTrigger.progress >= 0.965);
 }
 
 /**
@@ -460,12 +682,105 @@ export function playRandomBubble(volume = 0.55) {
 
 export const playBubble = playRandomBubble;
 
+/**
+ * Play futuristic planet / project card hover audio feedback
+ * Uses preloaded multi-instance audio pool to support fast cursor flybys without clipping or delay.
+ */
+export function playPlanetHover(volume = 0.5) {
+  if (!soundEnabled || typeof window === "undefined") return;
+
+  const now = performance.now();
+  // Throttle by 85ms to avoid buzzing/stuttering on noisy mouse border movements
+  if (now - lastPlanetHoverTime < 85) {
+    return;
+  }
+  lastPlanetHoverTime = now;
+
+  initPlanetHoverPool();
+  if (planetHoverAudioPool.length === 0) return;
+
+  let audio = planetHoverAudioPool.find(a => a.paused || a.ended);
+  if (!audio) {
+    audio = planetHoverAudioPool[planetHoverPoolIndex % planetHoverAudioPool.length];
+    planetHoverPoolIndex++;
+  }
+
+  try {
+    audio.currentTime = 0;
+    audio.volume = Math.max(0, Math.min(1, volume));
+    const playPromise = audio.play();
+    if (playPromise !== undefined) {
+      playPromise.catch(() => {});
+    }
+  } catch {}
+}
+
 export function playClick() {
   if (!soundEnabled || typeof window === "undefined") return;
   try {
     const click = new Audio("/sounds/space/onclick.mp3");
     click.volume = 0.5;
     click.play().catch(() => {});
+  } catch {}
+}
+
+export function stopFishSwim() {
+  fishSwimAudioPool.forEach(item => {
+    try {
+      if (!item.audio.paused) {
+        item.audio.pause();
+        item.audio.currentTime = 0;
+      }
+    } catch {}
+  });
+}
+
+/**
+ * Play mild, slow underwater fish swimming glide sound (whoosh.mp3 / sloosh.mp3)
+ * Alternates organically between whoosh and sloosh, with subtle pitch & volume nuances
+ * creating a realistic, slow mild fluid displacement as the fish maneuvers through the sea.
+ */
+export function playFishSwim({ volume = 0.26, type = null } = {}) {
+  if (!soundEnabled || typeof window === "undefined") return;
+
+  const now = performance.now();
+  // Throttle by 950ms to allow each stroke to breathe without chaotic overlap
+  if (now - lastFishSwimTime < 950) {
+    return;
+  }
+  lastFishSwimTime = now;
+
+  initFishSwimPool();
+  if (fishSwimAudioPool.length === 0) return;
+
+  let soundIdx;
+  if (type === "whoosh") {
+    soundIdx = 0;
+  } else if (type === "sloosh") {
+    soundIdx = 1;
+  } else {
+    soundIdx = lastFishSwimIndex === 0 ? 1 : 0;
+  }
+  lastFishSwimIndex = soundIdx;
+
+  let match = fishSwimAudioPool.find(item => item.soundIndex === soundIdx && (item.audio.paused || item.audio.ended));
+  if (!match) {
+    match = fishSwimAudioPool.find(item => item.soundIndex === soundIdx);
+  }
+  if (!match) {
+    match = fishSwimAudioPool[0];
+  }
+
+  try {
+    match.audio.currentTime = 0;
+    // Mild, calm volume (clamped between 0.12 and 0.35)
+    match.audio.volume = Math.max(0.12, Math.min(0.35, volume));
+    // Subtle organic playbackRate (0.92 to 0.98 for that "slow mild" fluid drag)
+    match.audio.playbackRate = 0.92 + Math.random() * 0.06;
+    const playPromise = match.audio.play();
+    if (playPromise !== undefined) {
+      playPromise.catch(() => {});
+    }
   } catch {}
 }
 

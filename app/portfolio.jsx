@@ -97,6 +97,7 @@ export default function Portfolio() {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
     gsap.registerPlugin(ScrollTrigger);
+    window.ScrollTrigger = ScrollTrigger;
 
     const lenis = new Lenis({
       duration: 1.15,

@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { MotionPathPlugin } from "gsap/MotionPathPlugin";
-import { playRandomBubble, isInsideOcean, unlockAudio } from "./sound-manager";
+import { playRandomBubble, isInsideOcean, unlockAudio, playFishSwim, stopFishSwim } from "./sound-manager";
 import "./ocean-fish.css";
 
 export default function DeepSeaFish({ paused = false }) {
@@ -61,6 +61,8 @@ export default function DeepSeaFish({ paused = false }) {
     let lastBubbleTime = 0;
     let lastClusterTime = 0;
     let lastDirection = 1;
+    let lastSwimSoundTime = 0;
+    let lastFishNearTime = 0;
 
     // Interactive cursor bubble throttling
     let lastMouseX = -999;
@@ -244,6 +246,21 @@ export default function DeepSeaFish({ paused = false }) {
         lastMouseTime = now;
         spawnCursorBubble(e.clientX, e.clientY);
       }
+
+      // Cursor gliding near the swimming fish triggers subtle mild water displacement
+      if (isFishVisible && fish) {
+        const rect = fish.getBoundingClientRect();
+        if (rect.width > 0 && rect.height > 0) {
+          const centerX = rect.left + rect.width * 0.5;
+          const centerY = rect.top + rect.height * 0.5;
+          const distToFish = Math.hypot(e.clientX - centerX, e.clientY - centerY);
+          if (distToFish < 130 && now - lastFishNearTime > 2400) {
+            lastFishNearTime = now;
+            playFishSwim({ volume: 0.24 });
+            spawnSwimBubble(2);
+          }
+        }
+      }
     };
 
     const handlePointerDown = (e) => {
@@ -256,6 +273,20 @@ export default function DeepSeaFish({ paused = false }) {
       }
 
       unlockAudio();
+
+      // Check if tap was on or near the fish
+      if (fish && isFishVisible) {
+        const rect = fish.getBoundingClientRect();
+        if (rect.width > 0 && rect.height > 0) {
+          const centerX = rect.left + rect.width * 0.5;
+          const centerY = rect.top + rect.height * 0.5;
+          const distToFish = Math.hypot(e.clientX - centerX, e.clientY - centerY);
+          if (distToFish < 140) {
+            playFishSwim({ volume: 0.30 });
+          }
+        }
+      }
+
       playRandomBubble();
       spawnTapBubbles(e.clientX, e.clientY);
     };
@@ -285,17 +316,21 @@ export default function DeepSeaFish({ paused = false }) {
         setVisible(true);
         triggerReferenceBubbles();
         spawnSwimBubble(2);
+        playFishSwim({ volume: 0.25, type: "whoosh" });
       },
       onEnterBack: () => {
         setVisible(true);
         triggerReferenceBubbles();
         spawnSwimBubble(2);
+        playFishSwim({ volume: 0.25, type: "sloosh" });
       },
       onLeave: () => {
         setVisible(false);
+        stopFishSwim();
       },
       onLeaveBack: () => {
         setVisible(false);
+        stopFishSwim();
       }
     });
 
@@ -329,6 +364,8 @@ export default function DeepSeaFish({ paused = false }) {
               duration: 0.35,
               overwrite: "auto"
             });
+            // Water displacement when fish changes direction
+            playFishSwim({ volume: 0.28, type: "sloosh" });
           }
 
           // Ensure visibility is active
@@ -336,9 +373,18 @@ export default function DeepSeaFish({ paused = false }) {
             setVisible(true);
           }
 
-          // Stream bubbles moderately as the fish swims through the water
+          // Active swimming: play gentle mild whoosh/sloosh as the fish moves through the water
           if (isFishVisible || self.isActive) {
+            const velocity = Math.abs(self.getVelocity());
             const now = performance.now();
+
+            if (velocity > 35 && now - lastSwimSoundTime > 1400) {
+              lastSwimSoundTime = now;
+              // Mild volume dynamically scaled with velocity (~0.20 to ~0.30)
+              const swimVol = Math.min(0.30, Math.max(0.20, 0.20 + (velocity / 2400) * 0.10));
+              playFishSwim({ volume: swimVol });
+            }
+
             const deltaProgress = Math.abs(self.progress - lastBubbleProgress);
 
             // Spaced-out, calm emission
@@ -400,9 +446,11 @@ export default function DeepSeaFish({ paused = false }) {
         start: "top 70%",
         onEnter: () => {
           triggerReferenceBubbles();
+          playFishSwim({ volume: 0.26, type: "whoosh" });
         },
         onEnterBack: () => {
           triggerReferenceBubbles();
+          playFishSwim({ volume: 0.26, type: "sloosh" });
         }
       });
     }
@@ -414,6 +462,7 @@ export default function DeepSeaFish({ paused = false }) {
 
     return () => {
       clearInterval(breathInterval);
+      stopFishSwim();
       window.removeEventListener("resize", handleResize);
       window.removeEventListener("pointermove", handlePointerMove);
       window.removeEventListener("pointerdown", handlePointerDown);

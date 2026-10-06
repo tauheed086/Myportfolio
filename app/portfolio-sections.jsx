@@ -6,7 +6,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { profile } from "./content";
 import AboutTimeline from "./about-timeline.jsx";
 import SpaceTravelScene from "./space-travel-scene.jsx";
-import { updateAmbientScrollAudio } from "./sound-manager";
+import { updateAmbientScrollAudio, playPlanetHover } from "./sound-manager";
 import "./space-fold-transition.css";
 
 export default function PortfolioSections() {
@@ -276,7 +276,10 @@ export default function PortfolioSections() {
           <p className="space-intro-subtitle">
             Enterprise system automation, high-throughput pipelines, and deep-learning architectures built for performance and resilience.
           </p>
-          <div className="space-intro-scroll-hint">
+          <div
+            className="space-intro-scroll-hint"
+            onMouseEnter={() => playPlanetHover(0.4)}
+          >
             <span className="scroll-hint-sparkle">✦</span>
             <span>SCROLL TO ENTER PLANETARY FLIGHT</span>
             <span className="scroll-hint-arrow">↓</span>

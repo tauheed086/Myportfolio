@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import * as THREE from "three";
 import { profile, projects } from "./content";
 import ContactRealm from "./contact-realm.jsx";
+import { playPlanetHover, playClick } from "./sound-manager";
 
 // =========================================================================
 // Procedural Canvas Texture Generators for 3D Celestial Bodies
@@ -426,6 +427,11 @@ export default function SpaceTravelScene({ flightProgressRef }) {
   const [isMounted, setIsMounted] = useState(false);
   const [isEnteredSmokePlanet, setIsEnteredSmokePlanet] = useState(false);
   const isEnteredRef = useRef(false);
+  const selectedProjectRef = useRef(selectedProject);
+
+  useEffect(() => {
+    selectedProjectRef.current = selectedProject;
+  }, [selectedProject]);
 
   useEffect(() => {
     setIsMounted(true);
@@ -791,12 +797,21 @@ export default function SpaceTravelScene({ flightProgressRef }) {
     // 5. Raycasting Interaction (Hover & Click)
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2(-999, -999);
+    let lastHoveredPlanetIndex = -1;
 
     const onPointerMove = (e) => {
+      if (selectedProjectRef.current) {
+        renderer.domElement.style.cursor = "default";
+        setIsHoveringPlanet(false);
+        lastHoveredPlanetIndex = -1;
+        return;
+      }
+
       const rawProgress = flightProgressRef?.current ?? 0;
       if (rawProgress <= 0.02) {
         renderer.domElement.style.cursor = "default";
         setIsHoveringPlanet(false);
+        lastHoveredPlanetIndex = -1;
         return;
       }
 
@@ -808,15 +823,22 @@ export default function SpaceTravelScene({ flightProgressRef }) {
       const intersects = raycaster.intersectObjects(planetMeshes, false);
 
       if (intersects.length > 0) {
+        const hitIdx = intersects[0].object.userData.projectIndex ?? 0;
+        if (lastHoveredPlanetIndex !== hitIdx) {
+          playPlanetHover(0.5);
+          lastHoveredPlanetIndex = hitIdx;
+        }
         renderer.domElement.style.cursor = "pointer";
         setIsHoveringPlanet(true);
       } else {
+        lastHoveredPlanetIndex = -1;
         renderer.domElement.style.cursor = "default";
         setIsHoveringPlanet(false);
       }
     };
 
     const onPointerDown = (e) => {
+      if (selectedProjectRef.current) return;
       const rawProgress = flightProgressRef?.current ?? 0;
       if (rawProgress <= 0.02) return;
 
@@ -830,13 +852,20 @@ export default function SpaceTravelScene({ flightProgressRef }) {
       if (intersects.length > 0) {
         const idx = intersects[0].object.userData.projectIndex;
         if (idx !== undefined && projects[idx]) {
+          playClick();
           setSelectedProject(projects[idx]);
         }
       }
     };
 
+    const onPointerLeave = () => {
+      lastHoveredPlanetIndex = -1;
+      setIsHoveringPlanet(false);
+    };
+
     window.addEventListener("pointermove", onPointerMove);
     renderer.domElement.addEventListener("click", onPointerDown);
+    renderer.domElement.addEventListener("pointerleave", onPointerLeave);
 
     // 6. Responsive Resize
     const onResize = () => {
@@ -1088,6 +1117,7 @@ export default function SpaceTravelScene({ flightProgressRef }) {
       cancelAnimationFrame(animId);
       window.removeEventListener("pointermove", onPointerMove);
       renderer.domElement.removeEventListener("click", onPointerDown);
+      renderer.domElement.removeEventListener("pointerleave", onPointerLeave);
       window.removeEventListener("resize", onResize);
 
       // Clean disposal
@@ -1130,12 +1160,17 @@ export default function SpaceTravelScene({ flightProgressRef }) {
                     ? "left"
                     : "center"
             }`}
-          onClick={() => setSelectedProject(activeProj)}
+          onMouseEnter={() => playPlanetHover(0.45)}
+          onClick={() => {
+            playClick();
+            setSelectedProject(activeProj);
+          }}
           role="button"
           tabIndex={0}
           onKeyDown={(e) => {
             if (e.key === "Enter" || e.key === " ") {
               e.preventDefault();
+              playClick();
               setSelectedProject(activeProj);
             }
           }}
@@ -1155,7 +1190,10 @@ export default function SpaceTravelScene({ flightProgressRef }) {
           {activeProj.subtitle && <p className="hud-project-subtitle">{activeProj.subtitle}</p>}
 
           <div className="hud-actions-row">
-            <div className="hud-explore-btn">
+            <div
+              className="hud-explore-btn"
+              onMouseEnter={() => playPlanetHover(0.4)}
+            >
               <span className="btn-sparkle">✦</span>
               <span>Know More</span>
               <span className="btn-arrow">↗</span>
@@ -1166,7 +1204,11 @@ export default function SpaceTravelScene({ flightProgressRef }) {
                 target="_blank"
                 rel="noreferrer"
                 className="hud-direct-live-btn"
-                onClick={(e) => e.stopPropagation()}
+                onMouseEnter={() => playPlanetHover(0.4)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  playClick();
+                }}
                 title="Launch Live Application"
               >
                 <span>LAUNCH APP</span>
@@ -1206,6 +1248,8 @@ export default function SpaceTravelScene({ flightProgressRef }) {
             target="_blank"
             rel="noreferrer"
             className="brand-gate-btn brand-gate-btn-primary"
+            onMouseEnter={() => playPlanetHover(0.4)}
+            onClick={() => playClick()}
           >
             <svg className="gate-btn-icon" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
               <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
@@ -1219,6 +1263,8 @@ export default function SpaceTravelScene({ flightProgressRef }) {
             target="_blank"
             rel="noreferrer"
             className="brand-gate-btn brand-gate-btn-secondary"
+            onMouseEnter={() => playPlanetHover(0.4)}
+            onClick={() => playClick()}
           >
             <svg className="gate-btn-icon" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
               <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" />
@@ -1232,6 +1278,8 @@ export default function SpaceTravelScene({ flightProgressRef }) {
               href={profile.resume}
               download
               className="brand-gate-btn brand-gate-btn-secondary"
+              onMouseEnter={() => playPlanetHover(0.4)}
+              onClick={() => playClick()}
             >
               <span>Download Résumé</span>
               <span className="btn-arrow">↓</span>
@@ -1278,6 +1326,7 @@ export default function SpaceTravelScene({ flightProgressRef }) {
         >
           <div
             className={`project-modal-card planet-theme-${selectedProject.id}`}
+            onMouseEnter={() => playPlanetHover(0.4)}
             onClick={(e) => e.stopPropagation()}
             onWheel={(e) => e.stopPropagation()}
             data-lenis-prevent="true"
@@ -1310,7 +1359,11 @@ export default function SpaceTravelScene({ flightProgressRef }) {
               </div>
               <button
                 className="modal-close-btn"
-                onClick={() => setSelectedProject(null)}
+                onClick={() => {
+                  playClick();
+                  setSelectedProject(null);
+                }}
+                onMouseEnter={() => playPlanetHover(0.35)}
                 aria-label="Close modal"
               >
                 ✕
@@ -1344,13 +1397,19 @@ export default function SpaceTravelScene({ flightProgressRef }) {
             >
               {/* Modal Content Sections */}
               <div className="modal-body-grid">
-                <div className="modal-card">
+                <div
+                  className="modal-card"
+                  onMouseEnter={() => playPlanetHover(0.35)}
+                >
                   <span className="modal-card-label">PROJECT OVERVIEW</span>
                   <p className="modal-card-text">{selectedProject.description}</p>
                 </div>
 
                 {selectedProject.highlights && (
-                  <div className="modal-card modal-card-highlights">
+                  <div
+                    className="modal-card modal-card-highlights"
+                    onMouseEnter={() => playPlanetHover(0.35)}
+                  >
                     <span className="modal-card-label">CORE ARCHITECTURAL HIGHLIGHTS</span>
                     <ul className="modal-highlights-list">
                       {selectedProject.highlights.map((h, i) => (
@@ -1364,17 +1423,26 @@ export default function SpaceTravelScene({ flightProgressRef }) {
                 )}
 
                 <div className="modal-subgrid">
-                  <div className="modal-card">
+                  <div
+                    className="modal-card"
+                    onMouseEnter={() => playPlanetHover(0.35)}
+                  >
                     <span className="modal-card-label">CHALLENGE</span>
                     <p className="modal-card-subtext">{selectedProject.problem}</p>
                   </div>
                   {selectedProject.approach && (
-                    <div className="modal-card">
+                    <div
+                      className="modal-card"
+                      onMouseEnter={() => playPlanetHover(0.35)}
+                    >
                       <span className="modal-card-label">APPROACH</span>
                       <p className="modal-card-subtext">{selectedProject.approach}</p>
                     </div>
                   )}
-                  <div className="modal-card">
+                  <div
+                    className="modal-card"
+                    onMouseEnter={() => playPlanetHover(0.35)}
+                  >
                     <span className="modal-card-label">KEY OUTCOMES</span>
                     <p className="modal-card-subtext">{selectedProject.outcome}</p>
                   </div>
@@ -1391,6 +1459,8 @@ export default function SpaceTravelScene({ flightProgressRef }) {
                     href={selectedProject.liveUrl}
                     target="_blank"
                     rel="noreferrer"
+                    onMouseEnter={() => playPlanetHover(0.4)}
+                    onClick={() => playClick()}
                   >
                     <span className="live-pulse-dot" />
                     <span>LAUNCH LIVE APPLICATION ↗</span>
@@ -1403,6 +1473,8 @@ export default function SpaceTravelScene({ flightProgressRef }) {
                     href={selectedProject.repoUrl}
                     target="_blank"
                     rel="noreferrer"
+                    onMouseEnter={() => playPlanetHover(0.4)}
+                    onClick={() => playClick()}
                   >
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
@@ -1421,7 +1493,11 @@ export default function SpaceTravelScene({ flightProgressRef }) {
 
               <button
                 className="modal-dismiss-btn"
-                onClick={() => setSelectedProject(null)}
+                onClick={() => {
+                  playClick();
+                  setSelectedProject(null);
+                }}
+                onMouseEnter={() => playPlanetHover(0.35)}
               >
                 CLOSE [ESC]
               </button>
