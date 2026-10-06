@@ -99,7 +99,7 @@ export default function ResumeDrawer({ isOpen, onClose, night = false }) {
               aria-label="Open résumé in new window"
             >
               <ExternalLink size={13} strokeWidth={2} />
-              <span className="btn-label-desk">Open Tab</span>
+              <span>Open Tab</span>
             </a>
 
             <a
@@ -125,21 +125,36 @@ export default function ResumeDrawer({ isOpen, onClose, night = false }) {
           </div>
         </header>
 
-        {/* Drawer Document Frame */}
+        {/* Drawer Document Body */}
         <div className="resume-drawer-body">
+          {/* Mobile Document View: Full-width, crisp, multi-page render without iframe squishing */}
+          <div className="resume-mobile-doc-view">
+            <div className="resume-doc-page">
+              <span className="resume-page-pill">Page 1 of 2</span>
+              <img
+                src="/resume-page-1.png"
+                alt="Tauheed Mulla Résumé - Page 1"
+                className="resume-page-render"
+                loading="eager"
+              />
+            </div>
+            <div className="resume-doc-page">
+              <span className="resume-page-pill">Page 2 of 2</span>
+              <img
+                src="/resume-page-2.png"
+                alt="Tauheed Mulla Résumé - Page 2"
+                className="resume-page-render"
+                loading="lazy"
+              />
+            </div>
+          </div>
+
+          {/* Desktop PDF Iframe (With FitW to fit full container width) */}
           <iframe
-            src="/Tauheed_Mulla_Resume.pdf#view=FitH&toolbar=0&navpanes=0"
+            src="/Tauheed_Mulla_Resume.pdf#view=FitW&toolbar=0&navpanes=0"
             title="Tauheed Mulla Curriculum Vitae"
             className="resume-pdf-viewport"
           />
-          <noscript>
-            <div className="resume-noscript-fallback">
-              <p>Your browser doesn&apos;t support direct PDF preview.</p>
-              <a href="/Tauheed_Mulla_Resume.pdf" target="_blank" rel="noreferrer">
-                Download or view Tauheed Mulla&apos;s Résumé directly &rarr;
-              </a>
-            </div>
-          </noscript>
         </div>
       </div>
     </dialog>

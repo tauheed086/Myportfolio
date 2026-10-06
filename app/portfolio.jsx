@@ -12,6 +12,7 @@ import PortfolioSections from "./portfolio-sections";
 import DeepSeaFish from "./deep-sea-fish";
 import SubmergedNarrative from "./submerged-narrative";
 import ResumeDrawer from "./resume-drawer";
+import MobileNavMenu from "./mobile-nav-menu";
 import { profile } from "./content";
 import { isSoundEnabled, toggleSound, subscribeSound, unlockAudio, updateAmbientScrollAudio } from "./sound-manager";
 
@@ -41,6 +42,7 @@ export default function Portfolio() {
   const night = nightOverride ?? isNightSaved;
   const [panel, setPanel] = useState(null);
   const [resumeDrawerOpen, setResumeDrawerOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [hoverNav, setHoverNav] = useState(null);
   const [focusNav, setFocusNav] = useState(null);
   const openPanel = (next) => {
@@ -194,6 +196,20 @@ export default function Portfolio() {
           ? <a className="social-icon" key={social.icon} href={social.url} target="_blank" rel="noreferrer" aria-label={social.name} title={social.name}><span className={`brand-icon brand-${social.icon}`} aria-hidden="true" /></a>
           : <button className="social-icon" key={social.icon} disabled aria-label={`${social.name} — coming soon`} title={`${social.name} — coming soon`}><span className={`brand-icon brand-${social.icon}`} aria-hidden="true" /></button>)}
       </div>
+      <button
+        type="button"
+        className={`mobile-menu-toggle ${mobileMenuOpen ? "is-active" : ""}`}
+        onClick={() => setMobileMenuOpen(prev => !prev)}
+        aria-label={mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
+        aria-expanded={mobileMenuOpen}
+        aria-controls="mobile-nav-panel"
+      >
+        <span className="hamburger-box" aria-hidden="true">
+          <span className="hamburger-bar bar-1" />
+          <span className="hamburger-bar bar-2" />
+          <span className="hamburger-bar bar-3" />
+        </span>
+      </button>
     </header>
     <div className="ocean-journey" id="home" ref={journey}>
       <div className={`wave-portfolio ${sceneOnly ? "scene-only" : ""} ${night ? "theme-night" : "theme-day"}`}>
@@ -270,5 +286,19 @@ export default function Portfolio() {
     <PortfolioSections />
     <DeepSeaFish submerged={submerged} paused={paused} />
     <ResumeDrawer isOpen={resumeDrawerOpen} onClose={() => setResumeDrawerOpen(false)} night={night} />
+    <MobileNavMenu
+      isOpen={mobileMenuOpen}
+      onClose={() => setMobileMenuOpen(false)}
+      navigation={navigation}
+      activeId={activeId}
+      onSelectSection={(id) => {
+        scrollToSection(null, id);
+      }}
+      onResumeClick={() => {
+        setResumeDrawerOpen(true);
+      }}
+      night={night}
+      profile={profile}
+    />
   </main>;
 }
