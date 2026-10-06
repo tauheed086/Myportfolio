@@ -185,7 +185,6 @@ export function createTechStackOrbit({ parentGroup }) {
   // Attach inside parentGroup (smokyGroup) so they expand seamlessly with the planet
   parentGroup.add(orbitGroup);
 
-  let currentOrbitAngle = 0;
   let hoveredIndex = -1;
 
   return {
@@ -219,8 +218,11 @@ export function createTechStackOrbit({ parentGroup }) {
       }
       const alpha = entranceFactor * exitFactor;
 
-      // Rotate badges in orbit around central z-axis at steady celestial speed
-      currentOrbitAngle += 0.14 * delta;
+      // Scroll-driven rotation (NO continuous automatic spin):
+      // Scroll down (progress increases) -> rotates CLOCKWISE (decreasing angle)
+      // Scroll up (progress decreases) -> rotates ANTI-CLOCKWISE (increasing angle)
+      const scrollRotationMultiplier = 42;
+      const currentOrbitAngle = -(smoothedProgress - 0.85) * scrollRotationMultiplier;
 
       // Dynamic expansion bonus as camera accelerates into the planet
       let orbitExpansion = 1.0;
