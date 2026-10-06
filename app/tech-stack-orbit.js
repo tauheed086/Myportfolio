@@ -100,14 +100,141 @@ export const TECH_STACK = [
 ];
 
 // =========================================================================
+// Cinematic 3D Poster Typography Texture
+// Blockbuster depth: "// WHAT I USE TO BUILD // TECH STACK" rendered behind the planet
+// =========================================================================
+
+export function createCinematicPosterTexture() {
+  const canvas = document.createElement("canvas");
+  canvas.width = 2048;
+  canvas.height = 1024;
+  const ctx = canvas.getContext("2d");
+
+  ctx.clearRect(0, 0, 2048, 1024);
+
+  // 1. Top Kicker: // WHAT I USE TO BUILD //
+  ctx.save();
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+
+  const kickerY = 175;
+  // Decorative tech rule lines
+  ctx.strokeStyle = "rgba(56, 189, 248, 0.45)";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(560, kickerY);
+  ctx.lineTo(760, kickerY);
+  ctx.moveTo(1288, kickerY);
+  ctx.lineTo(1488, kickerY);
+  ctx.stroke();
+
+  // Cyan terminal accent dots
+  ctx.fillStyle = "#38bdf8";
+  ctx.beginPath();
+  ctx.arc(760, kickerY, 3, 0, Math.PI * 2);
+  ctx.arc(1288, kickerY, 3, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.font = "700 22px 'Outfit', 'Inter', -apple-system, sans-serif";
+  ctx.fillStyle = "#94a3b8";
+  ctx.letterSpacing = "12px";
+  ctx.fillText("// WHAT I USE TO BUILD //", 1024, kickerY);
+  ctx.restore();
+
+  // 2. Monumental 3D Title: "TECH" on left, "STACK" on right
+  // Wide central clearance for planet and orbit ring
+  const titleY = 512;
+  const fontStr = "900 155px 'Outfit', 'Inter', -apple-system, sans-serif";
+  const leftX = 410;
+  const rightX = 1638;
+
+  ctx.save();
+  ctx.font = fontStr;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.letterSpacing = "12px";
+
+  // Pass 1: Luminous deep space cyan-blue aura
+  ctx.shadowColor = "rgba(56, 189, 248, 0.4)";
+  ctx.shadowBlur = 40;
+  ctx.fillStyle = "rgba(148, 163, 184, 0.25)";
+  ctx.fillText("TECH", leftX, titleY);
+  ctx.fillText("STACK", rightX, titleY);
+
+  // Pass 2: 3D Extrusion Depth Bevels
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = "rgba(15, 23, 42, 0.75)";
+  ctx.fillText("TECH", leftX + 4, titleY + 6);
+  ctx.fillText("STACK", rightX + 4, titleY + 6);
+
+  // Pass 3: Metallic vertical gradient fill
+  const textGrad = ctx.createLinearGradient(0, titleY - 80, 0, titleY + 80);
+  textGrad.addColorStop(0.0, "#ffffff");
+  textGrad.addColorStop(0.25, "#f8fafc");
+  textGrad.addColorStop(0.65, "#94a3b8");
+  textGrad.addColorStop(1.0, "#475569");
+
+  ctx.fillStyle = textGrad;
+  ctx.fillText("TECH", leftX, titleY);
+  ctx.fillText("STACK", rightX, titleY);
+
+  // Pass 4: Crisp metallic rim highlight stroke
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.5)";
+  ctx.lineWidth = 1.8;
+  ctx.strokeText("TECH", leftX, titleY);
+  ctx.strokeText("STACK", rightX, titleY);
+  ctx.restore();
+
+  // 3. Subtitles framed neatly under each title block (leaving center wide open)
+  ctx.save();
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.font = "600 15px 'Courier New', monospace";
+  ctx.fillStyle = "rgba(148, 163, 184, 0.7)";
+  ctx.letterSpacing = "6px";
+  ctx.fillText("ARCHITECTURES & ENGINES", leftX, 625);
+  ctx.fillText("MODERN WEB & AUTOMATION", rightX, 625);
+  ctx.restore();
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.generateMipmaps = true;
+  texture.minFilter = THREE.LinearMipmapLinearFilter;
+  texture.magFilter = THREE.LinearFilter;
+  return texture;
+}
+
+// =========================================================================
 // Main Tech Stack Orbit System Factory
 // Uses the authentic 3D icons from /public/tech-stack/
 // Clean unhovered state (zero glow) + radiant neon icon bloom on hover
 // =========================================================================
 
-export function createTechStackOrbit({ parentGroup }) {
+export function createTechStackOrbit({ parentGroup, scene, camera }) {
   const orbitGroup = new THREE.Group();
   orbitGroup.position.set(0, 0, 0);
+
+  // 1. Cinematic 3D Poster Text Billboard (Background layer: renderOrder = 1)
+  const posterTexture = createCinematicPosterTexture();
+  const posterGeo = new THREE.PlaneGeometry(1, 1);
+  const posterMat = new THREE.MeshBasicMaterial({
+    map: posterTexture,
+    transparent: true,
+    opacity: 0,
+    depthWrite: false,
+    depthTest: false,
+    fog: false,
+    side: THREE.DoubleSide
+  });
+  const posterMesh = new THREE.Mesh(posterGeo, posterMat);
+  posterMesh.renderOrder = 1; // Lowest renderOrder: drawn FIRST behind planet & badges
+  posterMesh.position.set(0, 0, -5250);
+
+  if (scene) {
+    scene.add(posterMesh);
+  } else {
+    parentGroup.add(posterMesh);
+  }
 
   // Base orbit radius outside the planet's atmospheric corona (planet r=66, corona r=82.5)
   const baseOrbitRadius = 118;
@@ -131,9 +258,11 @@ export function createTechStackOrbit({ parentGroup }) {
       map: cleanTexture,
       transparent: true,
       opacity: 0,
-      depthWrite: false
+      depthWrite: false,
+      depthTest: false
     });
     const cleanSprite = new THREE.Sprite(cleanMat);
+    cleanSprite.renderOrder = 1000; // ALWAYS above poster text (renderOrder 1) & planet
     cleanSprite.scale.set(badgeBaseScale, badgeBaseScale, 1);
     cleanSprite.userData = { techIndex: i, tech };
     itemGroup.add(cleanSprite);
@@ -151,9 +280,11 @@ export function createTechStackOrbit({ parentGroup }) {
       transparent: true,
       opacity: 0,
       depthWrite: false,
+      depthTest: false,
       blending: THREE.NormalBlending
     });
     const glowSprite = new THREE.Sprite(glowMat);
+    glowSprite.renderOrder = 1001; // ALWAYS above clean sprite on hover
     glowSprite.scale.set(badgeBaseScale, badgeBaseScale, 1);
     glowSprite.visible = false; // Strictly invisible by default: ZERO glow until hovered!
     itemGroup.add(glowSprite);
@@ -193,12 +324,14 @@ export function createTechStackOrbit({ parentGroup }) {
     getHoveredIndex: () => hoveredIndex,
 
     // Called every animation frame
-    update: (delta, smoothedProgress) => {
+    update: (delta, smoothedProgress, currentCamera) => {
       // Visibility threshold: starts materializing at 0.85
       const isVisible = smoothedProgress >= 0.85;
       orbitGroup.visible = isVisible;
+      posterMesh.visible = isVisible;
 
       if (!isVisible) {
+        posterMat.opacity = 0;
         techItems.forEach((item) => {
           item.cleanSprite.material.opacity = 0;
           item.glowSprite.material.opacity = 0;
@@ -217,6 +350,31 @@ export function createTechStackOrbit({ parentGroup }) {
         exitFactor = Math.max(0, 1 - (smoothedProgress - 0.91) / 0.03);
       }
       const alpha = entranceFactor * exitFactor;
+
+      // 3D Cinematic Poster Text: Fade opacity
+      posterMat.opacity = alpha * 0.95;
+
+      // Screen-lock calculation: Fills display width & maintains stable cinematic framing
+      const activeCam = currentCamera || camera;
+      if (activeCam) {
+        const posterZ = -5250;
+        posterMesh.position.z = posterZ;
+        posterMesh.position.x = activeCam.position.x;
+        posterMesh.quaternion.copy(activeCam.quaternion);
+
+        // Compute perspective frustum dimensions at poster plane depth
+        const dist = Math.abs(activeCam.position.z - posterZ);
+        const vHeight = 2.0 * Math.tan(THREE.MathUtils.degToRad(activeCam.fov / 2.0)) * dist;
+        const vWidth = vHeight * activeCam.aspect;
+
+        // Fills the display horizontally (~94% width)
+        const fillFraction = activeCam.aspect < 1.0 ? 0.98 : 0.94;
+        const targetW = vWidth * fillFraction;
+        const targetH = targetW * (1024 / 2048); // 2:1 canvas aspect ratio
+
+        posterMesh.scale.set(targetW, targetH, 1);
+        posterMesh.position.y = activeCam.position.y;
+      }
 
       // Scroll-driven rotation (NO continuous automatic spin):
       // Scroll down (progress increases) -> rotates CLOCKWISE (decreasing angle)
@@ -290,6 +448,14 @@ export function createTechStackOrbit({ parentGroup }) {
     },
 
     dispose: () => {
+      if (scene) {
+        scene.remove(posterMesh);
+      } else {
+        parentGroup.remove(posterMesh);
+      }
+      posterGeo.dispose();
+      posterMat.dispose();
+      posterTexture.dispose();
       techItems.forEach((item) => {
         item.cleanTexture.dispose();
         item.glowTexture.dispose();

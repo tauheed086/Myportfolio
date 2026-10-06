@@ -767,6 +767,7 @@ export default function SpaceTravelScene({ flightProgressRef }) {
       side: THREE.DoubleSide
     });
     const smokyCoreMesh = new THREE.Mesh(smokyGeo, smokyMat);
+    smokyCoreMesh.renderOrder = 100; // ALWAYS above poster text (renderOrder 1)
     smokyGroup.add(smokyCoreMesh);
 
     // 2. Swirling Translucent Atmosphere Smoke Veil (Counter-rotating)
@@ -781,6 +782,7 @@ export default function SpaceTravelScene({ flightProgressRef }) {
       depthWrite: false
     });
     const smokyVeilMesh = new THREE.Mesh(atmoGeo, atmoMat);
+    smokyVeilMesh.renderOrder = 101; // ALWAYS above poster text
     smokyGroup.add(smokyVeilMesh);
 
     // 3. Ethereal White Mist Outer Corona / Halo
@@ -794,13 +796,14 @@ export default function SpaceTravelScene({ flightProgressRef }) {
       depthWrite: false
     });
     const smokyHaloMesh = new THREE.Mesh(haloGeo, haloMat);
+    smokyHaloMesh.renderOrder = 102; // ALWAYS above poster text
     smokyGroup.add(smokyHaloMesh);
 
     smokyGroup.visible = false;
     scene.add(smokyGroup);
 
     // 4. Orbiting Tech Stack Badges (10 Round Celestial Badges expanding with the planet)
-    const techOrbit = createTechStackOrbit({ parentGroup: smokyGroup });
+    const techOrbit = createTechStackOrbit({ parentGroup: smokyGroup, scene, camera });
 
     // 5. Raycasting Interaction (Hover & Click)
     const raycaster = new THREE.Raycaster();
@@ -1166,7 +1169,7 @@ export default function SpaceTravelScene({ flightProgressRef }) {
       smokyHaloMesh.scale.set(haloScale, haloScale, haloScale);
 
       // Update orbiting tech stack badges and expanding orbit ring
-      techOrbit.update(delta, smoothedProgress);
+      techOrbit.update(delta, smoothedProgress, camera);
 
       // Orbit satellite moonlet (Nexus LMS at index 4)
       if (planetGroups[4]?.userData.moon) {
