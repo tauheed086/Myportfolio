@@ -47,7 +47,7 @@ export default function useScrollNavigation(journey) {
       const pinEnd = st ? st.end : (pinStart + 3600);
 
       let current = null;
-      if (typeof window !== "undefined" && (window.__flightProgress >= 0.88 || window.scrollY >= pinEnd - 50)) {
+      if (typeof window !== "undefined" && (window.__flightProgress >= 0.94 || window.scrollY >= pinEnd - 50)) {
         current = "contact";
       } else if (window.scrollY >= pinStart - 50) {
         current = "projects";

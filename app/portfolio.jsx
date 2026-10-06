@@ -167,7 +167,7 @@ export default function Portfolio() {
         </a>)}
       </nav>
       <div className="nav-socials" role="group" aria-label="Social media and credentials">
-        <button
+        {/* <button
           type="button"
           className={`social-icon sound-toggle-btn ${soundEnabled ? "is-active" : "is-muted"}`}
           onClick={() => {
@@ -178,7 +178,7 @@ export default function Portfolio() {
           title={soundEnabled ? "Sound Effects: ON (Click to mute)" : "Sound Effects: MUTED (Click to enable)"}
         >
           {soundEnabled ? <Volume2 size={16} aria-hidden="true" /> : <VolumeX size={16} aria-hidden="true" />}
-        </button>
+        </button> */}
         <button
           type="button"
           className="nav-resume-btn"
@@ -240,13 +240,13 @@ export default function Portfolio() {
         <canvas ref={foregroundCanvasRef} className="wave-scene-foreground" aria-hidden="true" />
 
         <div className="scene-controls" style={{ opacity: "var(--controls-opacity, 1)", pointerEvents: "var(--controls-pointer, auto)", transition: "opacity 0.2s ease-out" }}>
-          <button className="theme-toggle" onClick={toggleTheme} aria-label="Night mode" aria-pressed={night}>{night ? <Sun size={13} /> : <Moon size={13} />}<span>{night ? "Day scene" : "Night scene"}</span></button>
+          <button className="theme-toggle" onClick={toggleTheme} aria-label="Night mode" aria-pressed={night}>{night ? <Sun size={13} /> : <Moon size={13} />}<span>{night ? "" : ""}</span></button>
           <span />
           <button onClick={() => setSceneOnly(!sceneOnly)} aria-pressed={sceneOnly}>{sceneOnly ? "Show portfolio" : "View scene only"}</button>
           <span />
           <button className="sound-button" aria-label={soundEnabled ? "Mute sound" : "Enable sound"} onClick={() => { unlockAudio(); toggleSound(); }}>
             {soundEnabled ? <Volume2 size={12} /> : <VolumeX size={12} />}
-            <span>{soundEnabled ? "Sound on" : "Sound off"}</span>
+            <span>{soundEnabled ? "" : ""}</span>
           </button>
           <span />
           <button className="motion-button" aria-label={paused ? "Play animation" : "Pause animation"} onClick={() => setPaused(!paused)}>{paused ? <Play size={12} /> : <Pause size={12} />}</button>

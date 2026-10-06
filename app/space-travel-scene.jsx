@@ -6,6 +6,7 @@ import * as THREE from "three";
 import { profile, projects } from "./content";
 import ContactRealm from "./contact-realm.jsx";
 import { playPlanetHover, playClick } from "./sound-manager";
+import { createTechStackOrbit } from "./tech-stack-orbit";
 
 // =========================================================================
 // Procedural Canvas Texture Generators for 3D Celestial Bodies
@@ -424,6 +425,9 @@ export default function SpaceTravelScene({ flightProgressRef }) {
   const [activeProjectIndex, setActiveProjectIndex] = useState(-1);
   const [selectedProject, setSelectedProject] = useState(null);
   const [isHoveringPlanet, setIsHoveringPlanet] = useState(false);
+  const [hoveredTech, setHoveredTech] = useState(null);
+  const [techTooltipPos, setTechTooltipPos] = useState({ x: 0, y: 0 });
+  const lastHoveredTechRef = useRef(null);
   const [isMounted, setIsMounted] = useState(false);
   const [isEnteredSmokePlanet, setIsEnteredSmokePlanet] = useState(false);
   const isEnteredRef = useRef(false);
@@ -759,7 +763,8 @@ export default function SpaceTravelScene({ flightProgressRef }) {
       emissive: new THREE.Color(0xf8fafc),
       emissiveIntensity: 0.55,
       transparent: true,
-      opacity: 0
+      opacity: 0,
+      side: THREE.DoubleSide
     });
     const smokyCoreMesh = new THREE.Mesh(smokyGeo, smokyMat);
     smokyGroup.add(smokyCoreMesh);
@@ -779,13 +784,13 @@ export default function SpaceTravelScene({ flightProgressRef }) {
     smokyGroup.add(smokyVeilMesh);
 
     // 3. Ethereal White Mist Outer Corona / Halo
-    const haloGeo = new THREE.SphereGeometry(smokyRadius * 1.22, 36, 36);
+    const haloGeo = new THREE.SphereGeometry(smokyRadius * 1.25, 36, 36);
     const haloMat = new THREE.MeshBasicMaterial({
       color: 0xffffff,
       transparent: true,
       opacity: 0,
       blending: THREE.AdditiveBlending,
-      side: THREE.BackSide,
+      side: THREE.DoubleSide,
       depthWrite: false
     });
     const smokyHaloMesh = new THREE.Mesh(haloGeo, haloMat);
@@ -793,6 +798,9 @@ export default function SpaceTravelScene({ flightProgressRef }) {
 
     smokyGroup.visible = false;
     scene.add(smokyGroup);
+
+    // 4. Orbiting Tech Stack Badges (10 Round Celestial Badges expanding with the planet)
+    const techOrbit = createTechStackOrbit({ parentGroup: smokyGroup });
 
     // 5. Raycasting Interaction (Hover & Click)
     const raycaster = new THREE.Raycaster();
@@ -804,6 +812,8 @@ export default function SpaceTravelScene({ flightProgressRef }) {
         renderer.domElement.style.cursor = "default";
         setIsHoveringPlanet(false);
         lastHoveredPlanetIndex = -1;
+        setHoveredTech(null);
+        lastHoveredTechRef.current = null;
         return;
       }
 
@@ -812,6 +822,8 @@ export default function SpaceTravelScene({ flightProgressRef }) {
         renderer.domElement.style.cursor = "default";
         setIsHoveringPlanet(false);
         lastHoveredPlanetIndex = -1;
+        setHoveredTech(null);
+        lastHoveredTechRef.current = null;
         return;
       }
 
@@ -830,10 +842,29 @@ export default function SpaceTravelScene({ flightProgressRef }) {
         }
         renderer.domElement.style.cursor = "pointer";
         setIsHoveringPlanet(true);
+        setHoveredTech(null);
+        lastHoveredTechRef.current = null;
       } else {
         lastHoveredPlanetIndex = -1;
-        renderer.domElement.style.cursor = "default";
         setIsHoveringPlanet(false);
+
+        // Check hover on orbiting tech stack badges
+        const hitTech = techOrbit.checkHover(raycaster);
+        if (hitTech) {
+          if (lastHoveredTechRef.current !== hitTech.id) {
+            playPlanetHover(0.4);
+            lastHoveredTechRef.current = hitTech.id;
+          }
+          setHoveredTech(hitTech);
+          setTechTooltipPos({ x: e.clientX, y: e.clientY });
+          renderer.domElement.style.cursor = "pointer";
+        } else {
+          if (lastHoveredTechRef.current) {
+            lastHoveredTechRef.current = null;
+            setHoveredTech(null);
+          }
+          renderer.domElement.style.cursor = "default";
+        }
       }
     };
 
@@ -855,12 +886,19 @@ export default function SpaceTravelScene({ flightProgressRef }) {
           playClick();
           setSelectedProject(projects[idx]);
         }
+      } else {
+        const hitTech = techOrbit.checkHover(raycaster);
+        if (hitTech) {
+          playClick();
+        }
       }
     };
 
     const onPointerLeave = () => {
       lastHoveredPlanetIndex = -1;
       setIsHoveringPlanet(false);
+      lastHoveredTechRef.current = null;
+      setHoveredTech(null);
     };
 
     window.addEventListener("pointermove", onPointerMove);
@@ -895,7 +933,7 @@ export default function SpaceTravelScene({ flightProgressRef }) {
       if (typeof window !== "undefined") {
         const prevProg = window.__flightProgress || 0;
         window.__flightProgress = smoothedProgress;
-        if ((prevProg < 0.92 && smoothedProgress >= 0.92) || (prevProg >= 0.92 && smoothedProgress < 0.92)) {
+        if ((prevProg < 0.94 && smoothedProgress >= 0.94) || (prevProg >= 0.94 && smoothedProgress < 0.94)) {
           window.dispatchEvent(new CustomEvent("flight-progress"));
         }
       }
@@ -906,10 +944,11 @@ export default function SpaceTravelScene({ flightProgressRef }) {
         g.visible = arePlanetsActive;
       });
 
-      // The White Smoky Planet ONLY appears AFTER the GitHub modal has finished (progress >= 0.88)
-      // Completely hidden during project planets, while GitHub modal is displayed, AND once inside the white smoke
-      const isInsideSmokyPlanet = arePlanetsActive && smoothedProgress >= 0.975;
-      const isSmokyActive = arePlanetsActive && smoothedProgress >= 0.88 && smoothedProgress < 0.965;
+      // The White Smoky Planet appears after GitHub modal begins clearing (smoothedProgress >= 0.85)
+      // and accelerates forward, expanding to completely fill the screen at smoothedProgress = 0.94.
+      // At smoothedProgress >= 0.94, the space flight ends and the contact page starts!
+      const isInsideSmokyPlanet = arePlanetsActive && smoothedProgress >= 0.94;
+      const isSmokyActive = arePlanetsActive && smoothedProgress >= 0.85;
       smokyGroup.visible = isSmokyActive;
 
       // Update sequential entrance state when camera dives completely into the white smoky planet
@@ -919,29 +958,44 @@ export default function SpaceTravelScene({ flightProgressRef }) {
       }
 
       if (isSmokyActive) {
-        // Materialize smoothly in the background as the modal dissolves (0.88 -> 0.92)
-        const entranceFactor = Math.min(1, Math.max(0, (smoothedProgress - 0.88) / 0.04));
+        // Materialize smoothly ahead in deep space as the GitHub modal begins clearing (0.85 -> 0.88)
+        const entranceFactor = Math.min(1, Math.max(0, (smoothedProgress - 0.85) / 0.03));
         smokyMat.opacity = entranceFactor;
-        atmoMat.opacity = 0.75 * entranceFactor;
-        haloMat.opacity = 0.35 * entranceFactor;
-        smokyVeilMesh.scale.set(1, 1, 1);
-        smokyHaloMesh.scale.set(1, 1, 1);
+        atmoMat.opacity = 0.85 * entranceFactor;
+        haloMat.opacity = 0.45 * entranceFactor;
 
-        const emergeScale = 0.85 + 0.15 * entranceFactor;
-        smokyGroup.scale.set(emergeScale, emergeScale, emergeScale);
+        // As camera flies into the white planet (0.89 -> 0.94),
+        // the planet and its atmospheric aura expand dynamically to completely fill the screen!
+        let fillScale = 1.0;
+        if (smoothedProgress > 0.89) {
+          const fillT = Math.min(1, (smoothedProgress - 0.89) / 0.05);
+          fillScale = 1.0 + Math.pow(fillT, 2.2) * 3.8;
+        }
+        smokyGroup.scale.set(fillScale, fillScale, fillScale);
+      }
+
+      // Ethereal white mist fog density rises as camera enters planet's atmospheric shell
+      if (scene.fog) {
+        if (smoothedProgress >= 0.89) {
+          const fogFactor = Math.min(1, (smoothedProgress - 0.89) / 0.05);
+          scene.fog.density = fogFactor * 0.007;
+          scene.fog.color.set(0xf8fafc);
+        } else {
+          scene.fog.density = 0;
+        }
       }
 
       // Smooth direct opacity and transform for Atmospheric Smoke Interior Overlay
-      // Smoothly envelops the screen in luminous white smoke from 0.93 to 0.965
-      // completely covering the camera before any geometry clipping occurs
+      // Smoothly envelops the screen in luminous white smoke from 0.91 to 0.94,
+      // reaching 100% full-screen coverage right as the space flight ends and the contact page begins!
       if (smokeEntranceRef.current) {
-        if (smoothedProgress >= 0.955) {
-          const entry = Math.min(1, Math.max(0, (smoothedProgress - 0.955) / 0.02));
-          smokeEntranceRef.current.style.opacity = entry >= 0.99 ? "1" : entry.toFixed(3);
-          smokeEntranceRef.current.style.visibility = entry > 0.01 ? "visible" : "hidden";
-          smokeEntranceRef.current.style.pointerEvents = entry >= 0.9 ? "auto" : "none";
-          smokeEntranceRef.current.setAttribute("aria-hidden", entry >= 0.9 ? "false" : "true");
-          smokeEntranceRef.current.style.transform = `scale(${1.03 - entry * 0.03})`;
+        if (smoothedProgress >= 0.91) {
+          const mistFactor = Math.min(1, Math.max(0, (smoothedProgress - 0.91) / 0.03));
+          smokeEntranceRef.current.style.opacity = mistFactor >= 0.99 ? "1" : mistFactor.toFixed(3);
+          smokeEntranceRef.current.style.visibility = mistFactor > 0.01 ? "visible" : "hidden";
+          smokeEntranceRef.current.style.pointerEvents = mistFactor >= 0.95 ? "auto" : "none";
+          smokeEntranceRef.current.setAttribute("aria-hidden", mistFactor >= 0.95 ? "false" : "true");
+          smokeEntranceRef.current.style.transform = `scale(${1.03 - mistFactor * 0.03})`;
         } else {
           smokeEntranceRef.current.style.opacity = "0";
           smokeEntranceRef.current.style.visibility = "hidden";
@@ -950,9 +1004,21 @@ export default function SpaceTravelScene({ flightProgressRef }) {
         }
       }
 
-      // Camera Z moves along flight corridor from +250 to -5250 (reaching White Smoky Planet at -5100)
-      const camZ = 250 - smoothedProgress * 5450;
-      camera.position.z += (camZ - camera.position.z) * 0.15;
+      // Camera Z moves along flight corridor from +250 through all planets to White Smoky Planet at -5100
+      let targetCamZ;
+      if (smoothedProgress <= 0.85) {
+        targetCamZ = 250 - (smoothedProgress / 0.85) * 4650; // +250 down to -4400
+      } else if (smoothedProgress <= 0.94) {
+        // Accelerated flight straight into the White Planet from -4400 to -5060
+        const t = (smoothedProgress - 0.85) / 0.09;
+        const easeT = t * t * (3 - 2 * t);
+        targetCamZ = -4400 - easeT * 660; // reaches -5060 right at the planet surface
+      } else {
+        // Inside the White Planet world: smoothly holds position from -5060 to -5075
+        const t = (smoothedProgress - 0.94) / 0.06;
+        targetCamZ = -5060 - t * 15;
+      }
+      camera.position.z += (targetCamZ - camera.position.z) * 0.16;
 
       // Camera lateral banking curve towards active planets
       let steerX = 0;
@@ -995,7 +1061,7 @@ export default function SpaceTravelScene({ flightProgressRef }) {
         steerX = 0;
         steerY = 0;
         activeIdx = -1; // Traveling through stars between worlds
-      } else if (smoothedProgress >= 0.68 && smoothedProgress <= 0.78) {
+      } else if (smoothedProgress >= 0.68 && smoothedProgress <= 0.77) {
         steerX = 0;
         steerY = 0;
         activeIdx = 4; // Nexus LMS (z = -3750)
@@ -1009,13 +1075,13 @@ export default function SpaceTravelScene({ flightProgressRef }) {
       // Smooth direct opacity for GitHub Station (Explore the Source on GitHub)
       if (brandGateRef.current) {
         let gateOp = 0;
-        if (arePlanetsActive && smoothedProgress >= 0.79 && smoothedProgress <= 0.89) {
-          if (smoothedProgress < 0.82) {
-            gateOp = (smoothedProgress - 0.79) / 0.03;
-          } else if (smoothedProgress <= 0.86) {
+        if (arePlanetsActive && smoothedProgress >= 0.77 && smoothedProgress <= 0.86) {
+          if (smoothedProgress < 0.80) {
+            gateOp = (smoothedProgress - 0.77) / 0.03;
+          } else if (smoothedProgress <= 0.83) {
             gateOp = 1;
           } else {
-            gateOp = Math.max(0, (0.89 - smoothedProgress) / 0.03);
+            gateOp = Math.max(0, (0.86 - smoothedProgress) / 0.03);
           }
         }
         brandGateRef.current.style.opacity = gateOp.toFixed(3);
@@ -1077,6 +1143,15 @@ export default function SpaceTravelScene({ flightProgressRef }) {
       distantStars.position.z = camera.position.z - 2200;
       starField.rotation.z += 0.003 * delta;
 
+      // Dim and fade stars as camera plunges into the radiant White Smoky Planet
+      let starAlpha = 1.0;
+      if (smoothedProgress > 0.88) {
+        starAlpha = Math.max(0, 1 - (smoothedProgress - 0.88) / 0.05);
+      }
+      starMat.opacity = 0.92 * starAlpha;
+      dustMat.opacity = 0.75 * starAlpha;
+      distantMat.opacity = 0.6 * starAlpha;
+
       // Rotate all planets on their axes
       planetMeshes.forEach((mesh, i) => {
         mesh.rotation.y += (0.25 + i * 0.05) * delta;
@@ -1089,6 +1164,9 @@ export default function SpaceTravelScene({ flightProgressRef }) {
       const smokyTime = clock.getElapsedTime() * 1.2;
       const haloScale = 1.0 + Math.sin(smokyTime) * 0.03;
       smokyHaloMesh.scale.set(haloScale, haloScale, haloScale);
+
+      // Update orbiting tech stack badges and expanding orbit ring
+      techOrbit.update(delta, smoothedProgress);
 
       // Orbit satellite moonlet (Nexus LMS at index 4)
       if (planetGroups[4]?.userData.moon) {
@@ -1121,6 +1199,7 @@ export default function SpaceTravelScene({ flightProgressRef }) {
       window.removeEventListener("resize", onResize);
 
       // Clean disposal
+      techOrbit.dispose();
       starGeo.dispose();
       starMat.dispose();
       dustGeo.dispose();
@@ -1144,6 +1223,27 @@ export default function SpaceTravelScene({ flightProgressRef }) {
 
   return (
     <div className="space-travel-container" ref={containerRef}>
+      {/* Floating Holographic Tooltip for Orbiting Tech Stack Badges */}
+      {hoveredTech && (
+        <div
+          className="tech-hover-tooltip"
+          style={{
+            left: techTooltipPos.x,
+            top: techTooltipPos.y,
+            borderColor: hoveredTech.borderColor,
+            boxShadow: `0 0 24px ${hoveredTech.glowColor}55`
+          }}
+        >
+          <span
+            className="tech-tooltip-dot"
+            style={{ backgroundColor: hoveredTech.accentColor || hoveredTech.brandColor }}
+          />
+          <span className="tech-tooltip-name">{hoveredTech.name}</span>
+          <span className="tech-tooltip-divider">//</span>
+          <span className="tech-tooltip-role">{hoveredTech.role}</span>
+        </div>
+      )}
+
       {/* Deep Ocean to Space Atmospheric Glow Backdrop */}
       <div className="space-realm-backdrop" aria-hidden="true" />
 
@@ -1151,14 +1251,14 @@ export default function SpaceTravelScene({ flightProgressRef }) {
       {activeProj && (
         <div
           className={`space-project-hud planet-theme-${activeProj.id} hud-pos-${activeProjectIndex === 0
-              ? "right"
-              : activeProjectIndex === 1
-                ? "left"
-                : activeProjectIndex === 2
-                  ? "right"
-                  : activeProjectIndex === 3
-                    ? "left"
-                    : "center"
+            ? "right"
+            : activeProjectIndex === 1
+              ? "left"
+              : activeProjectIndex === 2
+                ? "right"
+                : activeProjectIndex === 3
+                  ? "left"
+                  : "center"
             }`}
           onMouseEnter={() => playPlanetHover(0.45)}
           onClick={() => {

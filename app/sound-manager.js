@@ -538,18 +538,18 @@ export function updateAmbientScrollAudio() {
         return;
       }
 
-      // 2. Active Space Flight (0.20 -> 0.88): Full deep space immersion (all project planets and flight corridor)
-      if (progressInSpace < 0.88) {
+      // 2. Active Space Flight (0.20 -> 0.86): Full deep space immersion (all project planets and flight corridor)
+      if (progressInSpace < 0.86) {
         setUnderwaterTargetVolume(0);
         setSpaceTargetVolume(MAX_SPACE_VOLUME);
         stopFishSwim();
         return;
       }
 
-      // 3. Space End / Approaching Contact Planet (0.88 -> 0.965):
+      // 3. Space End / Approaching Contact Planet (0.86 -> 0.94):
       // Smoothly fades out the space ambient sound effect as camera pierces the White Smoky Planet
-      if (progressInSpace < 0.965) {
-        const fadeOutProgress = (progressInSpace - 0.88) / (0.965 - 0.88); // 0.0 -> 1.0
+      if (progressInSpace < 0.94) {
+        const fadeOutProgress = (progressInSpace - 0.86) / (0.94 - 0.86); // 0.0 -> 1.0
         const spaceFade = Math.max(0, 1 - fadeOutProgress);                // 1.0 -> 0.0
 
         setUnderwaterTargetVolume(0);
@@ -558,7 +558,7 @@ export function updateAmbientScrollAudio() {
         return;
       }
 
-      // 4. Contact Page / Interior White Smoke (progressInSpace >= 0.965):
+      // 4. Contact Page / Interior White Smoke (progressInSpace >= 0.94):
       // Space sound is completely silent on the contact page
       setUnderwaterTargetVolume(0);
       setSpaceTargetVolume(0);

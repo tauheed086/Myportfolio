@@ -114,8 +114,14 @@
     box-sizing: border-box;
     background: transparent !important;
     background-image: none !important;
+    opacity: 0;
+    transform: translateY(18px);
+    transition: opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1), transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .contact-realm.is-entered .contact-info-col {
     opacity: 1 !important;
     transform: none !important;
+    transition-delay: 0.25s;
   }
 }
 
@@ -720,10 +726,14 @@
     height: 100%;
     max-height: 100%;
     margin: 0 auto;
-    opacity: 1 !important;
-    filter: none !important;
-    transform: none !important;
-    pointer-events: auto !important;
+    opacity: 0;
+    filter: blur(14px) brightness(1.15);
+    transform: scale(0.96) translateY(12px);
+    transition:
+      opacity 1.2s cubic-bezier(0.16, 1, 0.3, 1),
+      filter 1.2s cubic-bezier(0.16, 1, 0.3, 1),
+      transform 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+    pointer-events: none;
     display: flex;
     align-items: flex-start;
     justify-content: center;
@@ -743,6 +753,13 @@
       rgba(0, 0, 0, 0.25) 88%,
       transparent 98%
     );
+  }
+  .contact-realm.is-entered .portrait-buildup-frame {
+    opacity: 1 !important;
+    filter: none !important;
+    transform: none !important;
+    pointer-events: auto !important;
+    transition-delay: 0.15s;
   }
   .portrait-buildup-img {
     height: 100%;
