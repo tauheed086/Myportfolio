@@ -106,8 +106,8 @@ export default function Portrait3DCanvas({
           const planeH = planeW / imgAspect;
           mesh.scale.set(planeW, planeH, 1);
 
-          // Position: place top of head gracefully below the top nav
-          const topTarget = (visibleHeight / 2) - 0.08 * visibleHeight;
+          // Position: place top of head gracefully with breathing room below header
+          const topTarget = (visibleHeight / 2) - 0.15 * visibleHeight;
           mesh.position.set(0, topTarget - planeH / 2, 0);
         } else {
           // Heroic sizing: scale so portrait covers the right side and full viewport height
@@ -180,7 +180,16 @@ export default function Portrait3DCanvas({
             displacement = clamp(displacement, vec2(-0.016), vec2(0.016));
             vec2 fake3d = clamp(vUv + displacement, 0.001, 0.999);
 
-            gl_FragColor = texture2D(uOriginalTexture, fake3d);
+            vec4 texColor = texture2D(uOriginalTexture, fake3d);
+
+            // Natural skin tone calibration: soft desaturation to eliminate harsh neon red/magenta cast
+            float luma = dot(texColor.rgb, vec3(0.299, 0.587, 0.114));
+            vec3 balanced = mix(vec3(luma), texColor.rgb, 0.82);
+
+            // Gently tame peak red channel dominance in warm lighting highlights
+            balanced.r = mix(balanced.r, pow(balanced.r, 1.06), 0.65);
+
+            gl_FragColor = vec4(balanced, texColor.a);
           }
         `,
         transparent: true,

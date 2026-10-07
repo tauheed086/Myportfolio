@@ -270,6 +270,7 @@
     font-size: 1.68rem;
     line-height: 1.22;
     gap: 4px;
+    text-shadow: 0 1px 12px rgba(255, 255, 255, 0.95), 0 0 20px rgba(255, 255, 255, 0.85);
   }
   .contact-headline-role {
     min-height: 1.28em;
@@ -772,7 +773,7 @@
     rgba(0, 0, 0, 0.8) 98.5%,
     transparent 100%
   );
-  filter: contrast(1.05) brightness(1.01);
+  filter: saturate(0.86) contrast(0.98) brightness(0.98);
 }
 
 @media (max-width: 940px) {
@@ -822,6 +823,7 @@
     width: 100%;
     max-width: 100%;
     justify-content: center;
+    filter: saturate(0.83) contrast(0.96) brightness(0.97);
     -webkit-mask-image: linear-gradient(
       to right,
       transparent 0%,
