@@ -14,7 +14,7 @@ import SubmergedNarrative from "./submerged-narrative";
 import ResumeDrawer from "./resume-drawer";
 import MobileNavMenu from "./mobile-nav-menu";
 import { profile } from "./content";
-import { isSoundEnabled, toggleSound, subscribeSound, unlockAudio, updateAmbientScrollAudio } from "./sound-manager";
+import { isSoundEnabled, setSoundEnabled, toggleSound, subscribeSound, unlockAudio, isAudioUnlockedState, updateAmbientScrollAudio } from "./sound-manager";
 
 const navigation = [{ id: "about", label: "About" }, { id: "projects", label: "My Work" }, { id: "contact", label: "Contact Me" }];
 
@@ -260,7 +260,22 @@ export default function Portfolio() {
           <span />
           <button onClick={() => setSceneOnly(!sceneOnly)} aria-pressed={sceneOnly}>{sceneOnly ? "Show portfolio" : "View scene only"}</button>
           <span />
-          <button className="sound-button" aria-label={soundEnabled ? "Mute sound" : "Enable sound"} onClick={() => { unlockAudio(); toggleSound(); }}>
+          <button
+            className="sound-button"
+            aria-label={soundEnabled ? "Mute sound" : "Enable sound"}
+            onClick={() => {
+              if (!isAudioUnlockedState()) {
+                unlockAudio();
+                if (!soundEnabled) {
+                  setSoundEnabled(true);
+                } else {
+                  updateAmbientScrollAudio();
+                }
+              } else {
+                toggleSound();
+              }
+            }}
+          >
             {soundEnabled ? <Volume2 size={12} /> : <VolumeX size={12} />}
             <span>{soundEnabled ? "" : ""}</span>
           </button>

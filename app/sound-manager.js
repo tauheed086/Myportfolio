@@ -177,16 +177,29 @@ export function unlockAudio() {
   });
 
   try {
-    getKeystrokeAudioContext();
+    const ctx = getKeystrokeAudioContext();
+    if (ctx && ctx.state === "suspended") {
+      ctx.resume().catch(() => {});
+    }
+  } catch {}
+
+  try {
+    updateAmbientScrollAudio();
   } catch {}
 
   window.removeEventListener("pointerdown", unlockAudio);
+  window.removeEventListener("click", unlockAudio);
   window.removeEventListener("keydown", unlockAudio);
   window.removeEventListener("touchstart", unlockAudio);
 }
 
+export function isAudioUnlockedState() {
+  return isAudioUnlocked;
+}
+
 if (typeof window !== "undefined") {
   window.addEventListener("pointerdown", unlockAudio, { once: true, passive: true });
+  window.addEventListener("click", unlockAudio, { once: true, passive: true });
   window.addEventListener("keydown", unlockAudio, { once: true, passive: true });
   window.addEventListener("touchstart", unlockAudio, { once: true, passive: true });
 }
