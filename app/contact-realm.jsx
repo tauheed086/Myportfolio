@@ -257,6 +257,20 @@ export default function ContactRealm({ isEntered = false }) {
             window.scrollTo(0, targetScroll);
           }
         }
+      } else if (typeof window !== "undefined" && (window.__flightProgress ?? 0) < 0.98 && deltaFromLast < 0) {
+        // When space flight timeline is still completing, forward downward swipe to Lenis/window
+        if (e.cancelable) {
+          e.preventDefault();
+        }
+        const scrollAmount = Math.abs(deltaFromLast) * 3.0;
+        const currentScroll = window.__lenis?.scroll ?? window.scrollY;
+        const targetScroll = currentScroll + scrollAmount;
+
+        if (window.__lenis) {
+          window.__lenis.scrollTo(targetScroll, { immediate: true });
+        } else {
+          window.scrollTo(0, targetScroll);
+        }
       }
     };
 
@@ -277,6 +291,20 @@ export default function ContactRealm({ isEntered = false }) {
           } else {
             window.scrollTo(0, targetScroll);
           }
+        }
+      } else if (typeof window !== "undefined" && (window.__flightProgress ?? 0) < 0.98 && e.deltaY > 0) {
+        // Forward downward wheel to Lenis if flight timeline not finished
+        if (e.cancelable) {
+          e.preventDefault();
+        }
+        const scrollAmount = Math.abs(e.deltaY) * 2.5;
+        const currentScroll = window.__lenis?.scroll ?? window.scrollY;
+        const targetScroll = currentScroll + scrollAmount;
+
+        if (window.__lenis) {
+          window.__lenis.scrollTo(targetScroll, { immediate: true });
+        } else {
+          window.scrollTo(0, targetScroll);
         }
       }
     };

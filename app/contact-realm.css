@@ -121,14 +121,14 @@
   .contact-realm.is-entered .contact-info-col {
     opacity: 1 !important;
     transform: none !important;
-    transition-delay: 0.25s;
+    transition-delay: 0.05s;
   }
 }
 
 .contact-realm.is-entered .contact-info-col {
   opacity: 1;
   transform: translateY(0);
-  transition-delay: 0.3s;
+  transition-delay: 0.05s;
 }
 
 /* 1st: Open to Work Live Indicator */
@@ -741,7 +741,7 @@
   opacity: 1;
   filter: blur(0px) brightness(1.0);
   transform: scale(1) translateY(0);
-  transition-delay: 0.2s;
+  transition-delay: 0.05s;
   pointer-events: auto;
 }
 
@@ -816,7 +816,7 @@
     filter: none !important;
     transform: none !important;
     pointer-events: auto !important;
-    transition-delay: 0.15s;
+    transition-delay: 0.05s;
   }
   .portrait-buildup-img {
     height: 100%;

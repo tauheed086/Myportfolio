@@ -948,30 +948,31 @@ export default function SpaceTravelScene({ flightProgressRef }) {
       });
 
       // The White Smoky Planet appears after GitHub modal begins clearing (smoothedProgress >= 0.85)
-      // and accelerates forward, expanding to completely fill the screen at smoothedProgress = 0.94.
-      // At smoothedProgress >= 0.94, the space flight ends and the contact page starts!
-      const isInsideSmokyPlanet = arePlanetsActive && smoothedProgress >= 0.94;
-      const isSmokyActive = arePlanetsActive && smoothedProgress >= 0.85;
+      // and accelerates forward, expanding to completely fill the screen.
+      // As camera enters the white mist, contact page materializes synchronously (smoothedProgress >= 0.90)
+      // with zero blank white screen delay!
+      const isInsideSmokyPlanet = arePlanetsActive && smoothedProgress >= 0.90;
+      const isSmokyActive = arePlanetsActive && smoothedProgress >= 0.84;
       smokyGroup.visible = isSmokyActive;
 
-      // Update sequential entrance state when camera dives completely into the white smoky planet
+      // Update sequential entrance state when camera dives into the white smoky planet
       if (isInsideSmokyPlanet !== isEnteredRef.current) {
         isEnteredRef.current = isInsideSmokyPlanet;
         setIsEnteredSmokePlanet(isInsideSmokyPlanet);
       }
 
       if (isSmokyActive) {
-        // Materialize smoothly ahead in deep space as the GitHub modal begins clearing (0.85 -> 0.88)
-        const entranceFactor = Math.min(1, Math.max(0, (smoothedProgress - 0.85) / 0.03));
+        // Materialize smoothly ahead in deep space as the GitHub modal begins clearing (0.84 -> 0.88)
+        const entranceFactor = Math.min(1, Math.max(0, (smoothedProgress - 0.84) / 0.04));
         smokyMat.opacity = entranceFactor;
         atmoMat.opacity = 0.85 * entranceFactor;
         haloMat.opacity = 0.45 * entranceFactor;
 
-        // As camera flies into the white planet (0.89 -> 0.94),
+        // As camera flies into the white planet (0.88 -> 0.94),
         // the planet and its atmospheric aura expand dynamically to completely fill the screen!
         let fillScale = 1.0;
-        if (smoothedProgress > 0.89) {
-          const fillT = Math.min(1, (smoothedProgress - 0.89) / 0.05);
+        if (smoothedProgress > 0.88) {
+          const fillT = Math.min(1, (smoothedProgress - 0.88) / 0.05);
           fillScale = 1.0 + Math.pow(fillT, 2.2) * 3.8;
         }
         smokyGroup.scale.set(fillScale, fillScale, fillScale);
@@ -979,8 +980,8 @@ export default function SpaceTravelScene({ flightProgressRef }) {
 
       // Ethereal white mist fog density rises as camera enters planet's atmospheric shell
       if (scene.fog) {
-        if (smoothedProgress >= 0.89) {
-          const fogFactor = Math.min(1, (smoothedProgress - 0.89) / 0.05);
+        if (smoothedProgress >= 0.88) {
+          const fogFactor = Math.min(1, (smoothedProgress - 0.88) / 0.05);
           scene.fog.density = fogFactor * 0.007;
           scene.fog.color.set(0xf8fafc);
         } else {
@@ -989,16 +990,19 @@ export default function SpaceTravelScene({ flightProgressRef }) {
       }
 
       // Smooth direct opacity and transform for Atmospheric Smoke Interior Overlay
-      // Smoothly envelops the screen in luminous white smoke from 0.91 to 0.94,
-      // reaching 100% full-screen coverage right as the space flight ends and the contact page begins!
+      // Synchronously envelops the screen in luminous white smoke from 0.88 to 0.93,
+      // seamlessly materializing the Contact Realm without ever showing a dead blank screen!
       if (smokeEntranceRef.current) {
-        if (smoothedProgress >= 0.91) {
-          const mistFactor = Math.min(1, Math.max(0, (smoothedProgress - 0.91) / 0.03));
+        if (smoothedProgress >= 0.88) {
+          const mistFactor = Math.min(1, Math.max(0, (smoothedProgress - 0.88) / 0.04));
           smokeEntranceRef.current.style.opacity = mistFactor >= 0.99 ? "1" : mistFactor.toFixed(3);
           smokeEntranceRef.current.style.visibility = mistFactor > 0.01 ? "visible" : "hidden";
-          smokeEntranceRef.current.style.pointerEvents = mistFactor >= 0.95 ? "auto" : "none";
-          smokeEntranceRef.current.setAttribute("aria-hidden", mistFactor >= 0.95 ? "false" : "true");
-          smokeEntranceRef.current.style.transform = `scale(${1.03 - mistFactor * 0.03})`;
+          // ONLY enable pointer events when contact realm is actually entered and interactive (>= 0.92)
+          // to prevent trapping mobile touch scrolls during the approach!
+          const canInteract = isInsideSmokyPlanet && smoothedProgress >= 0.92;
+          smokeEntranceRef.current.style.pointerEvents = canInteract ? "auto" : "none";
+          smokeEntranceRef.current.setAttribute("aria-hidden", isInsideSmokyPlanet ? "false" : "true");
+          smokeEntranceRef.current.style.transform = `scale(${1.02 - mistFactor * 0.02})`;
         } else {
           smokeEntranceRef.current.style.opacity = "0";
           smokeEntranceRef.current.style.visibility = "hidden";

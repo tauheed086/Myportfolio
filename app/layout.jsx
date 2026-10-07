@@ -84,7 +84,7 @@ export const metadata = {
     },
   },
   icons: {
-    icon: "/favicon.ico",
+    icon: "/logo-refined.webp",
     apple: "/logo-refined.png",
   },
 };
