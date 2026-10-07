@@ -132,7 +132,7 @@ export default function ResumeDrawer({ isOpen, onClose, night = false }) {
             <div className="resume-doc-page">
               <span className="resume-page-pill">Page 1 of 2</span>
               <img
-                src="/resume-page-1.png"
+                src="/resume-page-1.webp"
                 alt="Tauheed Mulla Résumé - Page 1"
                 className="resume-page-render"
                 loading="eager"
@@ -141,7 +141,7 @@ export default function ResumeDrawer({ isOpen, onClose, night = false }) {
             <div className="resume-doc-page">
               <span className="resume-page-pill">Page 2 of 2</span>
               <img
-                src="/resume-page-2.png"
+                src="/resume-page-2.webp"
                 alt="Tauheed Mulla Résumé - Page 2"
                 className="resume-page-render"
                 loading="lazy"

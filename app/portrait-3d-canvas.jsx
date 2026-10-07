@@ -9,8 +9,8 @@ import * as THREE from "three";
  * Built with Three.js & custom GLSL fragment shader inspired by Axel Vanhessche
  */
 export default function Portrait3DCanvas({
-  originalSrc = "/myportrait.png",
-  depthSrc = "/myportrait-depth.jpg",
+  originalSrc = "/myportrait.webp",
+  depthSrc = "/myportrait-depth.webp",
   className = "",
   alt = "Tauheed Mulla",
   isEntered = false,
@@ -128,63 +128,70 @@ export default function Portrait3DCanvas({
     };
     resizeHandlerRef.current = updateSize;
 
-    textureLoader.load(originalSrc, (origTex) => {
-      if (isDisposed) return;
+    // Concurrent texture loading (eliminates waterfall)
+    Promise.all([
+      textureLoader.loadAsync(originalSrc),
+      textureLoader.loadAsync(depthSrc),
+    ]).then(([origTex, dTex]) => {
+      if (isDisposed) {
+        origTex.dispose();
+        dTex.dispose();
+        return;
+      }
       origTex.generateMipmaps = true;
       origTex.minFilter = THREE.LinearMipmapLinearFilter;
       origTex.magFilter = THREE.LinearFilter;
       origTex.colorSpace = THREE.SRGBColorSpace;
       originalTexture = origTex;
 
-      textureLoader.load(depthSrc, (dTex) => {
-        if (isDisposed) return;
-        dTex.generateMipmaps = true;
-        dTex.minFilter = THREE.LinearMipmapLinearFilter;
-        dTex.magFilter = THREE.LinearFilter;
-        depthTexture = dTex;
+      dTex.generateMipmaps = true;
+      dTex.minFilter = THREE.LinearMipmapLinearFilter;
+      dTex.magFilter = THREE.LinearFilter;
+      depthTexture = dTex;
 
-        material = new THREE.ShaderMaterial({
-          uniforms: {
-            uOriginalTexture: { value: originalTexture },
-            uDepthTexture: { value: depthTexture },
-            uMouse: { value: new THREE.Vector2(0, 0) },
-            uThreshold: { value: new THREE.Vector2(thresholdX, thresholdY) },
-          },
-          vertexShader: `
-            varying vec2 vUv;
-            void main() {
-              vUv = uv;
-              gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-            }
-          `,
-          fragmentShader: `
-            precision mediump float;
-            uniform sampler2D uOriginalTexture;
-            uniform sampler2D uDepthTexture;
-            uniform vec2 uMouse;
-            uniform vec2 uThreshold;
-            varying vec2 vUv;
+      material = new THREE.ShaderMaterial({
+        uniforms: {
+          uOriginalTexture: { value: originalTexture },
+          uDepthTexture: { value: depthTexture },
+          uMouse: { value: new THREE.Vector2(0, 0) },
+          uThreshold: { value: new THREE.Vector2(thresholdX, thresholdY) },
+        },
+        vertexShader: `
+          varying vec2 vUv;
+          void main() {
+            vUv = uv;
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+          }
+        `,
+        fragmentShader: `
+          precision mediump float;
+          uniform sampler2D uOriginalTexture;
+          uniform sampler2D uDepthTexture;
+          uniform vec2 uMouse;
+          uniform vec2 uThreshold;
+          varying vec2 vUv;
 
-            void main() {
-              vec4 depthVal = texture2D(uDepthTexture, vUv);
-              // depthVal.r: 1.0 is foreground (chin/nose/collar), 0.0 is background
-              float depth = depthVal.r - 0.48;
-              vec2 displacement = depth * (uMouse / uThreshold);
-              // Safety clamp: limits maximum displacement to prevent silhouette separation tearing
-              displacement = clamp(displacement, vec2(-0.016), vec2(0.016));
-              vec2 fake3d = clamp(vUv + displacement, 0.001, 0.999);
+          void main() {
+            vec4 depthVal = texture2D(uDepthTexture, vUv);
+            // depthVal.r: 1.0 is foreground (chin/nose/collar), 0.0 is background
+            float depth = depthVal.r - 0.48;
+            vec2 displacement = depth * (uMouse / uThreshold);
+            // Safety clamp: limits maximum displacement to prevent silhouette separation tearing
+            displacement = clamp(displacement, vec2(-0.016), vec2(0.016));
+            vec2 fake3d = clamp(vUv + displacement, 0.001, 0.999);
 
-              gl_FragColor = texture2D(uOriginalTexture, fake3d);
-            }
-          `,
-          transparent: true,
-        });
-
-        mesh = new THREE.Mesh(geometry, material);
-        scene.add(mesh);
-        updateSize();
-        setIsLoaded(true);
+            gl_FragColor = texture2D(uOriginalTexture, fake3d);
+          }
+        `,
+        transparent: true,
       });
+
+      mesh = new THREE.Mesh(geometry, material);
+      scene.add(mesh);
+      updateSize();
+      setIsLoaded(true);
+    }).catch((err) => {
+      console.warn("Failed to load 3D portrait textures concurrently:", err);
     });
 
     // 4. Mouse / Touch & Idle Tracking

@@ -24,7 +24,7 @@ export default function WaveScene({ paused, night = false, waveProgressRef, fore
       if (!container) return;
       const THREE = await import("three");
       if (disposed) return;
-      const texture = await new THREE.TextureLoader().loadAsync("/sunset-painting.png");
+      const texture = await new THREE.TextureLoader().loadAsync("/sunset-painting.webp");
       if (disposed) { texture.dispose(); return; }
       let renderer;
       try { renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: "low-power" }); }

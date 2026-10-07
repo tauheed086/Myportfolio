@@ -275,7 +275,7 @@ export default function Portfolio() {
         </dialog>
         <div className="ocean-water" aria-hidden="true">
           <div className="ocean-wave">
-            <div className="ocean-crest"><img src="/ocean-wave-hd.png" alt="" width="2076" height="757" decoding="async" /></div>
+            <div className="ocean-crest"><img src="/ocean-wave-hd.webp" alt="" width="2076" height="757" decoding="async" /></div>
             <div className="ocean-extension" />
           </div>
         </div>

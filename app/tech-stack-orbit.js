@@ -248,7 +248,7 @@ export function createTechStackOrbit({ parentGroup, scene, camera }) {
     const itemGroup = new THREE.Group();
 
     // 1. Clean non-glowing sprite (authentic 3D icon from /public/tech-stack/)
-    const cleanTexture = textureLoader.load(`/tech-stack/${tech.file}-clean.png`);
+    const cleanTexture = textureLoader.load(`/tech-stack/${tech.file}-clean.webp`);
     cleanTexture.colorSpace = THREE.SRGBColorSpace;
     cleanTexture.generateMipmaps = true;
     cleanTexture.minFilter = THREE.LinearMipmapLinearFilter;
@@ -269,7 +269,7 @@ export function createTechStackOrbit({ parentGroup, scene, camera }) {
     raycastSprites.push(cleanSprite);
 
     // 2. Glowing icon sprite (visible ONLY on hover - vibrant neon glow around icon)
-    const glowTexture = textureLoader.load(`/tech-stack/${tech.file}-glow.png`);
+    const glowTexture = textureLoader.load(`/tech-stack/${tech.file}-glow.webp`);
     glowTexture.colorSpace = THREE.SRGBColorSpace;
     glowTexture.generateMipmaps = true;
     glowTexture.minFilter = THREE.LinearMipmapLinearFilter;

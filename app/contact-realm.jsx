@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { profile } from "./content";
 import Portrait3DCanvas from "./portrait-3d-canvas.jsx";
+import { playKeystroke } from "./sound-manager.js";
 import "./contact-realm.css";
 
 /**
@@ -130,6 +131,79 @@ export default function ContactRealm({ isEntered = false }) {
   const scrollContainerRef = useRef(null);
   const [mobileScrollFade, setMobileScrollFade] = useState(1);
 
+  // Interactive Typing Animation States
+  const [typedName, setTypedName] = useState("");
+  const [typedRole, setTypedRole] = useState("");
+  const [roleActive, setRoleActive] = useState(false);
+  const [roleIndex, setRoleIndex] = useState(0);
+  const [rolePhase, setRolePhase] = useState("typing"); // "typing" | "deleting"
+
+  const FULL_NAME = "Tauheed Mulla...";
+  const ROLES = ["Software Developer", "Full Stack Web Developer"];
+
+  // Reset or run typing animation when contact page is active
+  useEffect(() => {
+    if (!isEntered) {
+      setTypedName("");
+      setTypedRole("");
+      setRoleActive(false);
+      setRoleIndex(0);
+      setRolePhase("typing");
+      return;
+    }
+
+    let timeoutId;
+
+    // Phase 1: Typing "Tauheed Mulla..." on Line 1
+    if (!roleActive) {
+      if (typedName.length < FULL_NAME.length) {
+        const delay = typedName.length === 0 ? 380 : 65;
+        timeoutId = setTimeout(() => {
+          setTypedName(FULL_NAME.slice(0, typedName.length + 1));
+          playKeystroke(false);
+        }, delay);
+      } else {
+        // Name typing complete! Pause briefly then activate role cycling
+        timeoutId = setTimeout(() => {
+          setRoleActive(true);
+        }, 450);
+      }
+      return () => clearTimeout(timeoutId);
+    }
+
+    // Phase 2: Role Typing & Backspacing Infinite Loop on Line 2
+    const currentRole = ROLES[roleIndex];
+
+    if (rolePhase === "typing") {
+      if (typedRole.length < currentRole.length) {
+        timeoutId = setTimeout(() => {
+          setTypedRole(currentRole.slice(0, typedRole.length + 1));
+          playKeystroke(false);
+        }, 65);
+      } else {
+        // Full role is typed! Pause 2s so user can read comfortably
+        timeoutId = setTimeout(() => {
+          setRolePhase("deleting");
+        }, 2000);
+      }
+    } else if (rolePhase === "deleting") {
+      if (typedRole.length > 0) {
+        timeoutId = setTimeout(() => {
+          setTypedRole(typedRole.slice(0, -1));
+          playKeystroke(true);
+        }, 35);
+      } else {
+        // Role is cleared! Advance to next role and pause briefly
+        timeoutId = setTimeout(() => {
+          setRoleIndex((prev) => (prev + 1) % ROLES.length);
+          setRolePhase("typing");
+        }, 350);
+      }
+    }
+
+    return () => clearTimeout(timeoutId);
+  }, [isEntered, typedName, typedRole, roleActive, roleIndex, rolePhase]);
+
   // Directly update CSS variable on native scroll for 60fps GPU performance
   const updateMobileScroll = (top) => {
     const el = scrollContainerRef.current;
@@ -242,11 +316,17 @@ export default function ContactRealm({ isEntered = false }) {
             <span className="status-live-text">OPEN TO WORK</span>
           </div>
 
-          {/* 2nd: Software Developer and full stack web developer */}
-          <h1 className="contact-headline">
-            Software Developer <span className="headline-amp">&amp;</span>
-            <br />
-            Full Stack Web Developer
+          {/* 2nd: Interactive Typing Headline (Hi I am Tauheed Mulla... + Cycling Roles) */}
+          <h1 className="contact-headline" aria-label="Hi I am Tauheed Mulla, Software Developer and Full Stack Web Developer">
+            <span className="contact-headline-greeting">
+              <span className="contact-greeting-static">Hi I am </span>
+              <span className="contact-greeting-name">{typedName}</span>
+              {!roleActive && <span className="contact-typing-cursor" aria-hidden="true">|</span>}
+            </span>
+            <span className="contact-headline-role">
+              <span className="contact-role-text">{typedRole}</span>
+              {roleActive && <span className="contact-typing-cursor role-cursor" aria-hidden="true">|</span>}
+            </span>
           </h1>
 
           {/* 3rd: Contextual Intent Selection: Hire vs Freelance */}
@@ -406,8 +486,8 @@ export default function ContactRealm({ isEntered = false }) {
         <div className="contact-portrait-col">
           <div className="portrait-buildup-frame">
             <Portrait3DCanvas
-              originalSrc="/myportrait.png"
-              depthSrc="/myportrait-depth.jpg"
+              originalSrc="/myportrait.webp"
+              depthSrc="/myportrait-depth.webp"
               alt={profile.name}
               className="portrait-buildup-img"
               isEntered={isEntered}

@@ -96,7 +96,7 @@ h3 {
 .scene-fallback {
   position: absolute;
   inset: 0;
-  background: #e6b8ac url("/sunset-painting.png") center / cover no-repeat;
+  background: #e6b8ac url("/sunset-painting.webp") center / cover no-repeat;
 }
 
 .is-ready .scene-fallback {

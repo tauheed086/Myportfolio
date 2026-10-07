@@ -195,28 +195,84 @@
   text-transform: uppercase;
 }
 
-/* 2nd: Headline */
+/* 2nd: Interactive Typing Headline */
 .contact-headline {
   margin: 0;
-  font-size: clamp(2.35rem, 3.1vw, 3.25rem);
-  line-height: 1.08;
+  font-size: clamp(2.15rem, 2.9vw, 3.15rem);
+  line-height: 1.15;
   font-weight: 850;
   color: #090d16;
-  letter-spacing: -0.045em;
-  max-width: 620px;
+  letter-spacing: -0.04em;
+  max-width: 640px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
-.headline-amp {
+.contact-headline-greeting {
+  display: inline-flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  white-space: pre-wrap;
+  color: #090d16;
+}
+
+.contact-greeting-static {
+  color: #475569;
+  font-weight: 700;
+  margin-right: 0.24em;
+}
+
+.contact-greeting-name {
+  color: #090d16;
+  font-weight: 850;
+  letter-spacing: -0.035em;
+}
+
+.contact-headline-role {
+  display: inline-flex;
+  align-items: baseline;
+  min-height: 1.25em; /* Prevents height jumping when backspacing */
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.contact-role-text {
+  color: #0284c7; /* Vibrant modern developer cyan-blue */
+}
+
+.contact-typing-cursor {
+  display: inline-block;
+  margin-left: 2px;
   font-weight: 300;
-  font-style: italic;
-  color: #64748b;
-  margin: 0 4px;
+  font-family: monospace, sans-serif;
+  color: #0284c7;
+  line-height: 1;
+  animation: typingCursorBlink 0.9s step-start infinite;
+  user-select: none;
+}
+
+.contact-headline-greeting .contact-typing-cursor {
+  color: #090d16;
+}
+
+@keyframes typingCursorBlink {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
 }
 
 @media (max-width: 640px) {
   .contact-headline {
-    font-size: 1.85rem;
-    line-height: 1.15;
+    font-size: 1.68rem;
+    line-height: 1.22;
+    gap: 4px;
+  }
+  .contact-headline-role {
+    min-height: 1.28em;
   }
 }
 

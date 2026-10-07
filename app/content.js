@@ -1,7 +1,7 @@
 // Profile and portfolio content extracted from Tauheed Mulla's resume
 export const profile = {
   name: "Tauheed Mulla",
-  logo: "/logo1-removebg-preview.png",
+  logo: "/logo1-removebg-preview.webp",
   wordmark: "tauheed.dev",
   role: "Software Developer",
   heroKicker: "SOFTWARE DEVELOPER · ENTERPRISE AUTOMATION & MODERN WEB",
