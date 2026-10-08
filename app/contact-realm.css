@@ -265,13 +265,47 @@
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 940px) {
   .contact-headline {
-    font-size: 1.68rem;
-    line-height: 1.22;
+    font-size: clamp(1.68rem, 5.8vw, 2.15rem);
+    line-height: 1.18;
     gap: 4px;
-    text-shadow: 0 1px 12px rgba(255, 255, 255, 0.95), 0 0 20px rgba(255, 255, 255, 0.85);
+    letter-spacing: -0.035em;
+    position: relative;
+    padding: 12px 18px 14px 16px;
+    margin: -8px -16px 4px -16px;
+    width: calc(100% + 32px);
+    max-width: calc(100% + 32px);
+    box-sizing: border-box;
+    /* Soft atmospheric protective scrim with feathered radial falloff */
+    background: radial-gradient(
+      ellipse 95% 90% at 35% 50%,
+      rgba(255, 255, 255, 0.88) 0%,
+      rgba(255, 255, 255, 0.74) 42%,
+      rgba(255, 255, 255, 0.45) 70%,
+      rgba(255, 255, 255, 0) 100%
+    );
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-radius: 24px;
+    text-shadow: 0 1px 12px rgba(255, 255, 255, 0.95), 0 0 24px rgba(255, 255, 255, 0.85);
   }
+
+  .contact-greeting-static {
+    color: #1e293b;
+    font-weight: 750;
+  }
+
+  .contact-greeting-name {
+    color: #050811;
+    font-weight: 900;
+  }
+
+  .contact-role-text {
+    color: #0284c7;
+    font-weight: 850;
+  }
+
   .contact-headline-role {
     min-height: 1.28em;
   }
@@ -846,12 +880,6 @@
 }
 
 @media (max-width: 640px) {
-  .contact-headline {
-    font-size: clamp(1.65rem, 5.6vw, 2.05rem);
-    line-height: 1.15;
-    letter-spacing: -0.035em;
-    text-shadow: 0 2px 16px rgba(255, 255, 255, 0.9);
-  }
   .intent-cards-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
