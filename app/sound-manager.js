@@ -216,11 +216,148 @@ export function isAudioUnlockedState() {
   return isAudioUnlocked;
 }
 
+/**
+ * Pause all audio playback when tab is hidden, minimized, or backgrounded.
+ * Keeps target volume states preserved so audio gracefully fades back in when user returns.
+ */
+export function pauseAllAudio() {
+  if (underwaterFadeRaf) {
+    cancelAnimationFrame(underwaterFadeRaf);
+    underwaterFadeRaf = null;
+  }
+  if (spaceFadeRaf) {
+    cancelAnimationFrame(spaceFadeRaf);
+    spaceFadeRaf = null;
+  }
+  if (underwaterAudio && !underwaterAudio.paused) {
+    try { underwaterAudio.pause(); } catch {}
+  }
+  if (spaceAudio && !spaceAudio.paused) {
+    try { spaceAudio.pause(); } catch {}
+  }
+  if (diveInAudio && !diveInAudio.paused) {
+    try { diveInAudio.pause(); } catch {}
+  }
+  if (riseUpAudio && !riseUpAudio.paused) {
+    try { riseUpAudio.pause(); } catch {}
+  }
+  if (clickToEnterAudio && !clickToEnterAudio.paused) {
+    try { clickToEnterAudio.pause(); } catch {}
+  }
+  planetHoverAudioPool.forEach(audio => {
+    try {
+      if (!audio.paused) audio.pause();
+    } catch {}
+  });
+  fishSwimAudioPool.forEach(item => {
+    try {
+      if (!item.audio.paused) item.audio.pause();
+    } catch {}
+  });
+  bubbleAudioPool.forEach(item => {
+    try {
+      if (!item.audio.paused) item.audio.pause();
+    } catch {}
+  });
+  if (keystrokeAudioCtx && keystrokeAudioCtx.state === "running") {
+    try { keystrokeAudioCtx.suspend().catch(() => {}); } catch {}
+  }
+}
+
+/**
+ * Complete teardown and hard mute of all audio on page exit / window close / navigation.
+ */
+export function stopAllAudio() {
+  pauseAllAudio();
+  if (underwaterAudio) {
+    try {
+      underwaterAudio.volume = 0;
+      underwaterAudio.currentTime = 0;
+    } catch {}
+  }
+  currentUnderwaterVolume = 0;
+  targetUnderwaterVolume = 0;
+
+  if (spaceAudio) {
+    try {
+      spaceAudio.volume = 0;
+      spaceAudio.currentTime = 0;
+    } catch {}
+  }
+  currentSpaceVolume = 0;
+  targetSpaceVolume = 0;
+
+  if (diveInAudio) {
+    try {
+      diveInAudio.volume = 0;
+      diveInAudio.currentTime = 0;
+    } catch {}
+  }
+  if (riseUpAudio) {
+    try {
+      riseUpAudio.volume = 0;
+      riseUpAudio.currentTime = 0;
+    } catch {}
+  }
+  if (clickToEnterAudio) {
+    try {
+      clickToEnterAudio.volume = 0;
+      clickToEnterAudio.currentTime = 0;
+    } catch {}
+  }
+  if (keystrokeAudioCtx) {
+    try {
+      keystrokeAudioCtx.close().catch(() => {});
+    } catch {}
+    keystrokeAudioCtx = null;
+  }
+}
+
 if (typeof window !== "undefined") {
+  // Prime & unlock audio on first user gesture
   window.addEventListener("pointerdown", unlockAudio, { once: true, passive: true });
   window.addEventListener("click", unlockAudio, { once: true, passive: true });
   window.addEventListener("keydown", unlockAudio, { once: true, passive: true });
   window.addEventListener("touchstart", unlockAudio, { once: true, passive: true });
+
+  // 1. Page Visibility API: Stop music when user minimizes browser, switches tabs, or leaves screen
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) {
+      pauseAllAudio();
+    } else {
+      if (soundEnabled && isAudioUnlocked) {
+        if (keystrokeAudioCtx && keystrokeAudioCtx.state === "suspended") {
+          keystrokeAudioCtx.resume().catch(() => {});
+        }
+        updateAmbientScrollAudio();
+      }
+    }
+  });
+
+  // 2. Pagehide event (recommended modern standard for tab/window close or navigation)
+  window.addEventListener("pagehide", () => {
+    stopAllAudio();
+  });
+
+  // 3. Beforeunload & unload events (ensures instant audio termination when closing window/tab)
+  window.addEventListener("beforeunload", () => {
+    stopAllAudio();
+  });
+  window.addEventListener("unload", () => {
+    stopAllAudio();
+  });
+
+  // 4. Page Lifecycle API: freeze event (when browser freezes inactive tab)
+  document.addEventListener("freeze", () => {
+    pauseAllAudio();
+  });
+
+  // 5. Restore audio if restored from bfcache
+  window.addEventListener("pageshow", (e) => {
+    if (e.persisted && soundEnabled && isAudioUnlocked && !document.hidden) {
+      updateAmbientScrollAudio();
+    }
+  });
 }
 
 export function isSoundEnabled() {
@@ -288,7 +425,7 @@ export function subscribeSound(callback) {
  * Play dive-in splash / plunge sound effect when entering the ocean waves
  */
 export function playDiveIn() {
-  if (!soundEnabled || typeof window === "undefined") return;
+  if (!soundEnabled || typeof window === "undefined" || (typeof document !== "undefined" && document.hidden)) return;
 
   const now = performance.now();
   // Prevent duplicate triggering within 2.5 seconds
@@ -321,7 +458,7 @@ export function playDiveIn() {
  * Play rise-up emergence sound effect when surfacing from the ocean
  */
 export function playRiseUp() {
-  if (!soundEnabled || typeof window === "undefined") return;
+  if (!soundEnabled || typeof window === "undefined" || (typeof document !== "undefined" && document.hidden)) return;
 
   const now = performance.now();
   // Prevent duplicate triggering within 2.5 seconds
@@ -354,7 +491,7 @@ export function playRiseUp() {
  * Play custom entrance sound effect (clicktoenter.mp3) when entering the portfolio
  */
 export function playClickToEnter(volume = 0.8) {
-  if (!soundEnabled || typeof window === "undefined") return;
+  if (!soundEnabled || typeof window === "undefined" || (typeof document !== "undefined" && document.hidden)) return;
 
   const audio = getClickToEnterAudio();
   if (!audio) return;
@@ -425,6 +562,14 @@ function updateVolumeStep() {
   const audio = getUnderwaterAudio();
   if (!audio) return;
 
+  if (typeof document !== "undefined" && document.hidden) {
+    if (!audio.paused) {
+      audio.pause();
+    }
+    underwaterFadeRaf = null;
+    return;
+  }
+
   const diff = targetUnderwaterVolume - currentUnderwaterVolume;
   if (Math.abs(diff) < 0.003) {
     currentUnderwaterVolume = targetUnderwaterVolume;
@@ -442,7 +587,7 @@ function updateVolumeStep() {
   currentUnderwaterVolume += diff * 0.08;
   audio.volume = Math.max(0, Math.min(1, currentUnderwaterVolume));
 
-  if (currentUnderwaterVolume > 0.005 && audio.paused && soundEnabled) {
+  if (currentUnderwaterVolume > 0.005 && audio.paused && soundEnabled && (!document.hidden)) {
     audio.play().catch(() => {});
   }
 
@@ -452,6 +597,14 @@ function updateVolumeStep() {
 function updateSpaceVolumeStep() {
   const audio = getSpaceAudio();
   if (!audio) return;
+
+  if (typeof document !== "undefined" && document.hidden) {
+    if (!audio.paused) {
+      audio.pause();
+    }
+    spaceFadeRaf = null;
+    return;
+  }
 
   const diff = targetSpaceVolume - currentSpaceVolume;
   if (Math.abs(diff) < 0.003) {
@@ -470,7 +623,7 @@ function updateSpaceVolumeStep() {
   currentSpaceVolume += diff * 0.08;
   audio.volume = Math.max(0, Math.min(1, currentSpaceVolume));
 
-  if (currentSpaceVolume > 0.005 && audio.paused && soundEnabled) {
+  if (currentSpaceVolume > 0.005 && audio.paused && soundEnabled && (!document.hidden)) {
     audio.play().catch(() => {});
   }
 
@@ -478,7 +631,7 @@ function updateSpaceVolumeStep() {
 }
 
 export function setUnderwaterTargetVolume(target) {
-  if (!soundEnabled) {
+  if (!soundEnabled || (typeof document !== "undefined" && document.hidden)) {
     target = 0;
   }
   targetUnderwaterVolume = Math.max(0, Math.min(1, target));
@@ -486,7 +639,7 @@ export function setUnderwaterTargetVolume(target) {
   const audio = getUnderwaterAudio();
   if (!audio) return;
 
-  if (targetUnderwaterVolume > 0 && audio.paused && soundEnabled) {
+  if (targetUnderwaterVolume > 0 && audio.paused && soundEnabled && (typeof document === "undefined" || !document.hidden)) {
     audio.play().catch(() => {});
   }
 
@@ -496,7 +649,7 @@ export function setUnderwaterTargetVolume(target) {
 }
 
 export function setSpaceTargetVolume(target) {
-  if (!soundEnabled) {
+  if (!soundEnabled || (typeof document !== "undefined" && document.hidden)) {
     target = 0;
   }
   targetSpaceVolume = Math.max(0, Math.min(1, target));
@@ -504,7 +657,7 @@ export function setSpaceTargetVolume(target) {
   const audio = getSpaceAudio();
   if (!audio) return;
 
-  if (targetSpaceVolume > 0 && audio.paused && soundEnabled) {
+  if (targetSpaceVolume > 0 && audio.paused && soundEnabled && (typeof document === "undefined" || !document.hidden)) {
     audio.play().catch(() => {});
   }
 
@@ -524,7 +677,7 @@ export function setSpaceTargetVolume(target) {
 export function updateAmbientScrollAudio() {
   if (typeof window === "undefined") return;
 
-  if (!soundEnabled) {
+  if (!soundEnabled || (typeof document !== "undefined" && document.hidden)) {
     setUnderwaterTargetVolume(0);
     setSpaceTargetVolume(0);
     return;
@@ -704,7 +857,7 @@ export function isInsideOcean() {
  * Uses a preloaded audio pool to support rapid, overlapping taps without latency or interruption.
  */
 export function playRandomBubble(volume = 0.55) {
-  if (!soundEnabled || typeof window === "undefined") return;
+  if (!soundEnabled || typeof window === "undefined" || (typeof document !== "undefined" && document.hidden)) return;
 
   initBubblePool();
   if (bubbleAudioPool.length === 0) return;
@@ -742,7 +895,7 @@ export const playBubble = playRandomBubble;
  * Uses preloaded multi-instance audio pool to support fast cursor flybys without clipping or delay.
  */
 export function playPlanetHover(volume = 0.5) {
-  if (!soundEnabled || typeof window === "undefined") return;
+  if (!soundEnabled || typeof window === "undefined" || (typeof document !== "undefined" && document.hidden)) return;
 
   const now = performance.now();
   // Throttle by 85ms to avoid buzzing/stuttering on noisy mouse border movements
@@ -771,7 +924,7 @@ export function playPlanetHover(volume = 0.5) {
 }
 
 export function playClick() {
-  if (!soundEnabled || typeof window === "undefined") return;
+  if (!soundEnabled || typeof window === "undefined" || (typeof document !== "undefined" && document.hidden)) return;
   try {
     const click = new Audio("/sounds/space/onclick.mp3");
     click.volume = 0.5;
@@ -802,7 +955,7 @@ function getKeystrokeAudioContext() {
  * Features organic acoustic pitch jitter, snappy switch click, and warm bottom-out thock.
  */
 export function playKeystroke(isBackspace = false) {
-  if (!soundEnabled || typeof window === "undefined") return;
+  if (!soundEnabled || typeof window === "undefined" || (typeof document !== "undefined" && document.hidden)) return;
 
   const ctx = getKeystrokeAudioContext();
   if (!ctx) return;
@@ -899,7 +1052,7 @@ export function stopFishSwim() {
  * creating a realistic, slow mild fluid displacement as the fish maneuvers through the sea.
  */
 export function playFishSwim({ volume = 0.26, type = null } = {}) {
-  if (!soundEnabled || typeof window === "undefined") return;
+  if (!soundEnabled || typeof window === "undefined" || (typeof document !== "undefined" && document.hidden)) return;
 
   const now = performance.now();
   // Throttle by 950ms to allow each stroke to breathe without chaotic overlap
