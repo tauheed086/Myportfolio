@@ -13,6 +13,7 @@ import DeepSeaFish from "./deep-sea-fish";
 import SubmergedNarrative from "./submerged-narrative";
 import ResumeDrawer from "./resume-drawer";
 import MobileNavMenu from "./mobile-nav-menu";
+import InitialLoader from "./initial-loader";
 import { profile } from "./content";
 import { isSoundEnabled, setSoundEnabled, toggleSound, subscribeSound, unlockAudio, isAudioUnlockedState, updateAmbientScrollAudio } from "./sound-manager";
 
@@ -152,6 +153,7 @@ export default function Portfolio() {
   }, [panel]);
 
   return <main className={`portfolio-page ${night ? "theme-night" : "theme-day"}`}>
+    <InitialLoader />
     <header className="top-nav persistent-nav" ref={navbar}>
       <a className="wordmark" href="#home" aria-label={`${profile.name}, home`} onClick={event => scrollToSection(event, "home")}>
         <span className="logo-slot" aria-hidden="true">{profile.logo ? <img src={profile.logo} alt="" /> : <span>Logo</span>}</span>

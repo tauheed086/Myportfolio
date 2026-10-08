@@ -1,0 +1,228 @@
+/* Initial Welcome Loader Overlay - NeoLeaf Style with Atmospheric Fog Backdrop */
+
+.initial-loader-overlay {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+  opacity: 1;
+  visibility: visible;
+}
+
+/* =========================================================================
+   Fog Backdrop Architecture
+   ========================================================================= */
+.initial-loader-fog-backdrop {
+  position: absolute;
+  inset: -15%;
+  width: 130%;
+  height: 130%;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.fog-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  will-change: transform, opacity;
+  background-repeat: no-repeat;
+}
+
+.fog-layer-1 {
+  animation: fogRollSlow 22s ease-in-out infinite alternate;
+}
+
+.fog-layer-2 {
+  animation: fogRollOpposite 28s ease-in-out infinite alternate;
+}
+
+.fog-layer-3 {
+  animation: fogUndulate 16s ease-in-out infinite alternate;
+}
+
+.fog-vignette {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* =========================================================================
+   Theme: System Light (Morning Mist / Mountain Fog)
+   ========================================================================= */
+.initial-loader-overlay,
+.initial-loader-overlay.theme-system-light {
+  background-color: #e5ebf1;
+  color: #0f172a;
+}
+
+.initial-loader-overlay .fog-layer-1,
+.initial-loader-overlay.theme-system-light .fog-layer-1 {
+  background:
+    radial-gradient(ellipse 70% 50% at 20% 30%, rgba(255, 255, 255, 0.95) 0%, rgba(241, 245, 249, 0.65) 55%, transparent 85%),
+    radial-gradient(ellipse 65% 45% at 80% 65%, rgba(255, 255, 255, 0.9) 0%, rgba(226, 232, 240, 0.6) 55%, transparent 80%);
+}
+
+.initial-loader-overlay .fog-layer-2,
+.initial-loader-overlay.theme-system-light .fog-layer-2 {
+  background:
+    radial-gradient(ellipse 80% 55% at 75% 25%, rgba(255, 255, 255, 0.85) 0%, rgba(203, 213, 225, 0.45) 50%, transparent 80%),
+    radial-gradient(ellipse 75% 60% at 25% 75%, rgba(248, 250, 252, 0.9) 0%, rgba(226, 232, 240, 0.5) 55%, transparent 85%);
+}
+
+.initial-loader-overlay .fog-layer-3,
+.initial-loader-overlay.theme-system-light .fog-layer-3 {
+  background:
+    radial-gradient(ellipse 95% 65% at 50% 85%, rgba(255, 255, 255, 0.92) 0%, rgba(203, 213, 225, 0.55) 55%, transparent 90%),
+    radial-gradient(ellipse 90% 45% at 50% 15%, rgba(255, 255, 255, 0.75) 0%, rgba(226, 232, 240, 0.4) 60%, transparent 85%);
+}
+
+.initial-loader-overlay .fog-vignette,
+.initial-loader-overlay.theme-system-light .fog-vignette {
+  background: radial-gradient(ellipse at 50% 50%, transparent 40%, rgba(203, 213, 225, 0.35) 80%, rgba(148, 163, 184, 0.5) 100%);
+}
+
+.initial-loader-overlay .neoleaf-mask-container,
+.initial-loader-overlay.theme-system-light .neoleaf-mask-container {
+  background-color: rgba(15, 23, 42, 0.16);
+}
+
+.initial-loader-overlay .neoleaf-loading-counter,
+.initial-loader-overlay.theme-system-light .neoleaf-loading-counter {
+  color: rgba(15, 23, 42, 0.75);
+}
+
+/* =========================================================================
+   Theme: System Dark (Obsidian Night Mist Atmosphere)
+   ========================================================================= */
+@media (prefers-color-scheme: dark) {
+  .initial-loader-overlay {
+    background-color: #06090e;
+    color: #f8fafc;
+  }
+
+  .initial-loader-overlay .fog-layer-1 {
+    background:
+      radial-gradient(ellipse 70% 50% at 20% 30%, rgba(51, 65, 85, 0.55) 0%, rgba(30, 41, 59, 0.25) 55%, transparent 85%),
+      radial-gradient(ellipse 65% 45% at 80% 65%, rgba(71, 85, 105, 0.45) 0%, rgba(15, 23, 42, 0.2) 55%, transparent 80%);
+  }
+
+  .initial-loader-overlay .fog-layer-2 {
+    background:
+      radial-gradient(ellipse 80% 55% at 75% 25%, rgba(71, 85, 105, 0.4) 0%, rgba(30, 41, 59, 0.2) 50%, transparent 80%),
+      radial-gradient(ellipse 75% 60% at 25% 75%, rgba(51, 65, 85, 0.45) 0%, rgba(15, 23, 42, 0.2) 55%, transparent 85%);
+  }
+
+  .initial-loader-overlay .fog-layer-3 {
+    background:
+      radial-gradient(ellipse 95% 65% at 50% 85%, rgba(100, 116, 139, 0.35) 0%, rgba(30, 41, 59, 0.2) 55%, transparent 90%),
+      radial-gradient(ellipse 90% 45% at 50% 15%, rgba(51, 65, 85, 0.3) 0%, rgba(15, 23, 42, 0.15) 60%, transparent 85%);
+  }
+
+  .initial-loader-overlay .fog-vignette {
+    background: radial-gradient(ellipse at 50% 50%, transparent 40%, rgba(6, 9, 14, 0.55) 75%, rgba(2, 4, 7, 0.9) 100%);
+  }
+
+  .initial-loader-overlay .neoleaf-mask-container {
+    background-color: rgba(255, 255, 255, 0.22);
+  }
+
+  .initial-loader-overlay .neoleaf-loading-counter {
+    color: rgba(255, 255, 255, 0.7);
+  }
+}
+
+/* Explicit class-based override when JS detects system dark */
+.initial-loader-overlay.theme-system-dark {
+  background-color: #06090e;
+  color: #f8fafc;
+}
+
+.initial-loader-overlay.theme-system-dark .fog-layer-1 {
+  background:
+    radial-gradient(ellipse 70% 50% at 20% 30%, rgba(51, 65, 85, 0.55) 0%, rgba(30, 41, 59, 0.25) 55%, transparent 85%),
+    radial-gradient(ellipse 65% 45% at 80% 65%, rgba(71, 85, 105, 0.45) 0%, rgba(15, 23, 42, 0.2) 55%, transparent 80%);
+}
+
+.initial-loader-overlay.theme-system-dark .fog-layer-2 {
+  background:
+    radial-gradient(ellipse 80% 55% at 75% 25%, rgba(71, 85, 105, 0.4) 0%, rgba(30, 41, 59, 0.2) 50%, transparent 80%),
+    radial-gradient(ellipse 75% 60% at 25% 75%, rgba(51, 65, 85, 0.45) 0%, rgba(15, 23, 42, 0.2) 55%, transparent 85%);
+}
+
+.initial-loader-overlay.theme-system-dark .fog-layer-3 {
+  background:
+    radial-gradient(ellipse 95% 65% at 50% 85%, rgba(100, 116, 139, 0.35) 0%, rgba(30, 41, 59, 0.2) 55%, transparent 90%),
+    radial-gradient(ellipse 90% 45% at 50% 15%, rgba(51, 65, 85, 0.3) 0%, rgba(15, 23, 42, 0.15) 60%, transparent 85%);
+}
+
+.initial-loader-overlay.theme-system-dark .fog-vignette {
+  background: radial-gradient(ellipse at 50% 50%, transparent 40%, rgba(6, 9, 14, 0.55) 75%, rgba(2, 4, 7, 0.9) 100%);
+}
+
+.initial-loader-overlay.theme-system-dark .neoleaf-mask-container {
+  background-color: rgba(255, 255, 255, 0.22);
+}
+
+.initial-loader-overlay.theme-system-dark .neoleaf-loading-counter {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* =========================================================================
+   NeoLeaf Mask Container & Wave Canvas
+   ========================================================================= */
+.neoleaf-mask-container {
+  -webkit-mask-image: url(/welcome-mask.svg);
+  mask-image: url(/welcome-mask.svg);
+  -webkit-mask-mode: alpha;
+  mask-mode: alpha;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  will-change: transform, opacity, background-color;
+  transform-origin: center center;
+}
+
+.neoleaf-loading-counter {
+  font-family: var(--font-mono, 'IBM Plex Mono', monospace);
+  font-size: clamp(0.85rem, 1.8vw, 1.05rem);
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  will-change: opacity;
+}
+
+/* =========================================================================
+   Fog Animation Keyframes
+   ========================================================================= */
+@keyframes fogRollSlow {
+  0% { transform: translate3d(-5%, -4%, 0) scale(1.02); opacity: 0.85; }
+  50% { transform: translate3d(4%, 3%, 0) scale(1.08); opacity: 1; }
+  100% { transform: translate3d(7%, -2%, 0) scale(1.04); opacity: 0.9; }
+}
+
+@keyframes fogRollOpposite {
+  0% { transform: translate3d(6%, 5%, 0) scale(1.05); opacity: 0.9; }
+  50% { transform: translate3d(-4%, -3%, 0) scale(1); opacity: 0.75; }
+  100% { transform: translate3d(-7%, 4%, 0) scale(1.06); opacity: 0.95; }
+}
+
+@keyframes fogUndulate {
+  0% { transform: translate3d(0, 4%, 0) scaleY(1); opacity: 0.7; }
+  50% { transform: translate3d(-3%, -2%, 0) scaleY(1.15); opacity: 0.95; }
+  100% { transform: translate3d(3%, 3%, 0) scaleY(1.05); opacity: 0.8; }
+}
