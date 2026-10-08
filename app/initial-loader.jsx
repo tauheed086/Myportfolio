@@ -1,38 +1,132 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useSyncExternalStore, useCallback } from "react";
 import gsap from "gsap";
+import { unlockAudio, playClickToEnter } from "./sound-manager";
 import "./initial-loader.css";
+
+const subscribeThemeMedia = (notify) => {
+  if (typeof window === "undefined" || !window.matchMedia) return () => {};
+  const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+  if (mediaQuery.addEventListener) {
+    mediaQuery.addEventListener("change", notify);
+    return () => mediaQuery.removeEventListener("change", notify);
+  } else if (mediaQuery.addListener) {
+    mediaQuery.addListener(notify);
+    return () => mediaQuery.removeListener(notify);
+  }
+  return () => {};
+};
+const getSystemThemeSnapshot = () => {
+  if (typeof window === "undefined" || !window.matchMedia) return "dark";
+  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+};
+const getServerSystemThemeSnapshot = () => "dark";
 
 export default function InitialLoader({ onComplete }) {
   const [isExited, setIsExited] = useState(false);
-  const [systemTheme, setSystemTheme] = useState("dark");
+  const [isReady, setIsReady] = useState(false);
+  const systemTheme = useSyncExternalStore(subscribeThemeMedia, getSystemThemeSnapshot, getServerSystemThemeSnapshot);
 
   const overlayRef = useRef(null);
   const maskContainerRef = useRef(null);
   const canvasRef = useRef(null);
   const counterRef = useRef(null);
   const counterWrapperRef = useRef(null);
+  const promptRef = useRef(null);
+  const isEnteringRef = useRef(false);
+  const isAnimatingRef = useRef(true);
+  const rafIdRef = useRef(null);
+  const exitTlRef = useRef(null);
 
-  // 1. Pure System Theme Detection (Dark or Light)
+  // Approach 1: Audio Unlock on gesture, clicktoenter sound & camera zoom
+  const handleEnter = useCallback(() => {
+    if (isEnteringRef.current || !isReady) return;
+    isEnteringRef.current = true;
+
+    // 1. Prime & Unlock browser audio context with custom entrance sound
+    unlockAudio();
+    playClickToEnter();
+
+    const maskContainer = maskContainerRef.current;
+    const overlay = overlayRef.current;
+    const prompt = promptRef.current;
+    const canvas = canvasRef.current;
+
+    if (!maskContainer || !overlay) {
+      setIsExited(true);
+      if (typeof onComplete === "function") onComplete();
+      return;
+    }
+
+    const isDark = systemTheme === "dark";
+    const fillColor = isDark ? "#ffffff" : "#0f172a";
+    const isLargeScreen = typeof window !== "undefined" && window.innerWidth >= 1024;
+
+    const exitTl = gsap.timeline({
+      onComplete: () => {
+        isAnimatingRef.current = false;
+        if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current);
+        setIsExited(true);
+        if (canvas) canvas.removeAttribute("style");
+        if (typeof onComplete === "function") {
+          onComplete();
+        }
+      },
+    });
+    exitTlRef.current = exitTl;
+
+    // NeoLeaf Signature Camera Zoom into the 3D world
+    exitTl
+      .to(prompt, {
+        duration: 0.22,
+        opacity: 0,
+        ease: "power2.out",
+      })
+      .to(
+        maskContainer,
+        {
+          duration: 0.15,
+          ease: "none",
+          backgroundColor: fillColor,
+        },
+        "<60%"
+      )
+      .to(
+        maskContainer,
+        {
+          duration: 0.9,
+          ease: "power2.inOut",
+          opacity: 0,
+          scale: (window.innerWidth / (maskContainer.offsetWidth || 1)) * (isLargeScreen ? 1.8 : 1.4),
+        },
+        "<85%"
+      )
+      .to(
+        overlay,
+        {
+          duration: 0.45,
+          ease: "power2.out",
+          opacity: 0,
+        },
+        "<65%"
+      );
+  }, [isReady, systemTheme, onComplete]);
+
+  // Keyboard accessibility: Space or Enter triggers entrance
   useEffect(() => {
-    if (typeof window === "undefined" || !window.matchMedia) return;
+    if (!isReady || isExited) return;
 
-    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-    const updateTheme = (e) => {
-      setSystemTheme(e.matches ? "dark" : "light");
+    const handleKeyDown = (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        handleEnter();
+      }
     };
 
-    setSystemTheme(mediaQuery.matches ? "dark" : "light");
-
-    if (mediaQuery.addEventListener) {
-      mediaQuery.addEventListener("change", updateTheme);
-      return () => mediaQuery.removeEventListener("change", updateTheme);
-    } else if (mediaQuery.addListener) {
-      mediaQuery.addListener(updateTheme);
-      return () => mediaQuery.removeListener(updateTheme);
-    }
-  }, []);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isReady, isExited, handleEnter]);
 
   // 2. NeoLeaf Mathematical Fluid Wave Animation inside "WELCOME" Mask
   useEffect(() => {
@@ -49,7 +143,6 @@ export default function InitialLoader({ onComplete }) {
     const fillColor = isDark ? "#ffffff" : "#0f172a";
     const backWaveColor = isDark ? "rgba(255, 255, 255, 0.35)" : "rgba(15, 23, 42, 0.28)";
     const crestSheenColor = isDark ? "rgba(255, 255, 255, 0.85)" : "rgba(15, 23, 42, 0.4)";
-    const isLargeScreen = window.innerWidth >= 1024;
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
     const ctx = canvas.getContext("2d");
@@ -150,83 +243,50 @@ export default function InitialLoader({ onComplete }) {
     }
 
     const progressTracker = { value: 0 };
-    let rafId = null;
-    let isAnimating = true;
+    isAnimatingRef.current = true;
 
     // Dedicated requestAnimationFrame loop for hardware 60fps/120fps fluid physics
     const animateLoop = () => {
-      if (!isAnimating) return;
+      if (!isAnimatingRef.current) return;
       renderWave(progressTracker.value);
-      rafId = requestAnimationFrame(animateLoop);
+      rafIdRef.current = requestAnimationFrame(animateLoop);
     };
-    rafId = requestAnimationFrame(animateLoop);
+    rafIdRef.current = requestAnimationFrame(animateLoop);
 
-    const tl = gsap.timeline({
+    const loadTl = gsap.timeline({
       delay: 0.15,
-      onComplete: () => {
-        setIsExited(true);
-        if (typeof onComplete === "function") {
-          onComplete();
-        }
-      },
     });
 
-    // Animate progress 0 -> 100% over 2.6s with linear cadence (NeoLeaf pattern)
-    tl.to(progressTracker, {
-      duration: 2.6,
-      ease: "none",
-      value: 100,
-      onUpdate() {
-        if (counter) {
-          counter.innerText = `${Math.round(progressTracker.value)}`;
-        }
-      },
-    })
-      // Fade out loading... 100% counter
+    // Animate progress 0 -> 100% over 2.4s with linear cadence (NeoLeaf pattern)
+    loadTl
+      .to(progressTracker, {
+        duration: 2.4,
+        ease: "none",
+        value: 100,
+        onUpdate() {
+          if (counter) {
+            counter.innerText = `${Math.round(progressTracker.value)}`;
+          }
+        },
+      })
+      // Fade out loading... 100% counter and transition to "Click anywhere to enter"
       .to(counterWrapper, {
         duration: 0.25,
-        ease: "none",
+        ease: "power2.out",
         opacity: 0,
         onComplete() {
-          isAnimating = false;
-          if (rafId) cancelAnimationFrame(rafId);
+          setIsReady(true);
         },
-      })
-      // Fill the letters 100% solid
-      .to(maskContainer, {
-        duration: 0.15,
-        ease: "none",
-        backgroundColor: fillColor,
-      })
-      // NeoLeaf signature zoom: letters zoom toward camera and dissolve smoothly
-      .to(
-        maskContainer,
-        {
-          duration: 0.9,
-          ease: "power2.inOut",
-          opacity: 0,
-          scale: (window.innerWidth / (maskContainer.offsetWidth || 1)) * (isLargeScreen ? 1.8 : 1.4),
-        },
-        "<85%"
-      )
-      // Fade out entire overlay
-      .to(
-        overlay,
-        {
-          duration: 0.45,
-          ease: "power2.out",
-          opacity: 0,
-        },
-        "<65%"
-      );
+      });
 
     return () => {
-      isAnimating = false;
-      if (rafId) cancelAnimationFrame(rafId);
-      tl.kill();
+      isAnimatingRef.current = false;
+      if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current);
+      loadTl.kill();
+      if (exitTlRef.current) exitTlRef.current.kill();
       if (canvas) canvas.removeAttribute("style");
     };
-  }, [systemTheme, onComplete]);
+  }, [systemTheme]);
 
   if (isExited) {
     return null;
@@ -237,9 +297,11 @@ export default function InitialLoader({ onComplete }) {
   return (
     <div
       ref={overlayRef}
-      className={`initial-loader-overlay ${themeClass}`}
-      aria-label="Loading site"
-      role="progressbar"
+      className={`initial-loader-overlay ${themeClass} ${isReady ? "is-ready" : ""}`}
+      onClick={isReady ? handleEnter : undefined}
+      aria-label={isReady ? "Click anywhere to enter website with audio" : "Loading site"}
+      role={isReady ? "button" : "progressbar"}
+      tabIndex={isReady ? 0 : undefined}
       aria-valuemin={0}
       aria-valuemax={100}
     >
@@ -263,12 +325,26 @@ export default function InitialLoader({ onComplete }) {
           </div>
         </div>
 
-        {/* Counter positioned at bottom right like NeoLeaf */}
+        {/* Counter positioned at bottom right like NeoLeaf (fades out at 100%) */}
         <div
           ref={counterWrapperRef}
           className="neoleaf-loading-counter absolute right-0 top-full mt-2 md:mt-3"
         >
           loading... <span ref={counterRef} className="inline-block tabular-nums">0</span>%
+        </div>
+
+        {/* Approach 1: Click Anywhere to Enter Gate (Emerges when wave reaches 100%) */}
+        <div
+          ref={promptRef}
+          className={`loader-enter-container absolute inset-x-0 top-full mt-4 md:mt-5 flex flex-col items-center justify-center ${
+            isReady ? "is-visible" : ""
+          }`}
+          aria-hidden={!isReady}
+        >
+          <div className="loader-enter-subtext" aria-hidden="true">
+            {/* <span className="loader-audio-glyph">🎧</span> */}
+            <span>CLICK ANYWHERE TO ENTER</span>
+          </div>
         </div>
       </div>
     </div>

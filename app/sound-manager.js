@@ -31,6 +31,7 @@ let diveInAudio = null;
 let lastDiveInTime = 0;
 let riseUpAudio = null;
 let lastRiseUpTime = 0;
+let clickToEnterAudio = null;
 let isAudioUnlocked = false;
 
 // Preloaded bubble audio pool (bubble1.mp3, bubble2.mp3, bubble3.mp3)
@@ -138,6 +139,20 @@ function getRiseUpAudio() {
   return riseUpAudio;
 }
 
+function getClickToEnterAudio() {
+  if (typeof window === "undefined") return null;
+  if (!clickToEnterAudio) {
+    try {
+      clickToEnterAudio = new Audio("/sounds/clicktoenter.mp3");
+      clickToEnterAudio.preload = "auto";
+      clickToEnterAudio.volume = 0.8;
+    } catch (e) {
+      console.warn("Could not initialize click-to-enter audio:", e);
+    }
+  }
+  return clickToEnterAudio;
+}
+
 // Browser Autoplay Policy: unlock audio on first user gesture
 export function unlockAudio() {
   if (isAudioUnlocked || typeof window === "undefined") return;
@@ -151,6 +166,10 @@ export function unlockAudio() {
   const riseAudio = getRiseUpAudio();
   if (riseAudio) {
     riseAudio.load();
+  }
+  const enterAudio = getClickToEnterAudio();
+  if (enterAudio) {
+    enterAudio.load();
   }
   // Note: underwater and space ambient tracks are deferred to lazy load on demand
   // when the user actually navigates near those sections, saving 2.2MB on initial load.
@@ -328,6 +347,31 @@ export function playRiseUp() {
     }
   } catch (err) {
     console.warn("Error playing rise-up sound:", err);
+  }
+}
+
+/**
+ * Play custom entrance sound effect (clicktoenter.mp3) when entering the portfolio
+ */
+export function playClickToEnter(volume = 0.8) {
+  if (!soundEnabled || typeof window === "undefined") return;
+
+  const audio = getClickToEnterAudio();
+  if (!audio) return;
+
+  try {
+    audio.currentTime = 0;
+    audio.volume = Math.max(0, Math.min(1, volume));
+    const playPromise = audio.play();
+    if (playPromise !== undefined) {
+      playPromise.catch(err => {
+        if (err.name !== "AbortError") {
+          // Autoplay policy fallback
+        }
+      });
+    }
+  } catch (err) {
+    console.warn("Error playing click-to-enter sound:", err);
   }
 }
 
@@ -833,7 +877,7 @@ export function playKeystroke(isBackspace = false) {
 
     noiseSrc.start(now);
     noiseSrc.stop(now + 0.016);
-  } catch (e) {
+  } catch {
     // Graceful fallback
   }
 }

@@ -207,6 +207,159 @@
 }
 
 /* =========================================================================
+   Approach 1: "Click Anywhere to Enter" Cinematic Gate Styles
+   ========================================================================= */
+
+/* When loader reaches 100%, entire screen becomes clickable */
+.initial-loader-overlay.is-ready {
+  cursor: pointer;
+}
+
+.loader-enter-container {
+  position: absolute;
+  inset-inline: 0;
+  top: 100%;
+  margin-top: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  opacity: 0;
+  visibility: hidden;
+  transform: translate3d(0, 10px, 0);
+  transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+              visibility 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+  z-index: 20;
+}
+
+.loader-enter-container.is-visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translate3d(0, 0, 0);
+  pointer-events: auto;
+}
+
+.loader-enter-cta {
+  appearance: none;
+  -webkit-appearance: none;
+  background: transparent;
+  border: none;
+  padding: 0.35rem 0.8rem;
+  cursor: pointer;
+  font-family: var(--font-mono, 'IBM Plex Mono', monospace);
+  font-size: clamp(0.78rem, 1.6vw, 0.92rem);
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  line-height: 1.2;
+  transition: transform 0.25s ease, opacity 0.25s ease, color 0.25s ease;
+  animation: ctaBreathPulse 2.4s ease-in-out infinite;
+}
+
+.loader-enter-bracket {
+  opacity: 0.45;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.loader-enter-cta:hover {
+  transform: scale(1.04);
+}
+
+.loader-enter-cta:hover .loader-enter-bracket {
+  opacity: 0.9;
+}
+
+.loader-enter-cta:active {
+  transform: scale(0.97);
+}
+
+@keyframes ctaBreathPulse {
+  0%, 100% {
+    opacity: 0.85;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.02);
+  }
+}
+
+.loader-enter-subtext {
+  font-family: var(--font-mono, 'IBM Plex Mono', monospace);
+  font-size: clamp(0.78rem, 1.6vw, 0.92rem);
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  pointer-events: none;
+  animation: ctaBreathPulse 2.4s ease-in-out infinite;
+}
+
+.loader-audio-glyph {
+  font-size: 0.95em;
+  display: inline-block;
+  animation: glyphBob 2s ease-in-out infinite alternate;
+}
+
+@keyframes glyphBob {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-1.5px); }
+}
+
+/* Theme Adaptations */
+.initial-loader-overlay .loader-enter-cta,
+.initial-loader-overlay.theme-system-light .loader-enter-cta {
+  color: #0f172a;
+}
+
+.initial-loader-overlay .loader-enter-cta:hover,
+.initial-loader-overlay.theme-system-light .loader-enter-cta:hover {
+  color: #020617;
+  text-shadow: 0 0 12px rgba(15, 23, 42, 0.15);
+}
+
+.initial-loader-overlay .loader-enter-subtext,
+.initial-loader-overlay.theme-system-light .loader-enter-subtext {
+  color: rgba(15, 23, 42, 0.85);
+}
+
+@media (prefers-color-scheme: dark) {
+  .initial-loader-overlay .loader-enter-cta {
+    color: #f8fafc;
+  }
+
+  .initial-loader-overlay .loader-enter-cta:hover {
+    color: #ffffff;
+    text-shadow: 0 0 14px rgba(255, 255, 255, 0.35);
+  }
+
+  .initial-loader-overlay .loader-enter-subtext {
+    color: rgba(255, 255, 255, 0.85);
+  }
+}
+
+.initial-loader-overlay.theme-system-dark .loader-enter-cta {
+  color: #f8fafc;
+}
+
+.initial-loader-overlay.theme-system-dark .loader-enter-cta:hover {
+  color: #ffffff;
+  text-shadow: 0 0 14px rgba(255, 255, 255, 0.35);
+}
+
+.initial-loader-overlay.theme-system-dark .loader-enter-subtext {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* =========================================================================
    Fog Animation Keyframes
    ========================================================================= */
 @keyframes fogRollSlow {
