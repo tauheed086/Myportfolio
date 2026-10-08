@@ -58,10 +58,16 @@ export const metadata = {
     siteName: "Tauheed Mulla Portfolio",
     images: [
       {
-        url: "/ocean-wave-hd.webp",
+        url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "Tauheed Mulla Portfolio Preview",
+        alt: "Tauheed Mulla — Software Developer & System Architect",
+      },
+      {
+        url: "/myportrait.webp",
+        width: 941,
+        height: 1672,
+        alt: "Tauheed Mulla Portrait",
       },
     ],
   },
@@ -70,7 +76,7 @@ export const metadata = {
     title: "Tauheed Mulla — Software Developer & System Architect",
     description:
       "Specializing in system automation, endpoint orchestration, and fluid modern web applications.",
-    images: ["/ocean-wave-hd.webp"],
+    images: ["/og-image.png"],
   },
   robots: {
     index: true,
@@ -98,6 +104,7 @@ const structuredData = {
       name: "Tauheed Mulla",
       jobTitle: "Software Developer",
       url: SITE_URL,
+      image: `${SITE_URL}/og-image.png`,
       email: "mailto:tauheedbldeacet@gmail.com",
       address: {
         "@type": "PostalAddress",
