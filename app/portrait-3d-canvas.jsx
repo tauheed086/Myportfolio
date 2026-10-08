@@ -203,8 +203,10 @@ export default function Portrait3DCanvas({
       console.warn("Failed to load 3D portrait textures concurrently:", err);
     });
 
-    // 4. Mouse / Touch & Idle Tracking
+    // 4. Mouse / Touch / Gyroscope & Idle Tracking
     let hasUserMoved = false;
+    let hasOrientationActive = false;
+    let initialBeta = null;
     let clock = new THREE.Clock();
 
     const handleMouseMove = (e) => {
@@ -226,8 +228,85 @@ export default function Portrait3DCanvas({
       cursor.targetY = Math.tanh(rawY * 1.1) * 0.55;
     };
 
+    // Mobile Gyroscope 3D Tilt Parallax
+    const handleDeviceOrientation = (e) => {
+      if (e.gamma === null || e.beta === null) return;
+      hasOrientationActive = true;
+      hasUserMoved = true;
+
+      // Calibrate neutral viewing angle on first reading (typical handheld ~35° - 55°)
+      if (initialBeta === null) {
+        initialBeta = Math.max(25, Math.min(65, e.beta));
+      } else {
+        // Subtle continuous recentering if user slowly shifts posture
+        initialBeta += (e.beta - initialBeta) * 0.004;
+      }
+
+      // Check screen rotation (portrait vs landscape)
+      let orientationAngle = 0;
+      if (typeof window.orientation !== "undefined") {
+        orientationAngle = Number(window.orientation) || 0;
+      } else if (typeof screen !== "undefined" && screen.orientation && typeof screen.orientation.angle === "number") {
+        orientationAngle = screen.orientation.angle;
+      }
+
+      let tiltX = e.gamma || 0; // Left-to-right tilt (-90 to +90)
+      let tiltY = (e.beta || initialBeta) - initialBeta; // Front-to-back tilt
+
+      if (orientationAngle === 90) {
+        const temp = tiltX;
+        tiltX = tiltY;
+        tiltY = -temp;
+      } else if (orientationAngle === -90) {
+        const temp = tiltX;
+        tiltX = -tiltY;
+        tiltY = temp;
+      }
+
+      // Normalize tilt: ±26° horizontally and ±22° vertically gives full, satisfying displacement
+      const normX = tiltX / 26;
+      const normY = -tiltY / 22;
+
+      cursor.targetX = Math.tanh(normX * 1.15) * 0.62;
+      cursor.targetY = Math.tanh(normY * 1.15) * 0.56;
+    };
+
+    let orientationListening = false;
+    const startOrientationListener = () => {
+      if (orientationListening) return;
+      orientationListening = true;
+      window.addEventListener("deviceorientation", handleDeviceOrientation, { passive: true });
+    };
+
+    // Auto-start for Android & standard browsers that do not require permissions
+    if (typeof window !== "undefined" && "DeviceOrientationEvent" in window) {
+      if (typeof DeviceOrientationEvent.requestPermission !== "function") {
+        startOrientationListener();
+      }
+    }
+
+    // iOS Safari 13+ permission trigger on first touch/tap
+    const handleFirstGesture = async () => {
+      if (typeof DeviceOrientationEvent !== "undefined" && typeof DeviceOrientationEvent.requestPermission === "function") {
+        try {
+          const state = await DeviceOrientationEvent.requestPermission();
+          if (state === "granted") {
+            startOrientationListener();
+          }
+        } catch {
+          // Gracefully ignore if rejected
+        }
+      } else {
+        startOrientationListener();
+      }
+      window.removeEventListener("pointerdown", handleFirstGesture);
+      window.removeEventListener("touchstart", handleFirstGesture);
+    };
+
     window.addEventListener("mousemove", handleMouseMove, { passive: true });
     window.addEventListener("touchmove", handleTouchMove, { passive: true });
+    window.addEventListener("pointerdown", handleFirstGesture, { passive: true, once: true });
+    window.addEventListener("touchstart", handleFirstGesture, { passive: true, once: true });
     window.addEventListener("resize", updateSize);
 
     // ResizeObserver watches container to handle entrance animation & visibility changes
@@ -251,14 +330,14 @@ export default function Portrait3DCanvas({
 
       let targetX = cursor.targetX;
       let targetY = cursor.targetY;
-      if (!hasUserMoved) {
+      if (!hasUserMoved && !hasOrientationActive) {
         targetX = Math.sin(elapsedTime * 0.8) * 0.22;
         targetY = Math.cos(elapsedTime * 0.6) * 0.18;
       }
 
       // Smooth exponential damping / lerp
-      cursor.currentX += (targetX - cursor.currentX) * 0.055;
-      cursor.currentY += (targetY - cursor.currentY) * 0.055;
+      cursor.currentX += (targetX - cursor.currentX) * 0.065;
+      cursor.currentY += (targetY - cursor.currentY) * 0.065;
 
       if (material && material.uniforms) {
         material.uniforms.uMouse.value.set(cursor.currentX, cursor.currentY);
@@ -277,6 +356,11 @@ export default function Portrait3DCanvas({
       if (animationFrameId) cancelAnimationFrame(animationFrameId);
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("touchmove", handleTouchMove);
+      window.removeEventListener("pointerdown", handleFirstGesture);
+      window.removeEventListener("touchstart", handleFirstGesture);
+      if (orientationListening) {
+        window.removeEventListener("deviceorientation", handleDeviceOrientation);
+      }
       window.removeEventListener("resize", updateSize);
       if (resizeObserver) resizeObserver.disconnect();
 
