@@ -132,14 +132,33 @@
 @media (max-width: 600px) {
   .submerged-beat--left,
   .submerged-beat--right {
-    left: 20px;
-    right: 20px;
-    width: calc(100vw - 40px);
+    left: 18px;
+    right: 18px;
+    width: calc(100vw - 36px);
     align-items: flex-start;
     text-align: left;
   }
   .submerged-beat--right .submerged-badge-row {
     justify-content: flex-start;
+  }
+  .submerged-title {
+    font-size: clamp(26px, 7.5vw, 38px);
+    line-height: 1.16;
+    margin-bottom: 12px;
+  }
+  .submerged-desc {
+    font-size: 14px;
+    line-height: 1.55;
+    max-width: 100%;
+  }
+  .submerged-eyebrow {
+    font-size: 10px;
+    padding: 5px 12px;
+    margin-bottom: 12px;
+  }
+  .submerged-badge {
+    padding: 5px 10px;
+    font-size: 11px;
   }
 }
 

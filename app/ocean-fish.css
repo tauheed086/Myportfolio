@@ -55,6 +55,13 @@
   }
 }
 
+@media (max-width: 600px) {
+  .fish {
+    --size: 7.5rem;
+    --bodyW: 1.5rem;
+  }
+}
+
 /* Skeleton Layer revealed in deepest zones */
 .fish__skeleton {
   --clip: polygon(0 var(--bodyW), 45% 0, 55% 0, 100% var(--bodyW), 50% 100%);

@@ -158,6 +158,17 @@ export default function WaveScene({ paused, night = false, waveProgressRef, fore
               drift += normalize(delta + vec2(0.0001)) * wave * 0.006 * water;
             }
             vec3 color = texture2D(painting, clamp(uv + drift, 0.001, 0.999)).rgb;
+            // Harmonize daytime sky to eliminate pinkish/magenta sunset cast and match the oceanic palette
+            if (nightMix < 0.95 && water < 0.8) {
+              float skyFactor = (1.0 - water) * (1.0 - nightMix);
+              float excessRed = max(0.0, color.r - max(color.g, color.b * 0.9));
+              vec3 calmSky = vec3(
+                color.r - excessRed * 0.72,
+                color.g + excessRed * 0.16,
+                color.b + excessRed * 0.42
+              );
+              color = mix(color, calmSky, skyFactor * 0.85);
+            }
             color = mix(color, nightPainting(color, uv + drift, water), nightMix);
             vec3 wakeColor = mix(vec3(0.96, 0.76, 0.58), vec3(0.44, 0.59, 0.76), nightMix);
             color = mix(color, wakeColor, wake * (0.10 + boatEnergy * 0.12));

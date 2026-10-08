@@ -23,12 +23,12 @@ export default function SubmergedNarrative() {
     gsap.set(beats, { opacity: 0, pointerEvents: "none" });
 
     // The text animation starts right from here as the wave crest reaches the top of the screen (~10% of .ocean-journey)
-    // and continues until the bottom of the ocean journey where About begins.
+    // and cleanly finishes before About begins to prevent collision.
     const tl = gsap.timeline({
       scrollTrigger: {
         trigger: ".ocean-journey",
         start: "10% top",
-        end: "bottom bottom",
+        end: "92% bottom",
         scrub: true
       }
     });
@@ -90,6 +90,9 @@ export default function SubmergedNarrative() {
         .to(aliveItems[2], { opacity: 0.22, duration: 0.9 }, 18.6)
         .to(aliveItems[3], { opacity: 1, duration: 0.9 }, 19.0);
     }
+
+    // Fade and slide out Beat 5 so it cleanly leaves before About begins
+    tl.to(beats[4], { opacity: 0, y: -26, duration: 1.2, ease: "power1.in" }, 20.8);
 
     return () => {
       if (tl.scrollTrigger) tl.scrollTrigger.kill();

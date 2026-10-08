@@ -25,7 +25,7 @@ export default function useOceanScroll() {
     let displayedProgress = null;
     let stageHeight = 1, crestHeight = 1, extensionHeight = 1, distance = 1, elementTop = 0;
     const measure = () => {
-      stageHeight = stage.clientHeight;
+      stageHeight = Math.max(stage.clientHeight, window.innerHeight || 0);
       crestHeight = crest.clientHeight;
       extensionHeight = extension ? extension.clientHeight : stageHeight * 3;
       distance = Math.max(1, element.offsetHeight - stageHeight);
@@ -33,6 +33,11 @@ export default function useOceanScroll() {
     };
     const update = () => {
       frame = 0;
+      const currentH = Math.max(stage.clientHeight, window.innerHeight || 0);
+      if (Math.abs(currentH - stageHeight) > 8) {
+        stageHeight = currentH;
+        distance = Math.max(1, element.offsetHeight - stageHeight);
+      }
       const target = clamp((window.scrollY - elementTop) / distance);
       displayedProgress = target;
       const progress = displayedProgress;

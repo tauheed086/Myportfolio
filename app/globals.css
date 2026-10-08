@@ -96,7 +96,7 @@ h3 {
 .scene-fallback {
   position: absolute;
   inset: 0;
-  background: #e6b8ac url("/sunset-painting.webp") center / cover no-repeat;
+  background: #2b7a95 url("/sunset-painting.webp") center / cover no-repeat;
 }
 
 .is-ready .scene-fallback {
@@ -868,7 +868,8 @@ h3 {
 /* Scroll-driven ocean entry. The crest and its water extension share one layer. */
 .ocean-journey {
   position: relative;
-  height: 330svh;
+  height: 380vh;
+  height: 380dvh;
   background: #051f28;
   --wave-y: 100vh;
   --water-surface: #499ab0;
@@ -881,8 +882,9 @@ h3 {
 .ocean-journey>.wave-portfolio {
   position: sticky;
   top: 0;
-  height: 100svh;
-  min-height: 0;
+  height: 100vh;
+  height: 100dvh;
+  min-height: 100dvh;
   isolation: isolate;
   background: #226d86;
 }
@@ -918,6 +920,7 @@ h3 {
 .ocean-water {
   position: absolute;
   inset: 0;
+  bottom: -4px;
   z-index: 4;
   pointer-events: none;
   opacity: var(--ocean-opacity);
@@ -964,7 +967,8 @@ h3 {
 /* Continuous deep ocean water column: sunlit Caribbean surface down to abyssal trench floor */
 .ocean-extension {
   position: relative;
-  height: 300svh;
+  height: 350vh;
+  height: 350dvh;
   margin-top: -1px;
   background: linear-gradient(180deg,
       var(--water-surface) 0%,
@@ -985,7 +989,8 @@ h3 {
 .ocean-depth-target {
   position: absolute;
   bottom: 0;
-  height: 100svh;
+  height: 100vh;
+  height: 100dvh;
   width: 1px;
   pointer-events: none;
 }
